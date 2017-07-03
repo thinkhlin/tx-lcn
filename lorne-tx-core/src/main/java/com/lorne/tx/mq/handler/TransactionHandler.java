@@ -1,5 +1,6 @@
 package com.lorne.tx.mq.handler;
 
+import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
@@ -48,7 +49,12 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         heartJson = heartJo.toString();
 
 
-        String model = ConfigUtils.getString("tx.properties", "model");
+        String model = "";
+        try {
+            model =  ConfigUtils.getString("tx.properties", "model");
+        }catch (Exception e){
+            model = "m"+KidUtils.generateShortUuid();
+        }
 
         //模块包
         JSONObject modelJo = new JSONObject();
