@@ -1,7 +1,5 @@
 package com.lorne.tx.mq.handler;
 
-import com.lorne.core.framework.utils.KidUtils;
-import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
@@ -35,7 +33,6 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     private String heartJson;
 
-    private String modelInfo;
 
 
     public TransactionHandler(NettyService nettyService) {
@@ -48,24 +45,6 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         heartJo.put("p", "{}");
         heartJson = heartJo.toString();
 
-
-        String model = "";
-        try {
-            model =  ConfigUtils.getString("tx.properties", "model");
-        }catch (Exception e){
-            model = "m"+KidUtils.generateShortUuid();
-        }
-
-        //模块包
-        JSONObject modelJo = new JSONObject();
-        modelJo.put("a", "m");
-        modelJo.put("k", "h");
-
-        //模块名称
-        JSONObject param = new JSONObject();
-        param.put("n", model);
-        modelJo.put("p", param.toString());
-        modelInfo = modelJo.toString();
     }
 
     @Override
@@ -163,8 +142,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
         this.ctx = ctx;
-        ctx.writeAndFlush(Unpooled.buffer().writeBytes(modelInfo.getBytes()));
-        logger.info("建立链接-->" + modelInfo);
+        logger.info("建立链接-->" + ctx);
         net_state = true;
     }
 

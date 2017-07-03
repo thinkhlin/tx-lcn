@@ -2,8 +2,6 @@ package com.lorne.tx.socket;
 
 import com.lorne.core.framework.utils.config.ConfigUtils;
 import io.netty.channel.Channel;
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -32,34 +30,19 @@ public class SocketManager {
 
     private static SocketManager manager = null;
 
-    private AttributeKey<SocketVal> attributeKey = AttributeKey.valueOf(SocketManager.class.getName());
-
     public  synchronized static SocketManager getInstance() {
         if (manager == null)
             manager = new SocketManager();
         return manager;
     }
 
-    private AttributeKey<SocketVal> getAttributeKey() {
-        return attributeKey;
-    }
-
-    public Attribute<SocketVal> getSocketAttribute(Channel ctx) {
-        return ctx.attr(SocketManager.getInstance().getAttributeKey());
-    }
-
 
     public Channel getChannelByModelName(String name){
         for(Channel channel:clients){
-            Attribute<SocketVal> attr = getSocketAttribute(channel);
-            if(attr!=null){
-                SocketVal val =   attr.get();
-                if(val!=null){
-                    String id = val.getName();
-                    if(name.equals(id)){
-                        return channel;
-                    }
-                }
+            String modelName =channel.remoteAddress().toString();
+
+            if(modelName.equals(name)){
+                return channel;
             }
         }
         return null;

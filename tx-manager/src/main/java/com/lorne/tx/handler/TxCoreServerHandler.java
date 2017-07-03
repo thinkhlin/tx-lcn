@@ -10,7 +10,6 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.socket.SocketManager;
-import com.lorne.tx.socket.SocketVal;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
@@ -18,7 +17,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.util.Attribute;
 import io.netty.util.ReferenceCountUtil;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -66,14 +64,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                 case "atg": {
                     String groupId = params.getString("g");
                     String taskId = params.getString("t");
-                    String modelName = "";
-                    Attribute<SocketVal> attribute = SocketManager.getInstance().getSocketAttribute(ctx.channel());
-                    if (attribute != null) {
-                        SocketVal val = attribute.get();
-                        if (val != null) {
-                            modelName = val.getName();
-                        }
-                    }
+                    String modelName = ctx.channel().remoteAddress().toString();
                     if (StringUtils.isNotEmpty(modelName)) {
                         TxGroup txGroup = txManagerService.addTransactionGroup(groupId, taskId, modelName);
                         res = txGroup.toJsonString();
@@ -103,22 +94,6 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
 
                 //心跳包
                 case "h": {
-                    res = "1";
-                    break;
-                }
-
-                //上传模块信息
-                case "m": {
-                    String name = params.getString("n");
-                    Attribute<SocketVal> attribute = SocketManager.getInstance().getSocketAttribute(ctx.channel());
-                    if (attribute != null) {
-                        SocketVal val = attribute.get();
-                        if (val == null) {
-                            val = new SocketVal();
-                        }
-                        val.setName(name);
-                        attribute.set(val);
-                    }
                     res = "1";
                     break;
                 }
