@@ -84,6 +84,7 @@ public class TxServiceImpl implements TxService {
             loadSLBConfig();
 
             List<TxState> states = new ArrayList<>();
+            states.add(getState());
             for(String url:urls){
                 TxState state =  restTemplate.getForObject(url+"/tx/manager/state",TxState.class);
                 states.add(state);
