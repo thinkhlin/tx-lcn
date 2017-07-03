@@ -7,6 +7,7 @@
 3. 使用简单，代码完全开源
 4. 基于切面的强一致性事务框架
 5. 高可用，模块可以依赖dubbo或springcloud的集群方式做集群化，TxManager也可以做集群化
+6. 支持本地事务和分布式事务共存
 
 ## 使用示例
 
@@ -58,6 +59,7 @@ tx-manager 是LCN 分布式事务协调器（TxManager）
 ## 关于框架的设计原理
 
 见 [TxManager](https://github.com/1991wangliang/tx-lcn/blob/master/tx-manager/README.md)
+
 
 ## demo 说明
 
