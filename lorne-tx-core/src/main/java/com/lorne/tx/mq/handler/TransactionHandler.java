@@ -1,12 +1,15 @@
 package com.lorne.tx.mq.handler;
 
+import com.lorne.core.framework.Constant;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
+import com.lorne.tx.Constants;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.utils.SocketUtils;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -17,12 +20,18 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Created by lorne on 2017/6/30.
  */
 @ChannelHandler.Sharable
 public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
+    /**
+     * false 未链接
+     * true 连接中
+     */
     public static boolean net_state = false;
 
     private Logger logger = LoggerFactory.getLogger(TransactionHandler.class);
@@ -167,18 +176,38 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     }
 
     public String sendMsg(Request request) {
-        String key = request.getKey();
-        Task task = ConditionUtils.getInstance().createTask(key);
-        ctx.writeAndFlush(Unpooled.buffer().writeBytes(request.toMsg().getBytes()));
-        task.awaitTask();
+        final String key = request.getKey();
+        if(ctx.channel().isActive()){
+            Task task = ConditionUtils.getInstance().createTask(key);
+            ctx.writeAndFlush(Unpooled.buffer().writeBytes(request.toMsg().getBytes()));
 
-        Object msg = null;
-        try {
-            msg = task.getBack().doing();
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
+            Constant.scheduledExecutorService.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    Task task = ConditionUtils.getInstance().getTask(key);
+                    if(task!=null&&!task.isNotify()) {
+                        task.setBack(new IBack() {
+                            @Override
+                            public Object doing(Object... objs) throws Throwable {
+                                return null;
+                            }
+                        });
+                        task.signalTask();
+                    }
+                }
+            }, 1, TimeUnit.SECONDS);
+            task.awaitTask();
+
+            Object msg = null;
+            try {
+                msg = task.getBack().doing();
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+            task.remove();
+            return (String) msg;
         }
-        task.remove();
-        return (String) msg;
+        return null;
+
     }
 }

@@ -10,6 +10,7 @@ import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
+import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
@@ -115,7 +116,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                     task.setBack(new IBack() {
                         @Override
                         public Object doing(Object... objects) throws Throwable {
-                            return 0;
+                            return -2;
                         }
                     });
                     logger.info("自定回滚执行");
@@ -124,15 +125,23 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             }
         }, model.getTxGroup().getWaitTime(), TimeUnit.SECONDS);
 
+        final ExecuteAwaitTask executeAwaitTask = new ExecuteAwaitTask();
+
         if (!signTask) {
-            txManagerService.closeTransactionGroup(model.getTxGroup().getGroupId());
+            txManagerService.closeTransactionGroup(model.getTxGroup().getGroupId(),executeAwaitTask);
         }
         logger.info("进入回滚等待.");
-        waitTask.awaitTask();
+        waitTask.awaitTask(new IBack() {
+            @Override
+            public Object doing(Object... objs) throws Throwable {
+                executeAwaitTask.setState(1);
+                return null;
+            }
+        });
 
         try {
             int state = (Integer) waitTask.getBack().doing();
-            logger.info("单元事务（1：提交 0 -1：回滚）:" + state);
+            logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state);
             if (state == 1) {
                 txManager.commit(status);
             } else {
@@ -142,6 +151,14 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                         @Override
                         public Object doing(Object... objs) throws Throwable {
                             throw new Throwable("事务模块网络异常.");
+                        }
+                    });
+                }
+                if (state == -2) {
+                    task.setBack(new IBack() {
+                        @Override
+                        public Object doing(Object... objs) throws Throwable {
+                            throw new Throwable("事务模块超时异常.");
                         }
                     });
                 }

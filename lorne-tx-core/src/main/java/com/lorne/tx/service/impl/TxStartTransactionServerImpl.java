@@ -1,13 +1,16 @@
 package com.lorne.tx.service.impl;
 
+import com.lorne.core.framework.exception.ServiceException;
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
+import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.Constants;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
+import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.model.ServiceThreadModel;
@@ -35,6 +38,9 @@ public class TxStartTransactionServerImpl implements TransactionServer {
     private TransactionThreadService transactionThreadService;
 
 
+    @Autowired
+    private NettyService nettyService;
+
     @Override
     public Object execute(final ProceedingJoinPoint point, final TxTransactionInfo info) throws Throwable {
         //分布式事务开始执行
@@ -49,6 +55,19 @@ public class TxStartTransactionServerImpl implements TransactionServer {
             public void run() {
 
                 TxGroup txGroup = txManagerService.createTransactionGroup();
+
+                //获取不到模块信息重新连接，本次事务异常返回数据.
+                if (txGroup == null) {
+                    task.setBack(new IBack() {
+                        @Override
+                        public Object doing(Object... objects) throws Throwable {
+                            throw new ServiceException("添加事务组异常.");
+                        }
+                    });
+                    task.signalTask();
+                    nettyService.restart();
+                    return ;
+                }
 
                 final String groupId = txGroup.getGroupId();
 

@@ -1,6 +1,7 @@
 package com.lorne.tx.mq.service;
 
 import com.lorne.tx.mq.model.TxGroup;
+import com.lorne.tx.service.model.ExecuteAwaitTask;
 
 /**
  * Created by lorne on 2017/6/7.
@@ -30,7 +31,7 @@ public interface MQTxManagerService {
      * @param groupId
      * @return
      */
-    void closeTransactionGroup(String groupId);
+    void closeTransactionGroup(String groupId, ExecuteAwaitTask executeAwaitTask);
 
 
     /**

@@ -89,6 +89,7 @@ public class NettyServiceImpl implements NettyService {
 
     @Override
     public void close() {
+        TransactionHandler.net_state = false;
         if (workerGroup != null) {
             workerGroup.shutdownGracefully();
         }

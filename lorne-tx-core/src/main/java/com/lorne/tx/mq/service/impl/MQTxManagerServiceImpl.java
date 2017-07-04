@@ -5,6 +5,7 @@ import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
+import com.lorne.tx.service.model.ExecuteAwaitTask;
 import net.sf.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,21 +42,30 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
         return TxGroup.parser(json);
     }
 
+
+    private void thread( String groupId, ExecuteAwaitTask executeAwaitTask){
+        if(executeAwaitTask.getState()==1){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("g", groupId);
+            Request request = new Request("ctg", jsonObject.toString());
+            String json = nettyService.sendMsg(request);
+            logger.info("closeTransactionGroup->" + json);
+        }else{
+            try {
+                Thread.sleep(3);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            thread(groupId, executeAwaitTask);
+        }
+    }
+
     @Override
-    public void closeTransactionGroup(final String groupId) {
+    public void closeTransactionGroup(final String groupId,final  ExecuteAwaitTask executeAwaitTask) {
         Constants.threadPool.execute(new Runnable() {
             @Override
             public void run() {
-                try {
-                    Thread.sleep(5);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("g", groupId);
-                Request request = new Request("ctg", jsonObject.toString());
-                String json = nettyService.sendMsg(request);
-                logger.info("closeTransactionGroup->" + json);
+               thread(groupId, executeAwaitTask);
             }
         });
     }
