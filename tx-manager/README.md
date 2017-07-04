@@ -4,7 +4,10 @@ TxManager是LCN分布式事务框架的事务协调器，框架基于Netty做消
 原理向下找：LCN分布式事务框架的设计原理 标题。
 
 ## 使用教程
-1. 启动redis服务，并配置redis.properties配置文件
+1. 启动redis服务
+
+
+2. 配置application.properties文件
 
 ```
 #redis ip
@@ -13,25 +16,15 @@ redis.ip=127.0.0.1
 #redis port
 redis.port = 6379
 
-#redis密码
+#redis密码 （注意：密码需要时去掉添加即可）
 #redis.auth=password
-```
-注意：密码需要时去掉添加即可。
 
-2. 配置application.properties下的端口如下：
-
-```
 #服务端口
 server.port=8888
 
 spring.thymeleaf.prefix=classpath:/templates/
 spring.thymeleaf.suffix=.html
 
-```
-
-3. 配置tx.properties配置
-
-```
 
 #本文可不配置，默认数据为transaction_wait_max_time=5 redis_save_max_time=30
 
@@ -63,7 +56,7 @@ slb.list = http://127.0.0.1:8889/#http://127.0.0.1:8810/
 
 ```
 
-4. 配置完成后启动TxManagerApplication.main()方法，或者通过springboot打包运行。然后访问`http://127.0.0.1:8888`
+3. 配置完成后启动TxManagerApplication.main()方法，或者通过springboot打包运行。然后访问`http://127.0.0.1:8888`
 
 ![ ](readme/tx-manager.png)
 
