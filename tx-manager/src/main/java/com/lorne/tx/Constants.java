@@ -18,6 +18,8 @@ public class Constants {
      */
     public static TxServer local =  null;
 
+    public static int maxConnection;
+
     static {
         threadPool = Executors.newCachedThreadPool();
     }

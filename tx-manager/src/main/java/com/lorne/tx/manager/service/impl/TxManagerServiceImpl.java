@@ -2,14 +2,14 @@ package com.lorne.tx.manager.service.impl;
 
 
 import com.lorne.core.framework.utils.KidUtils;
-import com.lorne.core.framework.utils.config.ConfigUtils;
-import com.lorne.core.framework.utils.redis.RedisUtil;
+import com.lorne.tx.utils.RedisUtil;
 import com.lorne.tx.Constants;
 import com.lorne.tx.manager.service.TransactionConfirmService;
 import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 
@@ -22,9 +22,11 @@ import java.util.List;
 public class TxManagerServiceImpl implements TxManagerService {
 
 
-    public static int redis_save_max_time;
+    @Value("${redis_save_max_time}")
+    private  int redis_save_max_time;
 
-    public static int transaction_wait_max_time;
+    @Value("${transaction_wait_max_time}")
+    private  int transaction_wait_max_time;
 
     private final static String key_prefix = "tx_manager_";
 
@@ -32,16 +34,6 @@ public class TxManagerServiceImpl implements TxManagerService {
     private TransactionConfirmService transactionConfirmService;
 
 
-    public TxManagerServiceImpl() {
-        try {
-            redis_save_max_time = ConfigUtils.getInt("tx.properties", "redis_save_max_time");
-            transaction_wait_max_time = ConfigUtils.getInt("tx.properties", "transaction_wait_max_time");
-        } catch (Exception e) {
-            redis_save_max_time = 30;
-            transaction_wait_max_time = 5;
-        }
-
-    }
 
     @Override
     public TxGroup createTransactionGroup() {

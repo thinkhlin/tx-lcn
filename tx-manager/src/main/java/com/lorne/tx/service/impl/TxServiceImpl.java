@@ -1,14 +1,12 @@
 package com.lorne.tx.service.impl;
 
-import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.tx.Constants;
-import com.lorne.tx.manager.service.impl.TxManagerServiceImpl;
 import com.lorne.tx.model.TxServer;
 import com.lorne.tx.model.TxState;
-import com.lorne.tx.mq.service.impl.MQTxManagerServiceImpl;
 import com.lorne.tx.service.TxService;
 import com.lorne.tx.socket.SocketManager;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -31,17 +29,33 @@ public class TxServiceImpl implements TxService {
     /**
      * 负载均衡策略
      */
+    @Value("${slb.on}")
     private boolean slbOn = false;
 
     /**
      * 负载均衡类型
      */
+
+    @Value("${slb.type}")
     private String type;
 
 
     /**
      * 负载均衡服务器列表地址
      */
+
+    @Value("${slb.list}")
+    private String list;
+
+
+    @Value("${redis_save_max_time}")
+    private  int redis_save_max_time;
+
+    @Value("${transaction_wait_max_time}")
+    private  int transaction_wait_max_time;
+
+
+
     private List<String> urls;
 
 
@@ -54,18 +68,18 @@ public class TxServiceImpl implements TxService {
     }
 
 
-    private void loadSLBConfig(){
-        slbOn = "true".equals(ConfigUtils.getString("tx.properties", "slb.on"));
-        if(slbOn){
-            type = ConfigUtils.getString("tx.properties", "slb.type");
-
-            String list =  ConfigUtils.getString("tx.properties", "slb.list");
-            urls = Arrays.asList(list.split("#"));
-        }
-    }
+//    private void loadSLBConfig(){
+//        slbOn = "true".equals(ConfigUtils.getString("tx.properties", "slb.on"));
+//        if(slbOn){
+//            type = ConfigUtils.getString("tx.properties", "slb.type");
+//
+//            String list =  ConfigUtils.getString("tx.properties", "slb.list");
+//            urls = Arrays.asList(list.split("#"));
+//        }
+//    }
 
     public TxServiceImpl() {
-        loadSLBConfig();
+      //  loadSLBConfig();
     }
 
 
@@ -80,9 +94,8 @@ public class TxServiceImpl implements TxService {
             }
         } else {
 
-            //重新加载数据
-            loadSLBConfig();
-
+//            //重新加载数据
+//            loadSLBConfig();
             List<TxState> states = new ArrayList<>();
             states.add(getState());
             for(String url:urls){
@@ -129,13 +142,14 @@ public class TxServiceImpl implements TxService {
 
     @Override
     public TxState getState() {
+        urls = Arrays.asList(list.split("#"));
         TxState state = new TxState();
         state.setIp(Constants.local.getIp());
         state.setPort(Constants.local.getPort());
         state.setMaxConnection(SocketManager.getInstance().getMaxConnection());
         state.setNowConnection(SocketManager.getInstance().getNowConnection());
-        state.setTransactionWaitMaxTime(TxManagerServiceImpl.transaction_wait_max_time);
-        state.setRedisSaveMaxTime(TxManagerServiceImpl.redis_save_max_time);
+        state.setTransactionWaitMaxTime(transaction_wait_max_time);
+        state.setRedisSaveMaxTime(redis_save_max_time);
         state.setSlbList(urls);
         state.setSlbType(type);
         state.setSlbOn(slbOn);

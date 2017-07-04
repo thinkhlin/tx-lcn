@@ -1,6 +1,6 @@
 package com.lorne.tx.socket;
 
-import com.lorne.core.framework.utils.config.ConfigUtils;
+import com.lorne.tx.Constants;
 import io.netty.channel.Channel;
 
 import java.util.List;
@@ -14,7 +14,7 @@ public class SocketManager {
     /**
      * 最大连接数
      */
-    private int maxConnection;
+    private int maxConnection = Constants.maxConnection;
 
     /**
      * 当前连接数
@@ -50,7 +50,6 @@ public class SocketManager {
 
     private  SocketManager() {
         clients = new CopyOnWriteArrayList<Channel>();
-        maxConnection = ConfigUtils.getInt("tx.properties","socket.max.connection");
     }
 
     public void addClient(Channel client) {

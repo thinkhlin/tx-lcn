@@ -5,8 +5,8 @@
 
 	<groupId>com.lorne.tx</groupId>
 	<artifactId>tx-manager</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<version>2.0.0-SNAPSHOT</version>
+	<packaging>war</packaging>
 
 	<name>tx-manager</name>
 	<description>Demo project for Spring Boot</description>
@@ -43,6 +43,10 @@
 					<groupId>org.slf4j</groupId>
 					<artifactId>*</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>javax.servlet</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 
@@ -63,7 +67,26 @@
 		</dependency>
 
 
+		<!-- war -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.1.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- war -->
+
 	</dependencies>
+
 
 	<dependencyManagement>
 		<dependencies>

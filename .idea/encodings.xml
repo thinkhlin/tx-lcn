@@ -3,6 +3,7 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/dubbo-transaction" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/lorne-tx-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/manager" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/springcloud-transaction" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/tx-manager" charset="UTF-8" />
   </component>

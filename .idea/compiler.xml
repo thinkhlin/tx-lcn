@@ -15,6 +15,7 @@
     <bytecodeTargetLevel>
       <module name="dubbo-transaction" target="1.7" />
       <module name="lorne-tx-core" target="1.7" />
+      <module name="manager" target="1.7" />
       <module name="springcloud-transaction" target="1.7" />
       <module name="tx-manager" target="1.8" />
     </bytecodeTargetLevel>
