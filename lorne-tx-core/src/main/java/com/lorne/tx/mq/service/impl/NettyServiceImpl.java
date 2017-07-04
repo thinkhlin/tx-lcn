@@ -106,17 +106,20 @@ public class NettyServiceImpl implements NettyService {
     }
 
     @Override
-    public void checkState() {
+    public boolean checkState() {
         if (!TransactionHandler.net_state) {
-            logger.info("socket服务尚未建立连接成功,将在此等待2秒.");
+            logger.error("socket服务尚未建立连接成功,将在此等待2秒.");
             try {
                 Thread.sleep(1000 * 2);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             if (!TransactionHandler.net_state) {
-                throw new RuntimeException("socket还未连接成功,请检查TxManager服务后再试.");
+                logger.error("socket还未连接成功,请检查TxManager服务后再试.");
+                return false;
             }
         }
+
+        return true;
     }
 }

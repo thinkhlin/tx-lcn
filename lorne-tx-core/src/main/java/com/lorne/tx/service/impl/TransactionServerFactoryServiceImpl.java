@@ -29,7 +29,7 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
     private NettyService nettyService;
 
 
-    public TransactionServer createTransactionServer(TxTransactionInfo info) {
+    public TransactionServer createTransactionServer(TxTransactionInfo info) throws Throwable{
 
         /** 当都是空的时候表示是一般的业务处理。这里不做操作 **/
         if (StringUtils.isEmpty(info.getTxGroupId())
@@ -47,15 +47,23 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
         /** 尽当Transaction注解不为空，其他都为空时。表示分布式事务开始启动 **/
         if (info.getTransaction() != null && info.getTxTransactionLocal() == null && StringUtils.isEmpty(info.getTxGroupId())) {
             //检查socket通讯是否正常
-            nettyService.checkState();
-            return txStartTransactionServer;
+            if(nettyService.checkState()){
+                return txStartTransactionServer;
+            }else{
+                throw new Exception("tx-manager尚未链接成功,请检测tx-manager服务");
+            }
+
         }
 
         /** 分布式事务已经开启，业务进行中 **/
         if (info.getTxTransactionLocal() != null || StringUtils.isNotEmpty(info.getTxGroupId())) {
             //检查socket通讯是否正常
-            nettyService.checkState();
-            return txRunningTransactionServer;
+            if( nettyService.checkState()){
+                return txRunningTransactionServer;
+            }else{
+                throw new Exception("tx-manager尚未链接成功,请检测tx-manager服务");
+            }
+
         }
 
 

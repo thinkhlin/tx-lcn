@@ -28,6 +28,11 @@ public class TxServer {
     }
 
 
+    @Override
+    public String toString() {
+        return "host:"+host+",port:"+port;
+    }
+
     public static TxServer parser(String json) {
         try {
             JSONObject jsonObject = JSONObject.fromObject(json);
@@ -36,6 +41,7 @@ public class TxServer {
             txServer.setHost(jsonObject.getString("ip"));
             return txServer;
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }

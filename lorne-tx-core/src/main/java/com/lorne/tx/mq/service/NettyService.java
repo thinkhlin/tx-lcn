@@ -15,5 +15,5 @@ public interface NettyService {
 
     String sendMsg(Request request);
 
-    void checkState();
+    boolean checkState();
 }

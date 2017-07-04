@@ -7,5 +7,5 @@ import com.lorne.tx.bean.TxTransactionInfo;
  */
 public interface TransactionServerFactoryService {
 
-    TransactionServer createTransactionServer(TxTransactionInfo info);
+    TransactionServer createTransactionServer(TxTransactionInfo info) throws Throwable;
 }
