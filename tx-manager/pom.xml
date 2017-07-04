@@ -67,7 +67,7 @@
 		</dependency>
 
 
-		<!-- war -->
+		<!-- run 方式时需要注释 war start -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -83,7 +83,7 @@
 			<version>3.1.0</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- war -->
+		<!-- run 方式时需要注释 war end -->
 
 	</dependencies>
 
