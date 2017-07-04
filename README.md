@@ -53,7 +53,9 @@ dubbo-transaction 是LCN dubbo分布式事务框架
 
 springcloud-transaction 是LCN springcloud分布式事务框架
 
-tx-manager 是LCN 分布式事务协调器（TxManager）
+tx-manager-war 是LCN 分布式事务协调器安装环境
+
+tx-manager 是LCN 分布式事务协调器源码
 
 
 ## 关于框架的设计原理
