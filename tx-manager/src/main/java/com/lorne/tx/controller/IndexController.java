@@ -18,7 +18,7 @@ public class IndexController {
     @Autowired
     private TxService txService;
 
-    @RequestMapping("/")
+    @RequestMapping("/index")
     public String index(HttpServletRequest request){
         TxState state =  txService.getState();
         request.setAttribute("info",state);

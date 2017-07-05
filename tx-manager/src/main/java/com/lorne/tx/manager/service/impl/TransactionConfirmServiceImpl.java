@@ -1,8 +1,10 @@
 package com.lorne.tx.manager.service.impl;
 
 
+import com.lorne.core.framework.Constant;
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
+import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.core.framework.utils.thread.CountDownLatchHelper;
 import com.lorne.core.framework.utils.thread.IExecute;
@@ -19,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -29,6 +32,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
 
     private Logger logger = LoggerFactory.getLogger(TransactionConfirmServiceImpl.class);
+
 
 
 
@@ -129,6 +133,18 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                     jsonObject.put("k",key);
                     Task task = ConditionUtils.getInstance().createTask(key);
                     txInfo.getChannel().writeAndFlush(Unpooled.buffer().writeBytes(jsonObject.toString().getBytes()));
+                    Constant.scheduledExecutorService.schedule(new Runnable() {
+                        @Override
+                        public void run() {
+                            task.setBack(new IBack() {
+                                @Override
+                                public Object doing(Object... objs) throws Throwable {
+                                    return "0";
+                                }
+                            });
+                            task.signalTask();
+                        }
+                    },1, TimeUnit.SECONDS);
                     task.awaitTask();
                     try {
                         String data = (String)task.getBack().doing();

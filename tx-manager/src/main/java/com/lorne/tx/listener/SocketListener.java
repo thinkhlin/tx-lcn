@@ -1,20 +1,17 @@
 package com.lorne.tx.listener;
 
 import com.lorne.tx.service.InitService;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
-import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 
 /**
  * Created by lorne on 2017/7/1.
  */
-@WebListener
+
 @Component
 public class SocketListener implements ServletContextListener  {
 
