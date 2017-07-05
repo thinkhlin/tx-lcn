@@ -58,13 +58,13 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                     _groupId = groupId;
                 }
 
-                logger.info("taskId-id-tx-running:" + taskId);
+
 
                 ServiceThreadModel model = transactionThreadService.serviceInThread(true, _groupId, task, point);
                 if (model == null) {
                     return;
                 }
-
+                logger.info("taskId-id-tx-running:" + model.getWaitTask().getKey());
                 transactionThreadService.serviceWait(true, task, model);
             }
         });

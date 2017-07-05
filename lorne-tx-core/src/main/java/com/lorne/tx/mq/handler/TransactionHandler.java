@@ -92,7 +92,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         if (task != null) {
                             if(!task.isNotify()){
                                 task.setState(1);
-                                res = "1";//稍微回滚
+                                res = "1";//尚未回滚
                             }else{
                                 res = "0";//已经回滚
                             }
@@ -133,7 +133,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
+        cause.printStackTrace();
         ctx.close();
     }
 

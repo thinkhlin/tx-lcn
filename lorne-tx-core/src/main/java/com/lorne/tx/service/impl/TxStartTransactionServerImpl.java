@@ -76,7 +76,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                 TxTransactionLocal.setCurrent(txTransactionLocal);
 
 
-                logger.info("taskId-id-tx:" + taskId);
+
                 boolean signTask = false;
 
 
@@ -84,6 +84,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                 if (model == null) {
                     return;
                 }
+                logger.info("taskId-id-tx:" + model.getWaitTask().getKey());
                 transactionThreadService.serviceWait(signTask, task, model);
             }
         });
