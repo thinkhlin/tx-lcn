@@ -177,7 +177,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     public String sendMsg(Request request) {
         final String key = request.getKey();
-        if(ctx.channel().isActive()){
+        if(ctx!=null&&ctx.channel()!=null&&ctx.channel().isActive()){
             Task task = ConditionUtils.getInstance().createTask(key);
             ctx.writeAndFlush(Unpooled.buffer().writeBytes(request.toMsg().getBytes()));
 

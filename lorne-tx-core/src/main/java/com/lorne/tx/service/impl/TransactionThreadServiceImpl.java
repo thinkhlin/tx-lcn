@@ -67,6 +67,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
         Task waitTask = ConditionUtils.getInstance().createTask(kid);
 
+        boolean isSend = false;
         try {
             final Object res = point.proceed();
             task.setBack(new IBack() {
@@ -76,7 +77,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
             //通知TxManager调用成功
-            txManagerService.notifyTransactionInfo(_groupId, kid, true);
+             isSend =  txManagerService.notifyTransactionInfo(_groupId, kid, true);
         } catch (final Throwable throwable) {
             task.setBack(new IBack() {
                 @Override
@@ -85,11 +86,20 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
             //通知TxManager调用失败
-            txManagerService.notifyTransactionInfo(_groupId, kid, false);
+            isSend =  txManagerService.notifyTransactionInfo(_groupId, kid, false);
         }
 
-        if (signTask)
+        if (isSend==false||signTask){
+            if(isSend==false){
+                task.setBack(new IBack() {
+                    @Override
+                    public Object doing(Object... objects) throws Throwable {
+                        throw new ServiceException("修改事务组状态异常.");
+                    }
+                });
+            }
             task.signalTask();
+        }
 
 
         ServiceThreadModel model = new ServiceThreadModel();
