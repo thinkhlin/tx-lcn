@@ -115,18 +115,4 @@ buildNumber.properties
 # IntelliJ project files
 .idea
 *.iml
-out
-gen
-base-service-impl/background.log.1
-base-service-impl/background.log.2
-/background.log
-background.log
-logs/
-base-service-impl/logs/spring.log
-base-service-impl/logs/spring.log.2
-logs/spring.log
-base-service-impl/logPath_IS_UNDEFINED/happylife-base.log
-base-service-impl/logPath_IS_UNDEFINED/bossLog.log.2017-03-03.gz
 
-base-service-impl/logPath_IS_UNDEFINED/*
-base-service-impl/src/test/java/com/happylifeplat/position/service/PositionServiceTest.java
