@@ -12,6 +12,7 @@ public class ServiceThreadModel {
     private Task waitTask;
     private TransactionStatus status;
     private TxGroup txGroup;
+    private boolean notifyOk;
 
 
     public Task getWaitTask() {
@@ -30,12 +31,19 @@ public class ServiceThreadModel {
         this.status = status;
     }
 
-
     public TxGroup getTxGroup() {
         return txGroup;
     }
 
     public void setTxGroup(TxGroup txGroup) {
         this.txGroup = txGroup;
+    }
+
+    public boolean isNotifyOk() {
+        return notifyOk;
+    }
+
+    public void setNotifyOk(boolean notifyOk) {
+        this.notifyOk = notifyOk;
     }
 }

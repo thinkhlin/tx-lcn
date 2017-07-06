@@ -6,12 +6,15 @@ import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
+import com.lorne.tx.Constants;
+import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
+import net.sf.json.JSONObject;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +70,12 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
         Task waitTask = ConditionUtils.getInstance().createTask(kid);
 
+        //发送数据是否成功
         boolean isSend = false;
+
+        //执行是否成功
+        boolean executeOk = false;
+
         try {
             final Object res = point.proceed();
             task.setBack(new IBack() {
@@ -77,7 +85,8 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
             //通知TxManager调用成功
-            isSend = txManagerService.notifyTransactionInfo(_groupId, kid, true);
+            executeOk = true;
+
         } catch (final Throwable throwable) {
             task.setBack(new IBack() {
                 @Override
@@ -86,34 +95,43 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
             //通知TxManager调用失败
-            isSend = txManagerService.notifyTransactionInfo(_groupId, kid, false);
+            executeOk = false;
         }
 
-        if (isSend == false || signTask) {
-            if (isSend == false) {
-                task.setBack(new IBack() {
-                    @Override
-                    public Object doing(Object... objects) throws Throwable {
-                        throw new ServiceException("修改事务组状态异常.");
-                    }
-                });
-            }
-            task.signalTask();
-        }
-
+        isSend = txManagerService.notifyTransactionInfo(_groupId, kid, executeOk);
 
         ServiceThreadModel model = new ServiceThreadModel();
         model.setStatus(status);
         model.setWaitTask(waitTask);
         model.setTxGroup(txGroup);
+        model.setNotifyOk(isSend);
 
         return model;
 
     }
 
 
+    private void waitSignTask(Task task, ExecuteAwaitTask executeAwaitTask,final ExecuteAwaitTask closeGroupTask) {
+        if (executeAwaitTask.getState() == 1) {
+             task.signalTask(new IBack() {
+                 @Override
+                 public Object doing(Object... objs) throws Throwable {
+                     closeGroupTask.setState(1);
+                     return null;
+                 }
+             });
+        } else {
+            try {
+                Thread.sleep(3);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            waitSignTask(task, executeAwaitTask,closeGroupTask);
+        }
+    }
+
     @Override
-    public void serviceWait(boolean signTask, Task task, final ServiceThreadModel model) {
+    public void serviceWait(boolean signTask,final Task task, final ServiceThreadModel model) {
         Task waitTask = model.getWaitTask();
         final String taskId = waitTask.getKey();
         TransactionStatus status = model.getStatus();
@@ -135,16 +153,37 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             }
         }, model.getTxGroup().getWaitTime(), TimeUnit.SECONDS);
 
-        final ExecuteAwaitTask executeAwaitTask = new ExecuteAwaitTask();
+        //主线程先执行
+        final ExecuteAwaitTask mainTaskAwait = new ExecuteAwaitTask();
+
+        final ExecuteAwaitTask closeGroupTask = new ExecuteAwaitTask();
+
+        if (model.isNotifyOk() == false || signTask) {
+            if (model.isNotifyOk() == false) {
+                task.setBack(new IBack() {
+                    @Override
+                    public Object doing(Object... objects) throws Throwable {
+                        throw new ServiceException("修改事务组状态异常.");
+                    }
+                });
+            }
+            Constants.threadPool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    waitSignTask(task,mainTaskAwait,closeGroupTask); //执行顺序 2
+                }
+            });
+        }
+
 
         if (!signTask) {
-            txManagerService.closeTransactionGroup(model.getTxGroup().getGroupId(), executeAwaitTask);
+            txManagerService.closeTransactionGroup(model.getTxGroup().getGroupId(), closeGroupTask); //执行顺序 3
         }
         logger.info("进入回滚等待.");
         waitTask.awaitTask(new IBack() {
             @Override
             public Object doing(Object... objs) throws Throwable {
-                executeAwaitTask.setState(1);
+                mainTaskAwait.setState(1);// 执行顺序 1
                 return null;
             }
         });
