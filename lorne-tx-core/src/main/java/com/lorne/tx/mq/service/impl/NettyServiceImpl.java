@@ -57,7 +57,7 @@ public class NettyServiceImpl implements NettyService {
         int port = Constants.txServer.getPort();
 
         transactionHandler = new TransactionHandler(this);
-        workerGroup = new NioEventLoopGroup();
+        workerGroup = new NioEventLoopGroup(10);
         try {
             Bootstrap b = new Bootstrap(); // (1)
             b.group(workerGroup); // (2)

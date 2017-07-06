@@ -13,6 +13,7 @@ import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.TransactionServer;
+import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
@@ -41,6 +42,21 @@ public class TxStartTransactionServerImpl implements TransactionServer {
     @Autowired
     private NettyService nettyService;
 
+
+    private void confirmAwait(ExecuteAwaitTask executeAwaitTask,Task task){
+        if(executeAwaitTask.getState()==1){
+            task.signalTask();
+        }else{
+            try {
+                Thread.sleep(3);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            confirmAwait(executeAwaitTask, task);
+        }
+    }
+
+
     @Override
     public Object execute(final ProceedingJoinPoint point, final TxTransactionInfo info) throws Throwable {
         //分布式事务开始执行
@@ -49,6 +65,8 @@ public class TxStartTransactionServerImpl implements TransactionServer {
 
         final String taskId = KidUtils.generateShortUuid();
         final Task task = ConditionUtils.getInstance().createTask(taskId);
+
+        final ExecuteAwaitTask executeAwaitTask = new ExecuteAwaitTask();
 
         Constants.threadPool.execute(new Runnable() {
             @Override
@@ -64,7 +82,9 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                             throw new ServiceException("添加事务组异常.");
                         }
                     });
-                    task.signalTask();
+
+                    confirmAwait(executeAwaitTask,task);
+
                     nettyService.restart();
                     return;
                 }
@@ -88,7 +108,14 @@ public class TxStartTransactionServerImpl implements TransactionServer {
             }
         });
 
-        task.awaitTask();
+
+        task.awaitTask(new IBack() {
+            @Override
+            public Object doing(Object... objs) throws Throwable {
+                executeAwaitTask.setState(1);
+                return null;
+            }
+        });
         logger.info("tx-end");
         //分布式事务执行完毕
         try {

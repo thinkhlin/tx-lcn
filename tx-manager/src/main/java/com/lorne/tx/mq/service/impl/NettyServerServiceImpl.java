@@ -53,7 +53,7 @@ public class NettyServerServiceImpl implements NettyServerService {
     @Override
     public void start() {
         txCoreServerHandler = new TxCoreServerHandler(txManagerService);
-        bossGroup = new NioEventLoopGroup(); // (1)
+        bossGroup = new NioEventLoopGroup(10); // (1)
         workerGroup = new NioEventLoopGroup();
         try {
             ServerBootstrap b = new ServerBootstrap();
