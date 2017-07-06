@@ -4,12 +4,8 @@ import com.lorne.core.framework.Constant;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
-import com.lorne.tx.Constants;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyService;
-import com.lorne.tx.utils.SocketUtils;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -43,7 +39,6 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     private String heartJson;
 
 
-
     public TransactionHandler(NettyService nettyService) {
         this.nettyService = nettyService;
 
@@ -59,7 +54,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, final Object msg) throws Exception {
         net_state = true;
-        String json = SocketUtils.getJson(msg);
+        String json = (String) msg;
         logger.info("接受->" + json);
         if (StringUtils.isNotEmpty(json)) {
             JSONObject resObj = JSONObject.fromObject(json);
@@ -67,8 +62,8 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
                 String action = resObj.getString("a");
 
-                switch (action){
-                    case "t":{
+                switch (action) {
+                    case "t": {
                         //通知提醒
                         final int state = resObj.getInt("c");
                         String taskId = resObj.getString("t");
@@ -84,30 +79,30 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         }
                         break;
                     }
-                    case "l":{
+                    case "l": {
                         String taskId = resObj.getString("t");
                         String key = resObj.getString("k");
                         Task task = ConditionUtils.getInstance().getTask(taskId);
                         String res = "";
                         if (task != null) {
-                            if(!task.isNotify()){
+                            if (!task.isNotify()) {
                                 task.setState(1);
                                 res = "1";//尚未回滚
-                            }else{
+                            } else {
                                 res = "0";//已经回滚
                             }
-                        }else{
+                        } else {
                             res = "0";//已经回滚
                         }
 
                         JSONObject data = new JSONObject();
-                        data.put("k",key);
-                        data.put("a",action);
+                        data.put("k", key);
+                        data.put("a", action);
 
                         JSONObject params = new JSONObject();
-                        params.put("d",res);
-                        data.put("p",params);
-                        ctx.writeAndFlush(Unpooled.buffer().writeBytes(data.toString().getBytes()));
+                        params.put("d", res);
+                        data.put("p", params);
+                        ctx.writeAndFlush(data.toString());
                         break;
                     }
                 }
@@ -143,7 +138,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         net_state = false;
         //链接断开,重新连接
         nettyService.close();
-        Thread.sleep(1000*3);
+        Thread.sleep(1000 * 3);
         nettyService.start();
     }
 
@@ -166,7 +161,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                 //ctx.close();
             } else if (event.state() == IdleState.WRITER_IDLE) {
                 //表示已经多久没有发送数据了
-                ctx.writeAndFlush(Unpooled.buffer().writeBytes(heartJson.getBytes()));
+                ctx.writeAndFlush(heartJson);
                 logger.info("心跳数据---" + heartJson);
             } else if (event.state() == IdleState.ALL_IDLE) {
                 //表示已经多久既没有收到也没有发送数据了
@@ -177,15 +172,15 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     public String sendMsg(Request request) {
         final String key = request.getKey();
-        if(ctx!=null&&ctx.channel()!=null&&ctx.channel().isActive()){
+        if (ctx != null && ctx.channel() != null && ctx.channel().isActive()) {
             Task task = ConditionUtils.getInstance().createTask(key);
-            ctx.writeAndFlush(Unpooled.buffer().writeBytes(request.toMsg().getBytes()));
+            ctx.writeAndFlush(request.toMsg());
 
             Constant.scheduledExecutorService.schedule(new Runnable() {
                 @Override
                 public void run() {
                     Task task = ConditionUtils.getInstance().getTask(key);
-                    if(task!=null&&!task.isNotify()) {
+                    if (task != null && !task.isNotify()) {
                         task.setBack(new IBack() {
                             @Override
                             public Object doing(Object... objs) throws Throwable {

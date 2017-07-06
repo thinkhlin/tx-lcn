@@ -77,7 +77,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
             //通知TxManager调用成功
-             isSend =  txManagerService.notifyTransactionInfo(_groupId, kid, true);
+            isSend = txManagerService.notifyTransactionInfo(_groupId, kid, true);
         } catch (final Throwable throwable) {
             task.setBack(new IBack() {
                 @Override
@@ -86,11 +86,11 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
             //通知TxManager调用失败
-            isSend =  txManagerService.notifyTransactionInfo(_groupId, kid, false);
+            isSend = txManagerService.notifyTransactionInfo(_groupId, kid, false);
         }
 
-        if (isSend==false||signTask){
-            if(isSend==false){
+        if (isSend == false || signTask) {
+            if (isSend == false) {
                 task.setBack(new IBack() {
                     @Override
                     public Object doing(Object... objects) throws Throwable {
@@ -138,7 +138,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         final ExecuteAwaitTask executeAwaitTask = new ExecuteAwaitTask();
 
         if (!signTask) {
-            txManagerService.closeTransactionGroup(model.getTxGroup().getGroupId(),executeAwaitTask);
+            txManagerService.closeTransactionGroup(model.getTxGroup().getGroupId(), executeAwaitTask);
         }
         logger.info("进入回滚等待.");
         waitTask.awaitTask(new IBack() {

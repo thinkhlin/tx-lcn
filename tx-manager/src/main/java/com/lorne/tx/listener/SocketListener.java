@@ -13,7 +13,7 @@ import javax.servlet.ServletContextListener;
  */
 
 @Component
-public class SocketListener implements ServletContextListener  {
+public class SocketListener implements ServletContextListener {
 
     private WebApplicationContext springContext;
 

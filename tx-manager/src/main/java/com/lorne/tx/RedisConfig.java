@@ -18,21 +18,21 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 
 @Configuration
-@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,HibernateJpaAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
 public class RedisConfig {
 
     private static Logger logger = LoggerFactory.getLogger(RedisConfig.class);
 
     @Bean
-    @ConfigurationProperties(prefix="spring.redis")
-    public JedisPoolConfig getRedisConfig(){
+    @ConfigurationProperties(prefix = "spring.redis")
+    public JedisPoolConfig getRedisConfig() {
         JedisPoolConfig config = new JedisPoolConfig();
         return config;
     }
 
     @Bean
-    @ConfigurationProperties(prefix="spring.redis")
-    public JedisConnectionFactory getConnectionFactory(){
+    @ConfigurationProperties(prefix = "spring.redis")
+    public JedisConnectionFactory getConnectionFactory() {
         JedisConnectionFactory factory = new JedisConnectionFactory();
         JedisPoolConfig config = getRedisConfig();
         factory.setPoolConfig(config);
@@ -42,8 +42,8 @@ public class RedisConfig {
 
 
     @Bean
-    public RedisTemplate<?, ?> getRedisTemplate(){
-        RedisTemplate<?,?> template = new StringRedisTemplate(getConnectionFactory());
+    public RedisTemplate<?, ?> getRedisTemplate() {
+        RedisTemplate<?, ?> template = new StringRedisTemplate(getConnectionFactory());
         return template;
     }
 }

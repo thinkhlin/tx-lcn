@@ -19,9 +19,9 @@ public class IndexController {
     private TxService txService;
 
     @RequestMapping("/index")
-    public String index(HttpServletRequest request){
-        TxState state =  txService.getState();
-        request.setAttribute("info",state);
+    public String index(HttpServletRequest request) {
+        TxState state = txService.getState();
+        request.setAttribute("info", state);
         return "index";
     }
 

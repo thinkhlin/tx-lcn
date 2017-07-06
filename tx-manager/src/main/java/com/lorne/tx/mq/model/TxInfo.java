@@ -6,7 +6,7 @@ import io.netty.channel.Channel;
 /**
  * Created by lorne on 2017/6/7.
  */
-public class TxInfo extends JsonModel{
+public class TxInfo extends JsonModel {
 
     private String kid;
 

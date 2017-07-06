@@ -37,12 +37,12 @@ public class TxState {
     /**
      * redis_save_max_time
      */
-    private  int redisSaveMaxTime;
+    private int redisSaveMaxTime;
 
     /**
      * slb type
      */
-    private  String slbType;
+    private String slbType;
 
     /**
      * slb list

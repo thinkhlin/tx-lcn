@@ -23,8 +23,8 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
     @Override
-    public TxGroup addTransactionGroup(String groupId, String taskId,String modelName) {
-        return txManagerService.addTransactionGroup(groupId,taskId,modelName);
+    public TxGroup addTransactionGroup(String groupId, String taskId, String modelName) {
+        return txManagerService.addTransactionGroup(groupId, taskId, modelName);
     }
 
     @Override

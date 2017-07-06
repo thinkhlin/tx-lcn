@@ -43,14 +43,14 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
 
-    private void thread( String groupId, ExecuteAwaitTask executeAwaitTask){
-        if(executeAwaitTask.getState()==1){
+    private void thread(String groupId, ExecuteAwaitTask executeAwaitTask) {
+        if (executeAwaitTask.getState() == 1) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("g", groupId);
             Request request = new Request("ctg", jsonObject.toString());
             String json = nettyService.sendMsg(request);
             logger.info("closeTransactionGroup->" + json);
-        }else{
+        } else {
             try {
                 Thread.sleep(3);
             } catch (InterruptedException e) {
@@ -61,11 +61,11 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
     @Override
-    public void closeTransactionGroup(final String groupId,final  ExecuteAwaitTask executeAwaitTask) {
+    public void closeTransactionGroup(final String groupId, final ExecuteAwaitTask executeAwaitTask) {
         Constants.threadPool.execute(new Runnable() {
             @Override
             public void run() {
-               thread(groupId, executeAwaitTask);
+                thread(groupId, executeAwaitTask);
             }
         });
     }

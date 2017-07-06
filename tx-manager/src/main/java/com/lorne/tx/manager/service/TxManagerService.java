@@ -6,7 +6,7 @@ import com.lorne.tx.mq.model.TxGroup;
  * Created by lorne on 2017/6/7.
  */
 
-public interface TxManagerService  {
+public interface TxManagerService {
 
 
     /**
@@ -17,10 +17,10 @@ public interface TxManagerService  {
 
     /**
      * 添加事务组子对象
+     *
      * @return
      */
-    TxGroup addTransactionGroup(String groupId, String taskId,String modelName);
-
+    TxGroup addTransactionGroup(String groupId, String taskId, String modelName);
 
 
     boolean closeTransactionGroup(String groupId);
@@ -28,6 +28,7 @@ public interface TxManagerService  {
 
     /**
      * 通知事务组事务执行状态
+     *
      * @param groupId
      * @param kid
      * @param state

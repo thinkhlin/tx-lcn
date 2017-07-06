@@ -10,14 +10,11 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.socket.SocketManager;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.util.ReferenceCountUtil;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
@@ -36,16 +33,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        String json;
-        try {
-            ByteBuf buf = (ByteBuf) msg;
-            byte[] bytes = new byte[buf.readableBytes()];
-            buf.readBytes(bytes);
-            json = new String(bytes);
-        } finally {
-            ReferenceCountUtil.release(msg); // (2)
-        }
-
+        String json = (String) msg;
         if (StringUtils.isNotEmpty(json)) {
             JSONObject jsonObject = JSONObject.fromObject(json);
             String action = jsonObject.getString("a");
@@ -118,7 +106,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
             JSONObject resObj = new JSONObject();
             resObj.put("k", key);
             resObj.put("d", res);
-            ctx.writeAndFlush(Unpooled.buffer().writeBytes(resObj.toString().getBytes()));
+            ctx.writeAndFlush(resObj.toString());
         }
 
     }

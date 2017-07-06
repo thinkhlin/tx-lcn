@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by lorne on 2017/6/7.
  */
-public class TxGroup{
+public class TxGroup {
 
     private String groupId;
 
@@ -53,8 +53,8 @@ public class TxGroup{
         this.list = list;
     }
 
-    public void addTransactionInfo(TxInfo info){
-        if(!hasOver){
+    public void addTransactionInfo(TxInfo info) {
+        if (!hasOver) {
             list.add(info);
         }
     }
@@ -69,16 +69,16 @@ public class TxGroup{
     }
 
 
-    public static TxGroup parser(String json){
+    public static TxGroup parser(String json) {
         try {
             JSONObject jsonObject = JSONObject.fromObject(json);
             TxGroup txGroup = new TxGroup();
             txGroup.setGroupId(jsonObject.getString("g"));
-            txGroup.setHasOver(jsonObject.getInt("ho")==1);
+            txGroup.setHasOver(jsonObject.getInt("ho") == 1);
             txGroup.setWaitTime(jsonObject.getInt("w"));
-            JSONArray array  =  jsonObject.getJSONArray("l");
+            JSONArray array = jsonObject.getJSONArray("l");
             int length = array.size();
-            for(int i=0;i<length;i++){
+            for (int i = 0; i < length; i++) {
                 JSONObject object = array.getJSONObject(i);
 
                 TxInfo info = new TxInfo();
@@ -89,7 +89,7 @@ public class TxGroup{
             }
             return txGroup;
 
-        }catch (Exception e){
+        } catch (Exception e) {
             return null;
         }
 
@@ -97,19 +97,19 @@ public class TxGroup{
 
     public String toJsonString() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("g",getGroupId());
-        jsonObject.put("ho",hasOver?1:0);
-        jsonObject.put("w",getWaitTime());
+        jsonObject.put("g", getGroupId());
+        jsonObject.put("ho", hasOver ? 1 : 0);
+        jsonObject.put("w", getWaitTime());
 
         JSONArray jsonArray = new JSONArray();
-        for(TxInfo info:getList()){
+        for (TxInfo info : getList()) {
             JSONObject item = new JSONObject();
-            item.put("s",info.getState());
-            item.put("k",info.getKid());
-            item.put("m",info.getModelName());
+            item.put("s", info.getState());
+            item.put("k", info.getKid());
+            item.put("m", info.getModelName());
             jsonArray.add(item);
         }
-        jsonObject.put("l",jsonArray);
+        jsonObject.put("l", jsonArray);
         return jsonObject.toString();
     }
 }

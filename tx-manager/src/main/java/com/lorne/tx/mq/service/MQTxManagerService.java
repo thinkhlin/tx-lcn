@@ -10,6 +10,7 @@ public interface MQTxManagerService {
 
     /**
      * 创建事务组
+     *
      * @return
      */
     TxGroup createTransactionGroup();
@@ -17,13 +18,15 @@ public interface MQTxManagerService {
 
     /**
      * 添加事务组子对象
+     *
      * @return
      */
-    TxGroup addTransactionGroup(String groupId, String taskId,String modelName);
+    TxGroup addTransactionGroup(String groupId, String taskId, String modelName);
 
 
     /**
      * 关闭事务组-进入事务提交第一阶段
+     *
      * @param groupId
      * @return
      */
@@ -32,13 +35,13 @@ public interface MQTxManagerService {
 
     /**
      * 通知事务组事务执行状态
+     *
      * @param groupId
      * @param kid
      * @param state
      * @return
      */
     boolean notifyTransactionInfo(String groupId, String kid, boolean state);
-
 
 
 }

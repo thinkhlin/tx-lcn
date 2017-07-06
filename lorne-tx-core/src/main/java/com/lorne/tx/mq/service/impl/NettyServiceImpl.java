@@ -13,8 +13,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,14 +65,17 @@ public class NettyServiceImpl implements NettyService {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
                     ch.pipeline().addLast("timeout", new IdleStateHandler(readerIdleTime, writerIdleTime, allIdleTime, TimeUnit.SECONDS));
-                    ch.pipeline().addLast(new LengthFieldPrepender(4, false));
-                    ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
+//                    ch.pipeline().addLast(new LengthFieldPrepender(4, false));
+//                    ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
+                    ch.pipeline().addLast(new StringEncoder());
+                    ch.pipeline().addLast(new StringDecoder());
+                    ch.pipeline().addLast(new LineBasedFrameDecoder(1024));
 
                     ch.pipeline().addLast(transactionHandler);
                 }
             });
             // Start the client.
-            logger.info("连接manager-socket服务-> host:"+host+",port:"+port);
+            logger.info("连接manager-socket服务-> host:" + host + ",port:" + port);
             b.connect(host, port); // (5)
 
         } catch (Exception e) {

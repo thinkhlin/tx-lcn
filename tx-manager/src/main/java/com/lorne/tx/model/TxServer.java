@@ -8,7 +8,7 @@ public class TxServer {
     private String ip;
     private int port;
 
-    public static  TxServer format(TxState state){
+    public static TxServer format(TxState state) {
         TxServer txServer = new TxServer();
         txServer.setIp(state.getIp());
         txServer.setPort(state.getPort());

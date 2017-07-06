@@ -49,11 +49,10 @@ public class TxServiceImpl implements TxService {
 
 
     @Value("${redis_save_max_time}")
-    private  int redis_save_max_time;
+    private int redis_save_max_time;
 
     @Value("${transaction_wait_max_time}")
-    private  int transaction_wait_max_time;
-
+    private int transaction_wait_max_time;
 
 
     private List<String> urls;
@@ -79,7 +78,7 @@ public class TxServiceImpl implements TxService {
 //    }
 
     public TxServiceImpl() {
-      //  loadSLBConfig();
+        //  loadSLBConfig();
     }
 
 
@@ -87,9 +86,9 @@ public class TxServiceImpl implements TxService {
     public TxServer getServer() {
         if (!slbOn) {
             TxState state = getState();
-            if(state.getMaxConnection()>state.getNowConnection()){
+            if (state.getMaxConnection() > state.getNowConnection()) {
                 return TxServer.format(state);
-            }else{
+            } else {
                 return null;
             }
         } else {
@@ -98,24 +97,24 @@ public class TxServiceImpl implements TxService {
 //            loadSLBConfig();
             List<TxState> states = new ArrayList<>();
             states.add(getState());
-            for(String url:urls){
-                TxState state =  restTemplate.getForObject(url+"/tx/manager/state",TxState.class);
+            for (String url : urls) {
+                TxState state = restTemplate.getForObject(url + "/tx/manager/state", TxState.class);
                 states.add(state);
             }
             //获取其他参与集群的服务器获取连接对象
-            if(type.equals(STRATEGY_POLLING)){
+            if (type.equals(STRATEGY_POLLING)) {
                 //找默认数据
-                TxState state = getDefault(states,0);
+                TxState state = getDefault(states, 0);
 
-                if(state==null){
+                if (state == null) {
                     //没有满足的默认数据
                     return null;
                 }
 
                 int minNowConnection = state.getNowConnection();
-                for(TxState s:states){
-                    if(s.getMaxConnection()>s.getNowConnection()){
-                        if(s.getNowConnection()<minNowConnection){
+                for (TxState s : states) {
+                    if (s.getMaxConnection() > s.getNowConnection()) {
+                        if (s.getNowConnection() < minNowConnection) {
                             state = s;
                         }
                     }
@@ -126,16 +125,16 @@ public class TxServiceImpl implements TxService {
         }
     }
 
-    private TxState getDefault(List<TxState> states,int index){
+    private TxState getDefault(List<TxState> states, int index) {
         TxState state = states.get(index);
-        if(state.getMaxConnection()==state.getNowConnection()){
+        if (state.getMaxConnection() == state.getNowConnection()) {
             index++;
-            if(states.size()-1>=index){
-                return getDefault(states,index);
-            }else {
+            if (states.size() - 1 >= index) {
+                return getDefault(states, index);
+            } else {
                 return null;
             }
-        }else {
+        } else {
             return state;
         }
     }

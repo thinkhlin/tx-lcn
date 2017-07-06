@@ -7,13 +7,13 @@ import com.lorne.tx.mq.service.NettyServerService;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -37,8 +37,8 @@ public class NettyServerServiceImpl implements NettyServerService {
 
     private Logger logger = LoggerFactory.getLogger(NettyServerServiceImpl.class);
 
-    private EventLoopGroup bossGroup ;
-    private EventLoopGroup workerGroup ;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
     private TxCoreServerHandler txCoreServerHandler;
 
@@ -48,7 +48,6 @@ public class NettyServerServiceImpl implements NettyServerService {
     private int writerIdleTime = 20;
 
     private int allIdleTime = 20;
-
 
 
     @Override
@@ -65,21 +64,26 @@ public class NettyServerServiceImpl implements NettyServerService {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ChannelPipeline p = ch.pipeline();
-                            ch.pipeline().addLast(new LengthFieldPrepender(4, false));
-                            ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
-                            p.addLast("timeout", new IdleStateHandler(readerIdleTime, writerIdleTime, allIdleTime,
-                                    TimeUnit.SECONDS));
+                            ch.pipeline().addLast("timeout", new IdleStateHandler(readerIdleTime, writerIdleTime, allIdleTime, TimeUnit.SECONDS));
+
+//                            ch.pipeline().addLast(new LengthFieldPrepender(4, false));
+//                            ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
+
+                            ch.pipeline().addLast(new StringEncoder());
+                            ch.pipeline().addLast(new StringDecoder());
+                            ch.pipeline().addLast(new LineBasedFrameDecoder(1024));
+
                             //p.addLast(new LoggingHandler(LogLevel.INFO));
-                            p.addLast(txCoreServerHandler);
+                            ch.pipeline().addLast(txCoreServerHandler);
+
                         }
                     });
 
             // Start the server.
             b.bind(Constants.local.getPort());
-            logger.info("Socket started on port(s): "+Constants.local.getPort()+" (socket)");
+            logger.info("Socket started on port(s): " + Constants.local.getPort() + " (socket)");
 
-        } catch (Exception e){
+        } catch (Exception e) {
             // Shut down all event loops to terminate all threads.
             e.printStackTrace();
         }
@@ -87,10 +91,10 @@ public class NettyServerServiceImpl implements NettyServerService {
 
     @Override
     public void close() {
-        if(workerGroup!=null){
+        if (workerGroup != null) {
             workerGroup.shutdownGracefully();
         }
-        if(bossGroup!=null){
+        if (bossGroup != null) {
             bossGroup.shutdownGracefully();
         }
 

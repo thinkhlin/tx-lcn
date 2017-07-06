@@ -37,11 +37,11 @@ public class NettyDistributeServiceImpl implements NettyDistributeService {
         String url = ConfigUtils.getString("tx.properties", "url");
         //获取服务器ip
         String json = HttpUtils.get(url);
-        logger.info("获取manager服务信息->"+json);
-        if(StringUtils.isEmpty(json)){
+        logger.info("获取manager服务信息->" + json);
+        if (StringUtils.isEmpty(json)) {
             logger.info("TxManager服务器无法访问.");
             try {
-                Thread.sleep(1000*2);
+                Thread.sleep(1000 * 2);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -49,8 +49,8 @@ public class NettyDistributeServiceImpl implements NettyDistributeService {
         }
 
         TxServer txServer = TxServer.parser(json);
-        if(txServer!=null){
-            logger.info("txServer is " +(txServer==null?"null":"not null"));
+        if (txServer != null) {
+            logger.info("txServer is " + (txServer == null ? "null" : "not null"));
             logger.info(txServer.toString());
             Constants.txServer = txServer;
             logger.info(Constants.txServer.toString());

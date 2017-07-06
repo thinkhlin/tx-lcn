@@ -18,12 +18,12 @@ public class TxManagerController {
     private TxService txService;
 
     @RequestMapping("/getServer")
-    public TxServer getServer(){
+    public TxServer getServer() {
         return txService.getServer();
     }
 
     @RequestMapping("/state")
-    public TxState state(){
+    public TxState state() {
         return txService.getState();
     }
 }

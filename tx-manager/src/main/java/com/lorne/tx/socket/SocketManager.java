@@ -30,25 +30,25 @@ public class SocketManager {
 
     private static SocketManager manager = null;
 
-    public  synchronized static SocketManager getInstance() {
+    public synchronized static SocketManager getInstance() {
         if (manager == null)
             manager = new SocketManager();
         return manager;
     }
 
 
-    public Channel getChannelByModelName(String name){
-        for(Channel channel:clients){
-            String modelName =channel.remoteAddress().toString();
+    public Channel getChannelByModelName(String name) {
+        for (Channel channel : clients) {
+            String modelName = channel.remoteAddress().toString();
 
-            if(modelName.equals(name)){
+            if (modelName.equals(name)) {
                 return channel;
             }
         }
         return null;
     }
 
-    private  SocketManager() {
+    private SocketManager() {
         clients = new CopyOnWriteArrayList<Channel>();
     }
 
@@ -56,14 +56,14 @@ public class SocketManager {
         clients.add(client);
         nowConnection = clients.size();
 
-        allowConnection = (maxConnection!=nowConnection);
+        allowConnection = (maxConnection != nowConnection);
     }
 
     public void removeClient(Channel client) {
         clients.remove(client);
         nowConnection = clients.size();
 
-        allowConnection = (maxConnection!=nowConnection);
+        allowConnection = (maxConnection != nowConnection);
     }
 
 

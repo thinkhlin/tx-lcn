@@ -66,7 +66,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                     });
                     task.signalTask();
                     nettyService.restart();
-                    return ;
+                    return;
                 }
 
                 final String groupId = txGroup.getGroupId();
@@ -74,7 +74,6 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                 TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
                 txTransactionLocal.setGroupId(groupId);
                 TxTransactionLocal.setCurrent(txTransactionLocal);
-
 
 
                 boolean signTask = false;

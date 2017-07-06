@@ -30,7 +30,7 @@ public class TxServer {
 
     @Override
     public String toString() {
-        return "host:"+host+",port:"+port;
+        return "host:" + host + ",port:" + port;
     }
 
     public static TxServer parser(String json) {

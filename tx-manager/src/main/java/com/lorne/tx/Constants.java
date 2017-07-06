@@ -16,7 +16,7 @@ public class Constants {
     /**
      * 本地服务信息
      */
-    public static TxServer local =  null;
+    public static TxServer local = null;
 
     public static int maxConnection;
 

@@ -7,16 +7,15 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 
 @EnableEurekaServer
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class,HibernateJpaAutoConfiguration.class})
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
 public class TxManagerApplication {
 
-	/**
-	 * run 方式运行时请注释掉 pom文件标记的run 方式时需要注释 war 的包
-	 *
-	 */
+    /**
+     * run方式 jar打包时 请注释掉 pom文件标记的run 方式时需要注释 war 的包
+     */
 
-	public static void main(String[] args) {
-		SpringApplication.run(TxManagerApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(TxManagerApplication.class, args);
+    }
 
 }
