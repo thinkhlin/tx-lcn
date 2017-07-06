@@ -1,4 +1,4 @@
-package com.lorne.tx.handler;
+package com.lorne.tx.mq.handler;
 
 /**
  * Created by lorne on 2017/6/29.
@@ -10,6 +10,7 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.socket.SocketManager;
+import com.lorne.tx.socket.utils.SocketUtils;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -33,7 +34,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        String json = (String) msg;
+        String json = SocketUtils.getJson(msg);
         if (StringUtils.isNotEmpty(json)) {
             JSONObject jsonObject = JSONObject.fromObject(json);
             String action = jsonObject.getString("a");
@@ -106,7 +107,8 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
             JSONObject resObj = new JSONObject();
             resObj.put("k", key);
             resObj.put("d", res);
-            ctx.writeAndFlush(resObj.toString());
+
+            SocketUtils.sendMsg(ctx,resObj.toString());
         }
 
     }

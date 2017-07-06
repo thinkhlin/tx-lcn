@@ -6,6 +6,7 @@ import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyService;
+import com.lorne.tx.utils.SocketUtils;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -54,7 +55,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, final Object msg) throws Exception {
         net_state = true;
-        String json = (String) msg;
+        String json = SocketUtils.getJson(msg);
         logger.info("接受->" + json);
         if (StringUtils.isNotEmpty(json)) {
             JSONObject resObj = JSONObject.fromObject(json);
@@ -102,7 +103,8 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         JSONObject params = new JSONObject();
                         params.put("d", res);
                         data.put("p", params);
-                        ctx.writeAndFlush(data.toString());
+
+                        SocketUtils.sendMsg(ctx,data.toString());
                         break;
                     }
                 }
@@ -161,7 +163,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                 //ctx.close();
             } else if (event.state() == IdleState.WRITER_IDLE) {
                 //表示已经多久没有发送数据了
-                ctx.writeAndFlush(heartJson);
+                SocketUtils.sendMsg(ctx,heartJson);
                 logger.info("心跳数据---" + heartJson);
             } else if (event.state() == IdleState.ALL_IDLE) {
                 //表示已经多久既没有收到也没有发送数据了
@@ -174,7 +176,8 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         final String key = request.getKey();
         if (ctx != null && ctx.channel() != null && ctx.channel().isActive()) {
             Task task = ConditionUtils.getInstance().createTask(key);
-            ctx.writeAndFlush(request.toMsg());
+
+            SocketUtils.sendMsg(ctx,request.toMsg());
 
             Constant.scheduledExecutorService.schedule(new Runnable() {
                 @Override

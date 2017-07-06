@@ -13,6 +13,8 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
@@ -64,12 +66,18 @@ public class NettyServiceImpl implements NettyService {
             b.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
+
+
+
                     ch.pipeline().addLast("timeout", new IdleStateHandler(readerIdleTime, writerIdleTime, allIdleTime, TimeUnit.SECONDS));
+
+                  //  ch.pipeline().addLast(new LineBasedFrameDecoder(1024));
+
 //                    ch.pipeline().addLast(new LengthFieldPrepender(4, false));
 //                    ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
-                    ch.pipeline().addLast(new StringEncoder());
-                    ch.pipeline().addLast(new StringDecoder());
-                    ch.pipeline().addLast(new LineBasedFrameDecoder(1024));
+//                    ch.pipeline().addLast(new StringEncoder());
+//                    ch.pipeline().addLast(new StringDecoder());
+                   // ch.pipeline().addLast(new LineBasedFrameDecoder(1024));
 
                     ch.pipeline().addLast(transactionHandler);
                 }

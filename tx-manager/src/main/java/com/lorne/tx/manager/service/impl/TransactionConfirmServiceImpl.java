@@ -13,7 +13,7 @@ import com.lorne.tx.manager.service.TransactionConfirmService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
 import com.lorne.tx.socket.SocketManager;
-import io.netty.buffer.Unpooled;
+import com.lorne.tx.socket.utils.SocketUtils;
 import io.netty.channel.Channel;
 import net.sf.json.JSONObject;
 import org.slf4j.Logger;
@@ -110,7 +110,8 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                     jsonObject.put("a", "t");
                     jsonObject.put("c", checkSate);
                     jsonObject.put("t", txInfo.getKid());
-                    txInfo.getChannel().writeAndFlush(jsonObject.toString());
+
+                    SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
                 }
             });
         }
@@ -129,7 +130,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                     String key = KidUtils.generateShortUuid();
                     jsonObject.put("k", key);
                     Task task = ConditionUtils.getInstance().createTask(key);
-                    txInfo.getChannel().writeAndFlush(jsonObject.toString());
+                    SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
                     Constant.scheduledExecutorService.schedule(new Runnable() {
                         @Override
                         public void run() {
