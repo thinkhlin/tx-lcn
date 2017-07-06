@@ -129,7 +129,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                     jsonObject.put("t", txInfo.getKid());
                     String key = KidUtils.generateShortUuid();
                     jsonObject.put("k", key);
-                    Task task = ConditionUtils.getInstance().createTask(key);
+                    final Task task = ConditionUtils.getInstance().createTask(key);
                     SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
                     Constant.scheduledExecutorService.schedule(new Runnable() {
                         @Override
