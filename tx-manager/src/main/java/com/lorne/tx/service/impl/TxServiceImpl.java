@@ -1,6 +1,8 @@
 package com.lorne.tx.service.impl;
 
+
 import com.lorne.tx.Constants;
+import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.model.TxServer;
 import com.lorne.tx.model.TxState;
 import com.lorne.tx.service.TxService;
@@ -57,6 +59,8 @@ public class TxServiceImpl implements TxService {
 
     private List<String> urls;
 
+    @Autowired
+    private TxManagerService managerService;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -139,6 +143,7 @@ public class TxServiceImpl implements TxService {
         }
     }
 
+
     @Override
     public TxState getState() {
         urls = Arrays.asList(list.split("#"));
@@ -153,5 +158,10 @@ public class TxServiceImpl implements TxService {
         state.setSlbType(type);
         state.setSlbOn(slbOn);
         return state;
+    }
+
+    @Override
+    public boolean getServerGroup(String groupId) {
+        return managerService.checkTransactionGroup(groupId);
     }
 }

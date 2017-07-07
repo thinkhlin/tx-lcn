@@ -23,6 +23,9 @@ public interface TxManagerService {
     TxGroup addTransactionGroup(String groupId, String taskId, String modelName);
 
 
+    boolean checkTransactionGroup(String groupId);
+
+
     boolean closeTransactionGroup(String groupId);
 
 
@@ -35,4 +38,12 @@ public interface TxManagerService {
      * @return
      */
     boolean notifyTransactionInfo(String groupId, String kid, boolean state);
+
+
+    void dealTxGroup(TxGroup txGroup, boolean hasOk );
+
+
+    boolean getHasOvertime(TxGroup txGroup);
+
+
 }

@@ -1,7 +1,9 @@
 package com.lorne.tx.mq.service;
 
+import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
+import net.sf.json.JSONObject;
 
 /**
  * Created by lorne on 2017/6/7.
@@ -43,4 +45,9 @@ public interface MQTxManagerService {
      * @return
      */
     boolean notifyTransactionInfo(String groupId, String kid, boolean state);
+
+
+    int checkTransactionInfo(String groupId);
+
+
 }

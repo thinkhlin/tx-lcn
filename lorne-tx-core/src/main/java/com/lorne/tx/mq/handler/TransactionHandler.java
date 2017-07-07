@@ -68,32 +68,24 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         //通知提醒
                         final int state = resObj.getInt("c");
                         String taskId = resObj.getString("t");
-                        Task task = ConditionUtils.getInstance().getTask(taskId);
-                        if (task != null) {
-                            task.setBack(new IBack() {
-                                @Override
-                                public Object doing(Object... objects) throws Throwable {
-                                    return state;
-                                }
-                            });
-                            task.signalTask();
-                        }
-                        break;
-                    }
-                    case "l": {
-                        String taskId = resObj.getString("t");
                         String key = resObj.getString("k");
                         Task task = ConditionUtils.getInstance().getTask(taskId);
                         String res = "";
                         if (task != null) {
-                            if (!task.isNotify()) {
-                                task.setState(1);
-                                res = "1";//尚未回滚
-                            } else {
-                                res = "0";//已经回滚
+                            if(!task.isNotify()){
+                                task.setBack(new IBack() {
+                                    @Override
+                                    public Object doing(Object... objects) throws Throwable {
+                                        return state;
+                                    }
+                                });
+                                task.signalTask();
+                                res = "1";
+                            }else{
+                                res = "0";
                             }
-                        } else {
-                            res = "0";//已经回滚
+                        }else {
+                            res = "-1";
                         }
 
                         JSONObject data = new JSONObject();
@@ -107,6 +99,33 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         SocketUtils.sendMsg(ctx,data.toString());
                         break;
                     }
+//                    case "l": {
+//                        String taskId = resObj.getString("t");
+//                        String key = resObj.getString("k");
+//                        Task task = ConditionUtils.getInstance().getTask(taskId);
+//                        String res = "";
+//                        if (task != null) {
+//                            if (!task.isNotify()) {
+//                                task.setState(1);
+//                                res = "1";//尚未回滚
+//                            } else {
+//                                res = "0";//已经回滚
+//                            }
+//                        } else {
+//                            res = "0";//已经回滚
+//                        }
+//
+//                        JSONObject data = new JSONObject();
+//                        data.put("k", key);
+//                        data.put("a", action);
+//
+//                        JSONObject params = new JSONObject();
+//                        params.put("d", res);
+//                        data.put("p", params);
+//
+//                        SocketUtils.sendMsg(ctx,data.toString());
+//                        break;
+//                    }
                 }
 
             } else {

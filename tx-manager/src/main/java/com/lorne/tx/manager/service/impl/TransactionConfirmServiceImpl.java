@@ -10,14 +10,20 @@ import com.lorne.core.framework.utils.thread.CountDownLatchHelper;
 import com.lorne.core.framework.utils.thread.IExecute;
 import com.lorne.tx.Constants;
 import com.lorne.tx.manager.service.TransactionConfirmService;
+import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
 import com.lorne.tx.socket.SocketManager;
 import com.lorne.tx.socket.utils.SocketUtils;
 import io.netty.channel.Channel;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,6 +40,9 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     private Logger logger = LoggerFactory.getLogger(TransactionConfirmServiceImpl.class);
 
 
+    @Autowired
+    private TxManagerService txManagerService;
+
     @Override
     public void confirm(TxGroup txGroup) {
         logger.info("end:" + txGroup.toJsonString());
@@ -47,6 +56,8 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
             }
         }
 
+
+
         //绑定管道对象，检查网络
         boolean isOk = reloadChannel(txGroup.getList());
 
@@ -56,19 +67,25 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
             transaction(txGroup.getList(), 0);
             return;
         }
+        txGroup.setState(1);
+
+
+        boolean hasOvertime = txManagerService.getHasOvertime(txGroup);
 
         if (isOk) {
-            //锁定事务单元
-            boolean isLock = lock(txGroup.getList());
-
-            if (isLock) {
-                //通知事务
-                transaction(txGroup.getList(), 1);
-            } else {
+            if(hasOvertime){
                 transaction(txGroup.getList(), -1);
+            }else{
+                //提交事务
+               boolean hasOk =  transaction(txGroup.getList(), 1);
+                txManagerService.dealTxGroup(txGroup,hasOk);
             }
         } else {
-            transaction(txGroup.getList(), 0);
+            if(hasOvertime){
+                transaction(txGroup.getList(), -1);
+            }else{
+                transaction(txGroup.getList(), 0);
+            }
         }
 
 
@@ -101,31 +118,15 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
      * @param list
      * @param checkSate
      */
-    private void transaction(List<TxInfo> list, final int checkSate) {
+    private boolean transaction(List<TxInfo> list, final int checkSate) {
+        CountDownLatchHelper<Boolean> countDownLatchHelper = new CountDownLatchHelper<>();
         for (final TxInfo txInfo : list) {
-            Constants.threadPool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("a", "t");
-                    jsonObject.put("c", checkSate);
-                    jsonObject.put("t", txInfo.getKid());
-
-                    SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
-                }
-            });
-        }
-    }
-
-
-    private boolean lock(List<TxInfo> list) {
-        for (final TxInfo txInfo : list) {
-            CountDownLatchHelper<Boolean> countDownLatchHelper = new CountDownLatchHelper<>();
             countDownLatchHelper.addExecute(new IExecute<Boolean>() {
                 @Override
                 public Boolean execute() {
                     JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("a", "l");
+                    jsonObject.put("a", "t");
+                    jsonObject.put("c", checkSate);
                     jsonObject.put("t", txInfo.getKid());
                     String key = KidUtils.generateShortUuid();
                     jsonObject.put("k", key);
@@ -137,7 +138,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                             task.setBack(new IBack() {
                                 @Override
                                 public Object doing(Object... objs) throws Throwable {
-                                    return "0";
+                                    return "-2";
                                 }
                             });
                             task.signalTask();
@@ -146,26 +147,77 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                     task.awaitTask();
                     try {
                         String data = (String) task.getBack().doing();
-                        return "1".equals(data);
+                        // 1  成功 0 失败 -1 task为空 -2 超过
+                        boolean res =  "1".equals(data);
+                        return res;
                     } catch (Throwable throwable) {
                         throwable.printStackTrace();
+                        return false;
                     } finally {
                         task.remove();
                     }
-                    return false;
                 }
             });
-            List<Boolean> isLocks = countDownLatchHelper.execute().getData();
-            for (boolean bl : isLocks) {
-                if (bl == false) {
-                    return false;
-                }
-            }
-
         }
 
+        List<Boolean> hasOks = countDownLatchHelper.execute().getData();
+        for (boolean bl : hasOks) {
+            if (bl == false) {
+                return false;
+            }
+        }
         return true;
     }
+
+
+//    private boolean lock(List<TxInfo> list) {
+//        for (final TxInfo txInfo : list) {
+//            CountDownLatchHelper<Boolean> countDownLatchHelper = new CountDownLatchHelper<>();
+//            countDownLatchHelper.addExecute(new IExecute<Boolean>() {
+//                @Override
+//                public Boolean execute() {
+//                    JSONObject jsonObject = new JSONObject();
+//                    jsonObject.put("a", "l");
+//                    jsonObject.put("t", txInfo.getKid());
+//                    String key = KidUtils.generateShortUuid();
+//                    jsonObject.put("k", key);
+//                    final Task task = ConditionUtils.getInstance().createTask(key);
+//                    SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
+//                    Constant.scheduledExecutorService.schedule(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            task.setBack(new IBack() {
+//                                @Override
+//                                public Object doing(Object... objs) throws Throwable {
+//                                    return "0";
+//                                }
+//                            });
+//                            task.signalTask();
+//                        }
+//                    }, 1, TimeUnit.SECONDS);
+//                    task.awaitTask();
+//                    try {
+//                        String data = (String) task.getBack().doing();
+//                        return "1".equals(data);
+//                    } catch (Throwable throwable) {
+//                        throwable.printStackTrace();
+//                    } finally {
+//                        task.remove();
+//                    }
+//                    return false;
+//                }
+//            });
+//            List<Boolean> isLocks = countDownLatchHelper.execute().getData();
+//            for (boolean bl : isLocks) {
+//                if (bl == false) {
+//                    return false;
+//                }
+//            }
+//
+//        }
+//
+//        return true;
+//    }
 
 
 }

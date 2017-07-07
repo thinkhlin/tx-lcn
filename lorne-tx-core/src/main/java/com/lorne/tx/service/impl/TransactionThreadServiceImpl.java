@@ -3,6 +3,8 @@ package com.lorne.tx.service.impl;
 import com.lorne.core.framework.Constant;
 import com.lorne.core.framework.exception.ServiceException;
 import com.lorne.core.framework.utils.KidUtils;
+import com.lorne.core.framework.utils.config.ConfigUtils;
+import com.lorne.core.framework.utils.http.HttpUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
@@ -25,6 +27,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import javax.security.auth.login.Configuration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -44,6 +47,12 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
 
     private Logger logger = LoggerFactory.getLogger(TransactionThreadServiceImpl.class);
+
+    private String url;
+
+    public TransactionThreadServiceImpl() {
+       url =  ConfigUtils.getString("tx.properties","url");
+    }
 
     @Override
     public ServiceThreadModel serviceInThread(boolean signTask, String _groupId, Task task, ProceedingJoinPoint point) {
@@ -111,8 +120,16 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     }
 
 
-    private void waitSignTask(Task task, ExecuteAwaitTask executeAwaitTask,final ExecuteAwaitTask closeGroupTask) {
+    private void waitSignTask(Task task,boolean isNotifyOk, ExecuteAwaitTask executeAwaitTask,final ExecuteAwaitTask closeGroupTask) {
         if (executeAwaitTask.getState() == 1) {
+            if (isNotifyOk == false ) {
+                task.setBack(new IBack() {
+                    @Override
+                    public Object doing(Object... objects) throws Throwable {
+                        throw new ServiceException("修改事务组状态异常.");
+                    }
+                });
+            }
              task.signalTask(new IBack() {
                  @Override
                  public Object doing(Object... objs) throws Throwable {
@@ -126,7 +143,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            waitSignTask(task, executeAwaitTask,closeGroupTask);
+            waitSignTask(task,isNotifyOk, executeAwaitTask,closeGroupTask);
         }
     }
 
@@ -140,15 +157,34 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             @Override
             public void run() {
                 Task task = ConditionUtils.getInstance().getTask(taskId);
+                String groupId = model.getTxGroup().getGroupId();
                 if (task.getState() == 0) {
-                    task.setBack(new IBack() {
-                        @Override
-                        public Object doing(Object... objects) throws Throwable {
-                            return -2;
+
+                    int hasOk =  txManagerService.checkTransactionInfo(groupId);
+                    if(hasOk == 1){
+                        task.setState(1);
+                        task.signalTask();
+                    }else{
+                        if(hasOk==-1){
+                            // 发起http请求查询状态
+                            String json = HttpUtils.get(url+"Group?groupId="+groupId);
+                            if(json.contains("true")){
+
+                                task.setState(1);
+                                task.signalTask();
+
+                                return;
+                            }
                         }
-                    });
-                    logger.info("自定回滚执行");
-                    task.signalTask();
+                        task.setBack(new IBack() {
+                            @Override
+                            public Object doing(Object... objects) throws Throwable {
+                                return -2;
+                            }
+                        });
+                        logger.info("自定回滚执行");
+                        task.signalTask();
+                    }
                 }
             }
         }, model.getTxGroup().getWaitTime(), TimeUnit.SECONDS);
@@ -158,22 +194,12 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
         final ExecuteAwaitTask closeGroupTask = new ExecuteAwaitTask();
 
-        if (model.isNotifyOk() == false || signTask) {
-            if (model.isNotifyOk() == false) {
-                task.setBack(new IBack() {
-                    @Override
-                    public Object doing(Object... objects) throws Throwable {
-                        throw new ServiceException("修改事务组状态异常.");
-                    }
-                });
+        Constants.threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                waitSignTask(task,model.isNotifyOk(),mainTaskAwait,closeGroupTask); //执行顺序 2
             }
-            Constants.threadPool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    waitSignTask(task,mainTaskAwait,closeGroupTask); //执行顺序 2
-                }
-            });
-        }
+        });
 
 
         if (!signTask) {
@@ -212,6 +238,8 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                     });
                 }
             }
+
+            //主程序的业务数据返回
             if (!signTask) {
                 task.signalTask();
             }

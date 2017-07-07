@@ -18,6 +18,12 @@ public class TxGroup {
 
     private int waitTime;
 
+    private long startTime;
+
+    private long endTime;
+
+    private int state;
+
 
     public boolean isHasOver() {
         return hasOver;
@@ -53,6 +59,30 @@ public class TxGroup {
         this.list = list;
     }
 
+    public long getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+
+    public long getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(long endTime) {
+        this.endTime = endTime;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setState(int state) {
+        this.state = state;
+    }
+
     public void addTransactionInfo(TxInfo info) {
         if (!hasOver) {
             list.add(info);
@@ -76,6 +106,9 @@ public class TxGroup {
             txGroup.setGroupId(jsonObject.getString("g"));
             txGroup.setHasOver(jsonObject.getInt("ho") == 1);
             txGroup.setWaitTime(jsonObject.getInt("w"));
+            txGroup.setStartTime(jsonObject.getLong("st"));
+            txGroup.setEndTime(jsonObject.getInt("et"));
+            txGroup.setState(jsonObject.getInt("s"));
             JSONArray array = jsonObject.getJSONArray("l");
             int length = array.size();
             for (int i = 0; i < length; i++) {
@@ -100,7 +133,9 @@ public class TxGroup {
         jsonObject.put("g", getGroupId());
         jsonObject.put("ho", hasOver ? 1 : 0);
         jsonObject.put("w", getWaitTime());
-
+        jsonObject.put("st", getStartTime());
+        jsonObject.put("et", getEndTime());
+        jsonObject.put("s", getState());
         JSONArray jsonArray = new JSONArray();
         for (TxInfo info : getList()) {
             JSONObject item = new JSONObject();

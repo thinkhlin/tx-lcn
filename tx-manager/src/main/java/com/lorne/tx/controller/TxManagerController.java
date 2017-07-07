@@ -5,6 +5,7 @@ import com.lorne.tx.model.TxState;
 import com.lorne.tx.service.TxService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -20,6 +21,13 @@ public class TxManagerController {
     @RequestMapping("/getServer")
     public TxServer getServer() {
         return txService.getServer();
+    }
+
+
+    @RequestMapping("/getServerGroup")
+    @ResponseBody
+    public boolean getServerGroup(String groupId) {
+        return txService.getServerGroup(groupId);
     }
 
     @RequestMapping("/state")

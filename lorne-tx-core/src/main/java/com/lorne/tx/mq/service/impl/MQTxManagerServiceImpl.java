@@ -80,4 +80,15 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
         String json = nettyService.sendMsg(request);
         return "1".equals(json);
     }
+
+
+    @Override
+    public int checkTransactionInfo(String groupId) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("g", groupId);
+        Request request = new Request("ckg", jsonObject.toString());
+        String json =  nettyService.sendMsg(request);
+        int res =  "1".equals(json)?1:(json==null)?-1:0;
+        return res;
+    }
 }

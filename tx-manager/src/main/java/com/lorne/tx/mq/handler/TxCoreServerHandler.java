@@ -81,14 +81,24 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                     break;
                 }
 
+                //检查事务组
+                case "ckg": {
+                    String groupId = params.getString("g");
+                    boolean bs = txManagerService.checkTransactionGroup(groupId);
+
+                    res = bs ? "1" : "0";
+                    break;
+                }
+
+
                 //心跳包
                 case "h": {
                     res = "1";
                     break;
                 }
 
-                //锁定事务单元
-                case "l": {
+                //通知事务单元
+                case "t": {
                     final String data = params.getString("d");
                     Task task = ConditionUtils.getInstance().getTask(key);
                     if (task != null) {

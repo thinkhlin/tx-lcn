@@ -43,6 +43,7 @@ public class TxManagerServiceImpl implements TxManagerService {
     public TxGroup createTransactionGroup() {
         String groupId = KidUtils.generateShortUuid();
         TxGroup txGroup = new TxGroup();
+        txGroup.setStartTime(System.currentTimeMillis());
         txGroup.setGroupId(groupId);
         txGroup.setWaitTime(transaction_wait_max_time);
         String key = key_prefix + groupId;
@@ -72,6 +73,18 @@ public class TxManagerServiceImpl implements TxManagerService {
     }
 
     @Override
+    public boolean checkTransactionGroup(String groupId) {
+        ValueOperations<String, String> value = redisTemplate.opsForValue();
+        String key = key_prefix + groupId;
+        String json = value.get(key);
+        if (StringUtils.isEmpty(json)) {
+            return false;
+        }
+        TxGroup txGroup = TxGroup.parser(json);
+        return txGroup.getState()==1;
+    }
+
+    @Override
     public boolean closeTransactionGroup(String groupId) {
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix + groupId;
@@ -81,7 +94,7 @@ public class TxManagerServiceImpl implements TxManagerService {
         }
         final TxGroup txGroup = TxGroup.parser(json);
         txGroup.hasOvered();
-        redisTemplate.delete(key);
+        txGroup.setEndTime(System.currentTimeMillis());
         Constants.threadPool.execute(new Runnable() {
             @Override
             public void run() {
@@ -109,5 +122,25 @@ public class TxManagerServiceImpl implements TxManagerService {
         }
         value.set(key, txGroup.toJsonString(), redis_save_max_time);
         return true;
+    }
+
+
+    @Override
+    public void dealTxGroup(TxGroup txGroup, boolean hasOk) {
+        String key = key_prefix + txGroup.getGroupId();
+        if(hasOk) {
+            redisTemplate.delete(key);
+        }else{
+            ValueOperations<String, String> value = redisTemplate.opsForValue();
+            value.set(key, txGroup.toJsonString(), redis_save_max_time);
+        }
+    }
+
+
+    @Override
+    public boolean getHasOvertime(TxGroup txGroup) {
+        long dt = 500;//网络消耗
+        double time = (txGroup.getEndTime()-txGroup.getStartTime()-dt)/1000;
+        return time>transaction_wait_max_time;
     }
 }
