@@ -15,10 +15,7 @@ public class TxState {
      * socket port
      */
     private int port;
-    /**
-     * slb on
-     */
-    private boolean slbOn;
+
     /**
      * max connection
      */
@@ -40,11 +37,6 @@ public class TxState {
     private int redisSaveMaxTime;
 
     /**
-     * slb type
-     */
-    private String slbType;
-
-    /**
      * slb list
      */
     private List<String> slbList;
@@ -64,14 +56,6 @@ public class TxState {
 
     public void setPort(int port) {
         this.port = port;
-    }
-
-    public boolean isSlbOn() {
-        return slbOn;
-    }
-
-    public void setSlbOn(boolean slbOn) {
-        this.slbOn = slbOn;
     }
 
     public int getMaxConnection() {
@@ -104,14 +88,6 @@ public class TxState {
 
     public void setRedisSaveMaxTime(int redisSaveMaxTime) {
         this.redisSaveMaxTime = redisSaveMaxTime;
-    }
-
-    public String getSlbType() {
-        return slbType;
-    }
-
-    public void setSlbType(String slbType) {
-        this.slbType = slbType;
     }
 
     public List<String> getSlbList() {

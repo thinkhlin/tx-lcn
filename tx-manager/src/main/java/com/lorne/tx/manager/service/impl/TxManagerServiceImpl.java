@@ -15,6 +15,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by lorne on 2017/6/7.
@@ -48,7 +49,7 @@ public class TxManagerServiceImpl implements TxManagerService {
         txGroup.setWaitTime(transaction_wait_max_time);
         String key = key_prefix + groupId;
         ValueOperations<String, String> value = redisTemplate.opsForValue();
-        value.set(key, txGroup.toJsonString(), redis_save_max_time);
+        value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
         return txGroup;
     }
 
@@ -66,7 +67,7 @@ public class TxManagerServiceImpl implements TxManagerService {
         txInfo.setKid(taskId);
         if (txGroup != null) {
             txGroup.addTransactionInfo(txInfo);
-            value.set(key, txGroup.toJsonString(), redis_save_max_time);
+            value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
             return txGroup;
         }
         return null;
@@ -120,7 +121,7 @@ public class TxManagerServiceImpl implements TxManagerService {
                 info.setState(state ? 1 : 0);
             }
         }
-        value.set(key, txGroup.toJsonString(), redis_save_max_time);
+        value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
         return true;
     }
 
@@ -132,7 +133,7 @@ public class TxManagerServiceImpl implements TxManagerService {
             redisTemplate.delete(key);
         }else{
             ValueOperations<String, String> value = redisTemplate.opsForValue();
-            value.set(key, txGroup.toJsonString(), redis_save_max_time);
+            value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
         }
     }
 

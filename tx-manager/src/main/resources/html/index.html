@@ -17,7 +17,7 @@
 <body>
 <div class="container">
 
-    <h3 class="text-center">TxManagerV2.0 服务已启动</h3>
+    <h3 class="text-center">TxManagerV2.1 服务已启动</h3>
     <div class="table-responsive">
         <table class="table table-bordered table-striped">
             <colgroup>
@@ -66,18 +66,6 @@
                     redis存储最大时间(秒)
                 </th>
                 <td><span th:text="${info.redisSaveMaxTime}"></span></td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    负载均衡（true开启，false未开启）
-                </th>
-                <td><span th:text="${info.slbOn}"></span></td>
-            </tr>
-            <tr>
-                <th scope="row">
-                    负载均衡类型（polling:轮训策略）
-                </th>
-                <td><span th:text="${info.slbType}"></span></td>
             </tr>
             <tr>
                 <th scope="row">

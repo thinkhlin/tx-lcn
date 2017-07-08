@@ -9,12 +9,13 @@ import com.lorne.tx.service.TxService;
 import com.lorne.tx.socket.SocketManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -23,41 +24,13 @@ import java.util.List;
 @Service
 public class TxServiceImpl implements TxService {
 
-    /**
-     * 轮询策略
-     */
-    private final static String STRATEGY_POLLING = "polling";
-
-    /**
-     * 负载均衡策略
-     */
-    @Value("${slb.on}")
-    private boolean slbOn = false;
-
-    /**
-     * 负载均衡类型
-     */
-
-    @Value("${slb.type}")
-    private String type;
-
-
-    /**
-     * 负载均衡服务器列表地址
-     */
-
-    @Value("${slb.list}")
-    private String list;
-
-
     @Value("${redis_save_max_time}")
     private int redis_save_max_time;
 
     @Value("${transaction_wait_max_time}")
     private int transaction_wait_max_time;
 
-
-    private List<String> urls;
+    private final static String  tmKey = "tx-manager";
 
     @Autowired
     private TxManagerService managerService;
@@ -65,67 +38,44 @@ public class TxServiceImpl implements TxService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Bean
-    RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
+    @Autowired
+    private DiscoveryClient discoveryClient;
 
-
-//    private void loadSLBConfig(){
-//        slbOn = "true".equals(ConfigUtils.getString("tx.properties", "slb.on"));
-//        if(slbOn){
-//            type = ConfigUtils.getString("tx.properties", "slb.type");
-//
-//            String list =  ConfigUtils.getString("tx.properties", "slb.list");
-//            urls = Arrays.asList(list.split("#"));
-//        }
-//    }
-
-    public TxServiceImpl() {
-        //  loadSLBConfig();
-    }
 
 
     @Override
     public TxServer getServer() {
-        if (!slbOn) {
+        List<ServiceInstance> services=  discoveryClient.getInstances(tmKey);
+        System.out.println(services);
+        List<TxState> states = new ArrayList<>();
+        for(ServiceInstance serviceInstance:services){
+            URI uri = serviceInstance.getUri();
+            TxState state = restTemplate.getForObject(uri.toString()+"/tx/manager/state",TxState.class);
+            states.add(state);
+        }
+        if(states.size()==0) {
             TxState state = getState();
             if (state.getMaxConnection() > state.getNowConnection()) {
                 return TxServer.format(state);
             } else {
                 return null;
             }
-        } else {
-
-//            //重新加载数据
-//            loadSLBConfig();
-            List<TxState> states = new ArrayList<>();
-            states.add(getState());
-            for (String url : urls) {
-                TxState state = restTemplate.getForObject(url + "/tx/manager/state", TxState.class);
-                states.add(state);
+        }else{
+            //找默认数据
+            TxState state = getDefault(states,0);
+            if (state == null) {
+                //没有满足的默认数据
+                return null;
             }
-            //获取其他参与集群的服务器获取连接对象
-            if (type.equals(STRATEGY_POLLING)) {
-                //找默认数据
-                TxState state = getDefault(states, 0);
-
-                if (state == null) {
-                    //没有满足的默认数据
-                    return null;
-                }
-
-                int minNowConnection = state.getNowConnection();
-                for (TxState s : states) {
-                    if (s.getMaxConnection() > s.getNowConnection()) {
-                        if (s.getNowConnection() < minNowConnection) {
-                            state = s;
-                        }
+            int minNowConnection = state.getNowConnection();
+            for (TxState s : states) {
+                if (s.getMaxConnection() > s.getNowConnection()) {
+                    if (s.getNowConnection() < minNowConnection) {
+                        state = s;
                     }
                 }
-                return TxServer.format(state);
             }
-            return null;
+            return TxServer.format(state);
         }
     }
 
@@ -146,7 +96,6 @@ public class TxServiceImpl implements TxService {
 
     @Override
     public TxState getState() {
-        urls = Arrays.asList(list.split("#"));
         TxState state = new TxState();
         state.setIp(Constants.local.getIp());
         state.setPort(Constants.local.getPort());
@@ -154,9 +103,13 @@ public class TxServiceImpl implements TxService {
         state.setNowConnection(SocketManager.getInstance().getNowConnection());
         state.setTransactionWaitMaxTime(transaction_wait_max_time);
         state.setRedisSaveMaxTime(redis_save_max_time);
+        List<ServiceInstance> services=  discoveryClient.getInstances(tmKey);
+        List<String> urls = new ArrayList<>();
+        for(ServiceInstance serviceInstance:services){
+            URI uri = serviceInstance.getUri();
+            urls.add(uri.toString());
+        }
         state.setSlbList(urls);
-        state.setSlbType(type);
-        state.setSlbOn(slbOn);
         return state;
     }
 
