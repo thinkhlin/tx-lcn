@@ -26,6 +26,9 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
     private TransactionServer txRunningTransactionServer;
 
     @Autowired
+    private TransactionServer txInServiceTransactionServer;
+
+    @Autowired
     private NettyService nettyService;
 
 
@@ -59,7 +62,12 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
         if (info.getTxTransactionLocal() != null || StringUtils.isNotEmpty(info.getTxGroupId())) {
             //检查socket通讯是否正常
             if (nettyService.checkState()) {
-                return txRunningTransactionServer;
+                if(info.getTxTransactionLocal() != null){
+                    return txInServiceTransactionServer;
+                }else{
+                    return txRunningTransactionServer;
+                }
+
             } else {
                 throw new Exception("tx-manager尚未链接成功,请检测tx-manager服务");
             }
