@@ -7,14 +7,14 @@ import com.lorne.tx.model.TxServer;
 import com.lorne.tx.model.TxState;
 import com.lorne.tx.service.TxService;
 import com.lorne.tx.socket.SocketManager;
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.shared.Application;
+import com.netflix.eureka.EurekaServerContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,19 +38,13 @@ public class TxServiceImpl implements TxService {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Autowired
-    private DiscoveryClient discoveryClient;
-
-
 
     @Override
     public TxServer getServer() {
-        List<ServiceInstance> services=  discoveryClient.getInstances(tmKey);
-        System.out.println(services);
+        List<String> urls= getServices();
         List<TxState> states = new ArrayList<>();
-        for(ServiceInstance serviceInstance:services){
-            URI uri = serviceInstance.getUri();
-            TxState state = restTemplate.getForObject(uri.toString()+"/tx/manager/state",TxState.class);
+        for(String url:urls){
+            TxState state = restTemplate.getForObject(url+"/tx/manager/state",TxState.class);
             states.add(state);
         }
         if(states.size()==0) {
@@ -103,14 +97,22 @@ public class TxServiceImpl implements TxService {
         state.setNowConnection(SocketManager.getInstance().getNowConnection());
         state.setTransactionWaitMaxTime(transaction_wait_max_time);
         state.setRedisSaveMaxTime(redis_save_max_time);
-        List<ServiceInstance> services=  discoveryClient.getInstances(tmKey);
-        List<String> urls = new ArrayList<>();
-        for(ServiceInstance serviceInstance:services){
-            URI uri = serviceInstance.getUri();
-            urls.add(uri.toString());
-        }
-        state.setSlbList(urls);
+        state.setSlbList(getServices());
         return state;
+    }
+
+
+    private List<String> getServices(){
+        List<String> urls = new ArrayList<>();
+        Application application =   EurekaServerContextHolder.getInstance().getServerContext().getRegistry().getApplication(tmKey.toUpperCase());
+        if(application!=null) {
+            List<InstanceInfo> instanceInfos = application.getInstances();
+            for (InstanceInfo instanceInfo : instanceInfos) {
+                String url = instanceInfo.getHomePageUrl();
+                urls.add(url);
+            }
+        }
+        return urls;
     }
 
     @Override
