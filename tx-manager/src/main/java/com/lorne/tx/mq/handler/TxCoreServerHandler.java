@@ -56,7 +56,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                     String modelName = ctx.channel().remoteAddress().toString();
                     if (StringUtils.isNotEmpty(modelName)) {
                         TxGroup txGroup = txManagerService.addTransactionGroup(groupId, taskId, modelName);
-                        res = txGroup.toJsonString();
+                        res = txGroup.toJsonString(false);
                     } else {
                         res = "";
                     }

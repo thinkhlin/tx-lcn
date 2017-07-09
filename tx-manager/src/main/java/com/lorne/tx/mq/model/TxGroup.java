@@ -129,7 +129,7 @@ public class TxGroup {
 
     }
 
-    public String toJsonString() {
+    public String toJsonString(boolean noList) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", getGroupId());
         jsonObject.put("ho", hasOver ? 1 : 0);
@@ -137,16 +137,22 @@ public class TxGroup {
         jsonObject.put("st", getStartTime());
         jsonObject.put("et", getEndTime());
         jsonObject.put("s", getState());
-        JSONArray jsonArray = new JSONArray();
-        for (TxInfo info : getList()) {
-            JSONObject item = new JSONObject();
-            item.put("s", info.getState());
-            item.put("k", info.getKid());
-            item.put("m", info.getModelName());
-            item.put("n", info.getNotify());
-            jsonArray.add(item);
+        if(noList) {
+            JSONArray jsonArray = new JSONArray();
+            for (TxInfo info : getList()) {
+                JSONObject item = new JSONObject();
+                item.put("s", info.getState());
+                item.put("k", info.getKid());
+                item.put("m", info.getModelName());
+                item.put("n", info.getNotify());
+                jsonArray.add(item);
+            }
+            jsonObject.put("l", jsonArray);
         }
-        jsonObject.put("l", jsonArray);
         return jsonObject.toString();
+    }
+
+    public String toJsonString() {
+        return toJsonString(true);
     }
 }
