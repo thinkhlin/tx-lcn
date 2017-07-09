@@ -14,6 +14,8 @@ public class TxInfo extends JsonModel {
 
     private String modelName;
 
+    private int notify;
+
     private Channel channel;
 
     public int getState() {
@@ -46,5 +48,13 @@ public class TxInfo extends JsonModel {
 
     public void setModelName(String modelName) {
         this.modelName = modelName;
+    }
+
+    public int getNotify() {
+        return notify;
+    }
+
+    public void setNotify(int notify) {
+        this.notify = notify;
     }
 }

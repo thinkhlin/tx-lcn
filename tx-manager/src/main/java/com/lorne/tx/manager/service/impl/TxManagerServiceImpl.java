@@ -30,7 +30,10 @@ public class TxManagerServiceImpl implements TxManagerService {
     @Value("${transaction_wait_max_time}")
     private int transaction_wait_max_time;
 
-    private final static String key_prefix = "tx_manager_";
+    private final static String key_prefix = "tx_manager_default_";
+
+    private final static String key_prefix_notify = "tx_manager_notify_";
+
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -74,15 +77,37 @@ public class TxManagerServiceImpl implements TxManagerService {
     }
 
     @Override
-    public boolean checkTransactionGroup(String groupId) {
+    public boolean checkTransactionGroup(String groupId,String taskId) {
         ValueOperations<String, String> value = redisTemplate.opsForValue();
-        String key = key_prefix + groupId;
+        String key = key_prefix_notify + groupId;
         String json = value.get(key);
         if (StringUtils.isEmpty(json)) {
             return false;
         }
         TxGroup txGroup = TxGroup.parser(json);
-        return txGroup.getState()==1;
+        boolean res =  txGroup.getState()==1;
+
+        for(TxInfo info:txGroup.getList()){
+            if(info.getKid().equals(taskId)){
+                info.setNotify(1);
+            }
+        }
+
+        boolean isOver = true;
+        for(TxInfo info:txGroup.getList()){
+            if(info.getNotify()==0){
+                isOver = false;
+                break;
+            }
+        }
+
+        if(isOver){
+            redisTemplate.delete(key);
+        }else{
+            value.set(key,txGroup.toJsonString());
+        }
+
+        return res;
     }
 
     @Override
@@ -129,12 +154,17 @@ public class TxManagerServiceImpl implements TxManagerService {
     @Override
     public void dealTxGroup(TxGroup txGroup, boolean hasOk) {
         String key = key_prefix + txGroup.getGroupId();
-        if(hasOk) {
-            redisTemplate.delete(key);
-        }else{
-            ValueOperations<String, String> value = redisTemplate.opsForValue();
-            value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
+        if(!hasOk) {
+            //未通知成功
+
+            if(txGroup.getState()==1) {
+                ValueOperations<String, String> value = redisTemplate.opsForValue();
+                String newKey = key_prefix_notify+txGroup.getGroupId();
+                value.set(newKey, txGroup.toJsonString());
+            }
+
         }
+        redisTemplate.delete(key);
     }
 
 

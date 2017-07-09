@@ -160,14 +160,14 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 String groupId = model.getTxGroup().getGroupId();
                 if (task.getState() == 0) {
 
-                    int hasOk =  txManagerService.checkTransactionInfo(groupId);
+                    int hasOk =  txManagerService.checkTransactionInfo(groupId,taskId);
                     if(hasOk == 1){
                         task.setState(1);
                         task.signalTask();
                     }else{
                         if(hasOk==-1){
                             // 发起http请求查询状态
-                            String json = HttpUtils.get(url+"Group?groupId="+groupId);
+                            String json = HttpUtils.get(url+"Group?groupId="+groupId+"&taskId="+taskId);
                             if(json.contains("true")){
 
                                 task.setState(1);

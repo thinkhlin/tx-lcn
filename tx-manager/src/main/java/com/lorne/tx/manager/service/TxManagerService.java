@@ -23,7 +23,7 @@ public interface TxManagerService {
     TxGroup addTransactionGroup(String groupId, String taskId, String modelName);
 
 
-    boolean checkTransactionGroup(String groupId);
+    boolean checkTransactionGroup(String groupId,String taskId);
 
 
     boolean closeTransactionGroup(String groupId);

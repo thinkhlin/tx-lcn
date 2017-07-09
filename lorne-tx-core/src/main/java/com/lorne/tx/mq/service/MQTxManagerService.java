@@ -47,7 +47,7 @@ public interface MQTxManagerService {
     boolean notifyTransactionInfo(String groupId, String kid, boolean state);
 
 
-    int checkTransactionInfo(String groupId);
+    int checkTransactionInfo(String groupId,String taskId);
 
 
 }

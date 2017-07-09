@@ -83,9 +83,10 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
 
     @Override
-    public int checkTransactionInfo(String groupId) {
+    public int checkTransactionInfo(String groupId,String taskId) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
+        jsonObject.put("t", taskId);
         Request request = new Request("ckg", jsonObject.toString());
         String json =  nettyService.sendMsg(request);
         int res =  "1".equals(json)?1:(json==null)?-1:0;

@@ -47,7 +47,7 @@ public class TxServiceImpl implements TxService {
             TxState state = restTemplate.getForObject(url+"/tx/manager/state",TxState.class);
             states.add(state);
         }
-        if(states.size()==0) {
+        if(states.size()<=1) {
             TxState state = getState();
             if (state.getMaxConnection() > state.getNowConnection()) {
                 return TxServer.format(state);
@@ -116,7 +116,7 @@ public class TxServiceImpl implements TxService {
     }
 
     @Override
-    public boolean getServerGroup(String groupId) {
-        return managerService.checkTransactionGroup(groupId);
+    public boolean getServerGroup(String groupId,String taskId) {
+        return managerService.checkTransactionGroup(groupId,taskId);
     }
 }

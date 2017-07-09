@@ -26,6 +26,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -78,7 +79,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
             }else{
                 //提交事务
                boolean hasOk =  transaction(txGroup.getList(), 1);
-                txManagerService.dealTxGroup(txGroup,hasOk);
+               txManagerService.dealTxGroup(txGroup,hasOk);
             }
         } else {
             if(hasOvertime){
@@ -149,6 +150,11 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                         String data = (String) task.getBack().doing();
                         // 1  成功 0 失败 -1 task为空 -2 超过
                         boolean res =  "1".equals(data);
+
+                        if("1".equals(data)||"0".equals(data)){
+                            txInfo.setNotify(1);
+                        }
+
                         return res;
                     } catch (Throwable throwable) {
                         throwable.printStackTrace();

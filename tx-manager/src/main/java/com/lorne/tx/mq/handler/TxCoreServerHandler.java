@@ -84,7 +84,8 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                 //检查事务组
                 case "ckg": {
                     String groupId = params.getString("g");
-                    boolean bs = txManagerService.checkTransactionGroup(groupId);
+                    String taskId = params.getString("t");
+                    boolean bs = txManagerService.checkTransactionGroup(groupId,taskId);
 
                     res = bs ? "1" : "0";
                     break;
