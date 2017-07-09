@@ -46,7 +46,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                 //创建事务组
                 case "cg": {
                     TxGroup txGroup = txManagerService.createTransactionGroup();
-                    res = txGroup.toJsonString();
+                    res = txGroup.toJsonString(false);
                     break;
                 }
                 //添加事务组

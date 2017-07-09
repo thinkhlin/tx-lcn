@@ -76,16 +76,18 @@ public class TxGroup {
             txGroup.setGroupId(jsonObject.getString("g"));
             txGroup.setHasOver(jsonObject.getInt("ho") == 1);
             txGroup.setWaitTime(jsonObject.getInt("w"));
-            JSONArray array = jsonObject.getJSONArray("l");
-            int length = array.size();
-            for (int i = 0; i < length; i++) {
-                JSONObject object = array.getJSONObject(i);
+            if(jsonObject.has("l")) {
+                JSONArray array = jsonObject.getJSONArray("l");
+                int length = array.size();
+                for (int i = 0; i < length; i++) {
+                    JSONObject object = array.getJSONObject(i);
 
-                TxInfo info = new TxInfo();
-                info.setState(object.getInt("s"));
-                info.setKid(object.getString("k"));
-                info.setModelName(object.getString("m"));
-                txGroup.getList().add(info);
+                    TxInfo info = new TxInfo();
+                    info.setState(object.getInt("s"));
+                    info.setKid(object.getString("k"));
+                    info.setModelName(object.getString("m"));
+                    txGroup.getList().add(info);
+                }
             }
             return txGroup;
 
