@@ -35,7 +35,7 @@ public class TxManagerController {
     @RequestMapping("/getServerGroup")
     @ResponseBody
     public boolean getServerGroup(@RequestParam("groupId") String groupId,@RequestParam("taskId") String taskId) {
-        return txService.getServerGroup(groupId);
+        return txService.getServerGroup(groupId,taskId);
     }
 
     @RequestMapping("/state")
