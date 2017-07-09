@@ -11,9 +11,7 @@ import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 @EnableEurekaServer
 public class TxManagerApplication {
 
-    /**
-     * run方式 jar打包时 请注释掉 pom文件标记的run 方式时需要注释 war 的包
-     */
+
 
     public static void main(String[] args) {
         SpringApplication.run(TxManagerApplication.class, args);
