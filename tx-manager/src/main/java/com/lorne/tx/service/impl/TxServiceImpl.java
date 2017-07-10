@@ -2,6 +2,7 @@ package com.lorne.tx.service.impl;
 
 
 import com.lorne.tx.Constants;
+import com.lorne.tx.eureka.DiscoveryService;
 import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.model.TxServer;
 import com.lorne.tx.model.TxState;
@@ -30,19 +31,18 @@ public class TxServiceImpl implements TxService {
     @Value("${transaction_wait_max_time}")
     private int transaction_wait_max_time;
 
-    private final static String  tmKey = "tx-manager";
-
     @Autowired
     private TxManagerService managerService;
 
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private DiscoveryService discoveryService;
+
 
     @Override
     public TxServer getServer() {
-
-
         List<String> urls= getServices();
         List<TxState> states = new ArrayList<>();
         for(String url:urls){
@@ -106,13 +106,10 @@ public class TxServiceImpl implements TxService {
 
     private List<String> getServices(){
         List<String> urls = new ArrayList<>();
-        Application application =   EurekaServerContextHolder.getInstance().getServerContext().getRegistry().getApplication(tmKey.toUpperCase());
-        if(application!=null) {
-            List<InstanceInfo> instanceInfos = application.getInstances();
-            for (InstanceInfo instanceInfo : instanceInfos) {
-                String url = instanceInfo.getHomePageUrl();
-                urls.add(url);
-            }
+        List<InstanceInfo> instanceInfos =discoveryService.getConfigServiceInstances();
+        for (InstanceInfo instanceInfo : instanceInfos) {
+            String url = instanceInfo.getHomePageUrl();
+            urls.add(url);
         }
         return urls;
     }
