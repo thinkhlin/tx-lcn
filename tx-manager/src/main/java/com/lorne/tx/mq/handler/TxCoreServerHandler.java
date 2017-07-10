@@ -4,6 +4,7 @@ package com.lorne.tx.mq.handler;
  * Created by lorne on 2017/6/29.
  */
 
+import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
@@ -16,7 +17,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -36,10 +36,10 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         String json = SocketUtils.getJson(msg);
         if (StringUtils.isNotEmpty(json)) {
-            JSONObject jsonObject = JSONObject.fromObject(json);
+            JSONObject jsonObject = JSONObject.parseObject(json);
             String action = jsonObject.getString("a");
             String key = jsonObject.getString("k");
-            JSONObject params = JSONObject.fromObject(jsonObject.getString("p"));
+            JSONObject params = JSONObject.parseObject(jsonObject.getString("p"));
 
             String res = "";
             switch (action) {
@@ -66,7 +66,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                 case "nti": {
                     String groupId = params.getString("g");
                     String kid = params.getString("k");
-                    int state = params.getInt("s");
+                    int state = params.getInteger("s");
                     boolean bs = txManagerService.notifyTransactionInfo(groupId, kid, state == 1);
                     res = bs ? "1" : "0";
                     break;

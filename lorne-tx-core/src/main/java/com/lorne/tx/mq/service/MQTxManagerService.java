@@ -1,9 +1,7 @@
 package com.lorne.tx.mq.service;
 
-import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
-import net.sf.json.JSONObject;
 
 /**
  * Created by lorne on 2017/6/7.

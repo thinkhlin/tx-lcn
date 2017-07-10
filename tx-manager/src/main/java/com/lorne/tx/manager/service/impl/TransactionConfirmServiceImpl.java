@@ -1,6 +1,7 @@
 package com.lorne.tx.manager.service.impl;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.Constant;
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
@@ -8,7 +9,6 @@ import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.core.framework.utils.thread.CountDownLatchHelper;
 import com.lorne.core.framework.utils.thread.IExecute;
-import com.lorne.tx.Constants;
 import com.lorne.tx.manager.service.TransactionConfirmService;
 import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
@@ -16,17 +16,11 @@ import com.lorne.tx.mq.model.TxInfo;
 import com.lorne.tx.socket.SocketManager;
 import com.lorne.tx.socket.utils.SocketUtils;
 import io.netty.channel.Channel;
-import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 

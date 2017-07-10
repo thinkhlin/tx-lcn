@@ -1,8 +1,9 @@
 package com.lorne.tx.mq.model;
 
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,19 +72,19 @@ public class TxGroup {
 
     public static TxGroup parser(String json) {
         try {
-            JSONObject jsonObject = JSONObject.fromObject(json);
+            JSONObject jsonObject = JSONObject.parseObject(json);
             TxGroup txGroup = new TxGroup();
             txGroup.setGroupId(jsonObject.getString("g"));
-            txGroup.setHasOver(jsonObject.getInt("ho") == 1);
-            txGroup.setWaitTime(jsonObject.getInt("w"));
-            if(jsonObject.has("l")) {
+            txGroup.setHasOver(jsonObject.getInteger("ho") == 1);
+            txGroup.setWaitTime(jsonObject.getInteger("w"));
+            if(jsonObject.containsKey("l")) {
                 JSONArray array = jsonObject.getJSONArray("l");
                 int length = array.size();
                 for (int i = 0; i < length; i++) {
                     JSONObject object = array.getJSONObject(i);
 
                     TxInfo info = new TxInfo();
-                    info.setState(object.getInt("s"));
+                    info.setState(object.getInteger("s"));
                     info.setKid(object.getString("k"));
                     info.setModelName(object.getString("m"));
                     txGroup.getList().add(info);

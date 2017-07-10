@@ -1,6 +1,7 @@
 package com.lorne.tx.mq.model;
 
-import net.sf.json.JSONObject;
+
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * Created by lorne on 2017/6/30.
@@ -35,9 +36,9 @@ public class TxServer {
 
     public static TxServer parser(String json) {
         try {
-            JSONObject jsonObject = JSONObject.fromObject(json);
+            JSONObject jsonObject = JSONObject.parseObject(json);
             TxServer txServer = new TxServer();
-            txServer.setPort(jsonObject.getInt("port"));
+            txServer.setPort(jsonObject.getInteger("port"));
             txServer.setHost(jsonObject.getString("ip"));
             return txServer;
         } catch (Exception e) {

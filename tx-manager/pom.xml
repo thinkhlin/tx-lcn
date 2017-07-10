@@ -37,7 +37,7 @@
         <dependency>
             <groupId>com.lorne.core</groupId>
             <artifactId>lorne_core</artifactId>
-            <version>1.0.0.RELEASE</version>
+            <version>1.0.1.RELEASE</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>

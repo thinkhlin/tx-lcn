@@ -9,14 +9,12 @@ import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.Constants;
-import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
-import net.sf.json.JSONObject;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +25,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import javax.security.auth.login.Configuration;
 import java.util.concurrent.TimeUnit;
 
 /**

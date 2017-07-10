@@ -1,7 +1,7 @@
 package com.lorne.tx.mq.model;
 
+import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.utils.KidUtils;
-import net.sf.json.JSONObject;
 
 /**
  * Created by lorne on 2017/6/30.

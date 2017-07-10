@@ -1,5 +1,6 @@
 package com.lorne.tx.mq.handler;
 
+import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.Constant;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
@@ -12,7 +13,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,15 +58,15 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         String json = SocketUtils.getJson(msg);
         logger.info("接受->" + json);
         if (StringUtils.isNotEmpty(json)) {
-            JSONObject resObj = JSONObject.fromObject(json);
-            if (resObj.has("a")) {
+            JSONObject resObj = JSONObject.parseObject(json);
+            if (resObj.containsKey("a")) {
 
                 String action = resObj.getString("a");
 
                 switch (action) {
                     case "t": {
                         //通知提醒
-                        final int state = resObj.getInt("c");
+                        final int state = resObj.getInteger("c");
                         String taskId = resObj.getString("t");
                         String key = resObj.getString("k");
                         Task task = ConditionUtils.getInstance().getTask(taskId);
