@@ -41,6 +41,8 @@ public class TxServiceImpl implements TxService {
 
     @Override
     public TxServer getServer() {
+
+
         List<String> urls= getServices();
         List<TxState> states = new ArrayList<>();
         for(String url:urls){
