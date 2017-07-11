@@ -13,6 +13,7 @@ public class ServiceThreadModel {
     private TransactionStatus status;
     private TxGroup txGroup;
     private boolean notifyOk;
+    private String compensateId;
 
 
     public Task getWaitTask() {
@@ -45,5 +46,13 @@ public class ServiceThreadModel {
 
     public void setNotifyOk(boolean notifyOk) {
         this.notifyOk = notifyOk;
+    }
+
+    public String getCompensateId() {
+        return compensateId;
+    }
+
+    public void setCompensateId(String compensateId) {
+        this.compensateId = compensateId;
     }
 }

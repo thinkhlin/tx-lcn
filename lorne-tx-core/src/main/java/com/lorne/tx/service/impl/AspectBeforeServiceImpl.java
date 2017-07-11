@@ -29,7 +29,7 @@ public class AspectBeforeServiceImpl implements AspectBeforeService {
         MethodSignature signature = (MethodSignature) point.getSignature();
         Method method = signature.getMethod();
         Class<?> clazz = point.getTarget().getClass();
-
+        Object[] args = point.getArgs();
         Method thisMethod = clazz.getMethod(method.getName(), method.getParameterTypes());
 
         TxTransaction transaction = thisMethod.getAnnotation(TxTransaction.class);
@@ -38,7 +38,7 @@ public class AspectBeforeServiceImpl implements AspectBeforeService {
 
         TransactionLocal transactionLocal = TransactionLocal.current();
 
-        TxTransactionInfo state = new TxTransactionInfo(transaction, txTransactionLocal, groupId, transactionLocal);
+        TxTransactionInfo state = new TxTransactionInfo(transaction,txTransactionLocal,transactionLocal,clazz.getName(),thisMethod.getName(),args);
 
         TransactionServer server = transactionServerFactoryService.createTransactionServer(state);
 

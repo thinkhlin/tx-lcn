@@ -99,7 +99,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                 boolean signTask = false;
 
 
-                ServiceThreadModel model = transactionThreadService.serviceInThread(signTask, groupId, task, point);
+                ServiceThreadModel model = transactionThreadService.serviceInThread(info,signTask, groupId, task, point);
                 if (model == null) {
                     return;
                 }

@@ -1,6 +1,6 @@
 package com.lorne.tx.listener;
 
-import com.lorne.tx.mq.service.NettyService;
+import com.lorne.tx.service.InitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -16,16 +16,14 @@ import org.springframework.stereotype.Component;
 public class TransactionSocketListener implements ApplicationContextAware {
 
 
-    private Logger logger = LoggerFactory.getLogger(TransactionSocketListener.class);
 
     @Autowired
-    private NettyService nettyService;
+    private InitService initService;
 
 
     @Override
     public void setApplicationContext(ApplicationContext event) throws BeansException {
-        nettyService.start();
-        logger.info("socket-start..");
+        initService.start();
     }
 
 }

@@ -1,6 +1,7 @@
 package com.lorne.tx.service;
 
 import com.lorne.core.framework.utils.task.Task;
+import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.service.model.ServiceThreadModel;
 import org.aspectj.lang.ProceedingJoinPoint;
 
@@ -9,7 +10,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
  */
 public interface TransactionThreadService {
 
-    ServiceThreadModel serviceInThread(boolean signTask, String _groupId, Task task, ProceedingJoinPoint point);
+    ServiceThreadModel serviceInThread(TxTransactionInfo info,boolean signTask, String _groupId, Task task, ProceedingJoinPoint point);
 
 
     void serviceWait(boolean signTask, Task task, ServiceThreadModel model);

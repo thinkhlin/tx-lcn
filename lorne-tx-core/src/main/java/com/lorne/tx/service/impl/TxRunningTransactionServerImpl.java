@@ -59,7 +59,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 }
 
 
-                ServiceThreadModel model = transactionThreadService.serviceInThread(true, _groupId, task, point);
+                ServiceThreadModel model = transactionThreadService.serviceInThread(info,true, _groupId, task, point);
                 if (model == null) {
                     return;
                 }

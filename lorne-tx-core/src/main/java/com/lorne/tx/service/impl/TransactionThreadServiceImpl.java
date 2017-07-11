@@ -9,9 +9,11 @@ import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.Constants;
+import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
+import com.lorne.tx.service.CompensateService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
@@ -42,6 +44,8 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     @Autowired
     private NettyService nettyService;
 
+    @Autowired
+    private CompensateService  compensateService;
 
     private Logger logger = LoggerFactory.getLogger(TransactionThreadServiceImpl.class);
 
@@ -52,7 +56,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     }
 
     @Override
-    public ServiceThreadModel serviceInThread(boolean signTask, String _groupId, Task task, ProceedingJoinPoint point) {
+    public ServiceThreadModel serviceInThread(TxTransactionInfo info,boolean signTask, String _groupId, Task task, ProceedingJoinPoint point) {
 
         String kid = KidUtils.generateShortUuid();
         TxGroup txGroup = txManagerService.addTransactionGroup(_groupId, kid);
@@ -69,6 +73,8 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             nettyService.restart();
             return null;
         }
+
+        String compensateId = compensateService.saveTransactionInfo(info.getClassName(),info.getMethodName(),txGroup.getGroupId(),kid,info.getArgs());
 
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
@@ -110,7 +116,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         model.setWaitTask(waitTask);
         model.setTxGroup(txGroup);
         model.setNotifyOk(isSend);
-
+        model.setCompensateId(compensateId);
         return model;
 
     }
@@ -239,6 +245,8 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             if (!signTask) {
                 task.signalTask();
             }
+
+            compensateService.deleteTransactionInfo(model.getCompensateId());
         } catch (Throwable throwable) {
             txManager.rollback(status);
         } finally {
