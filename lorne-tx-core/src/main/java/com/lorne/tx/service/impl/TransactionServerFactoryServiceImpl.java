@@ -29,10 +29,18 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
     private TransactionServer txInServiceTransactionServer;
 
     @Autowired
+    private TransactionServer txCompensateTransactionServer;
+
+    @Autowired
     private NettyService nettyService;
 
 
     public TransactionServer createTransactionServer(TxTransactionInfo info) throws Throwable {
+
+        /** 事务补偿业务处理**/
+        if(CompensateServiceImpl.COMPENSATE_KEY.equals(info.getTxGroupId())){
+            return txCompensateTransactionServer;
+        }
 
         /** 当都是空的时候表示是一般的业务处理。这里不做操作 **/
         if (StringUtils.isEmpty(info.getTxGroupId())

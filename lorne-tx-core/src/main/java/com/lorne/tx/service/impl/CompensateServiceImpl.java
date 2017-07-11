@@ -1,5 +1,6 @@
 package com.lorne.tx.service.impl;
 
+import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.service.CompensateService;
 import org.springframework.stereotype.Service;
 
@@ -10,11 +11,21 @@ import org.springframework.stereotype.Service;
 public class CompensateServiceImpl implements CompensateService {
 
 
+    public final static String COMPENSATE_KEY = "COMPENSATE";
+
     @Override
     public void start() {
         // TODO: 2017/7/11  查找补偿数据
 
+
+        TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
+        if(txTransactionLocal!=null){
+            txTransactionLocal.setHasCompensate(true);
+            TxTransactionLocal.setCurrent(txTransactionLocal);
+        }
+        //在各业务模块执行远程调用的时候判断一下groupId类型
         // TODO: 2017/7/11  执行补偿业务
+
 
     }
 
