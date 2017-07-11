@@ -24,7 +24,7 @@ public class TxInServiceTransactionServerImpl implements TransactionServer {
     public Object execute(ProceedingJoinPoint point, TxTransactionInfo info) throws Throwable {
 
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_SUPPORTS);
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = txManager.getTransaction(def);
 
         Object obj = null;

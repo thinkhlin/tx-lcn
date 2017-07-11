@@ -71,9 +71,8 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         }
 
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_NESTED);
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = txManager.getTransaction(def);
-
         Task waitTask = ConditionUtils.getInstance().createTask(kid);
 
         //发送数据是否成功
