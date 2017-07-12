@@ -2,6 +2,8 @@ package com.lorne.tx.dubbo.interceptor;
 
 
 import com.alibaba.dubbo.rpc.RpcContext;
+import com.lorne.tx.bean.TxTransactionCompensate;
+import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.service.AspectBeforeService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +23,14 @@ public class TxManagerInterceptor {
 
     public Object around(ProceedingJoinPoint point) throws Throwable {
 
-        String groupId = RpcContext.getContext().getAttachment("tx-group");
+        TxTransactionCompensate compensate = TxTransactionCompensate.current();
+        String groupId;
+        if(compensate==null){
+            groupId = RpcContext.getContext().getAttachment("tx-group");
+        }else{
+            groupId = CompensateServiceImpl.COMPENSATE_KEY;
+        }
+
         return aspectBeforeService.around(groupId,point);
     }
 

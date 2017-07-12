@@ -1,6 +1,7 @@
 package com.lorne.tx.compensate.service.impl;
 
 import com.lorne.core.framework.utils.KidUtils;
+import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
@@ -37,6 +38,8 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
         if(data!=null){
             TransactionInvocation invocation =  data.getInvocation();
             if(invocation!=null){
+                TxTransactionCompensate compensate = new TxTransactionCompensate();
+                TxTransactionCompensate.setCurrent(compensate);
                 boolean isOk =  MethodUtils.invoke(applicationContext,invocation);
                 if(isOk){
                     delete(data.getId());

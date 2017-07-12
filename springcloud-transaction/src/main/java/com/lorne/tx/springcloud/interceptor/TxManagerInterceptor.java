@@ -1,5 +1,7 @@
 package com.lorne.tx.springcloud.interceptor;
 
+import com.lorne.tx.bean.TxTransactionCompensate;
+import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.service.AspectBeforeService;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +25,16 @@ public class TxManagerInterceptor {
 
     public Object around(ProceedingJoinPoint point) throws Throwable {
 
-        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-        HttpServletRequest request = requestAttributes==null?null:((ServletRequestAttributes)requestAttributes).getRequest();
-        String groupId = request == null?null:request.getHeader("tx-group");
+        TxTransactionCompensate compensate = TxTransactionCompensate.current();
+        String groupId;
+        if (compensate == null) {
+            RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+            HttpServletRequest request = requestAttributes == null ? null : ((ServletRequestAttributes) requestAttributes).getRequest();
+            groupId = request == null ? null : request.getHeader("tx-group");
+        } else {
+            groupId = CompensateServiceImpl.COMPENSATE_KEY;
+        }
 
-        return aspectBeforeService.around(groupId,point);
+        return aspectBeforeService.around(groupId, point);
     }
 }
