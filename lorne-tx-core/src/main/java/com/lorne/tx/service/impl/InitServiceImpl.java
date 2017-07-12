@@ -1,7 +1,7 @@
 package com.lorne.tx.service.impl;
 
 import com.lorne.tx.mq.service.NettyService;
-import com.lorne.tx.service.CompensateService;
+import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.service.InitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

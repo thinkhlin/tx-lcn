@@ -1,6 +1,7 @@
 package com.lorne.tx.service.impl;
 
 import com.lorne.tx.bean.TxTransactionInfo;
+import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.TransactionServerFactoryService;

@@ -1,4 +1,4 @@
-package com.lorne.tx.service;
+package com.lorne.tx.compensate.service;
 
 /**
  * Created by yuliang on 2017/7/11.

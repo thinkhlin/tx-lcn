@@ -1,7 +1,7 @@
 package com.lorne.tx.springcloud.http;
 
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.service.impl.CompensateServiceImpl;
+import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;

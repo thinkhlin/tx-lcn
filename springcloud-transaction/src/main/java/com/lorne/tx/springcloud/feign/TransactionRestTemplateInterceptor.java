@@ -1,7 +1,7 @@
 package com.lorne.tx.springcloud.feign;
 
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.service.impl.CompensateServiceImpl;
+import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 

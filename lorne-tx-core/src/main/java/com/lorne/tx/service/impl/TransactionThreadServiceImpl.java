@@ -13,7 +13,7 @@ import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
-import com.lorne.tx.service.CompensateService;
+import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;

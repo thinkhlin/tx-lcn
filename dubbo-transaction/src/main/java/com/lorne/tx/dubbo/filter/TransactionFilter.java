@@ -2,7 +2,7 @@ package com.lorne.tx.dubbo.filter;
 
 import com.alibaba.dubbo.rpc.*;
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.service.impl.CompensateServiceImpl;
+import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 
 /**
  * Created by lorne on 2017/6/30.
