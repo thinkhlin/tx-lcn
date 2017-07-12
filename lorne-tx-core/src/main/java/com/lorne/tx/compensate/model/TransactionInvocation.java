@@ -32,6 +32,8 @@ public class TransactionInvocation implements Serializable {
      */
     private Object[] argumentValues;
 
+    private Class[] parameterTypes;
+
     public byte[] toSerializable(){
         try {
             return serializer.serialize(this);
@@ -56,23 +58,44 @@ public class TransactionInvocation implements Serializable {
     }
 
 
-    public TransactionInvocation(Class targetClazz, String method, Object[] argumentValues) {
+    public TransactionInvocation(Class targetClazz, String method, Object[] argumentValues,Class[] parameterTypes) {
         this.targetClazz = targetClazz;
         this.method = method;
         this.argumentValues = argumentValues;
+        this.parameterTypes = parameterTypes;
     }
+
 
 
     public Class getTargetClazz() {
         return targetClazz;
     }
 
+    public void setTargetClazz(Class targetClazz) {
+        this.targetClazz = targetClazz;
+    }
+
     public String getMethod() {
         return method;
+    }
+
+    public void setMethod(String method) {
+        this.method = method;
     }
 
     public Object[] getArgumentValues() {
         return argumentValues;
     }
 
+    public void setArgumentValues(Object[] argumentValues) {
+        this.argumentValues = argumentValues;
+    }
+
+    public Class[] getParameterTypes() {
+        return parameterTypes;
+    }
+
+    public void setParameterTypes(Class[] parameterTypes) {
+        this.parameterTypes = parameterTypes;
+    }
 }

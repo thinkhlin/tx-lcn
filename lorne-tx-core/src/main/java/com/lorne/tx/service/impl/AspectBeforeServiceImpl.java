@@ -39,7 +39,7 @@ public class AspectBeforeServiceImpl implements AspectBeforeService {
 
         TransactionLocal transactionLocal = TransactionLocal.current();
 
-        TransactionInvocation invocation = new TransactionInvocation(clazz,thisMethod.getName(),args);
+        TransactionInvocation invocation = new TransactionInvocation(clazz,thisMethod.getName(),args,method.getParameterTypes());
 
         TxTransactionInfo state = new TxTransactionInfo(transaction,txTransactionLocal,groupId,transactionLocal,invocation);
 
