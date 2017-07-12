@@ -19,6 +19,7 @@ import java.util.List;
 public class CompensateServiceImpl implements CompensateService {
 
 
+    //补偿事务标示 识别groupId （远程调用时传递的参数）
     public final static String COMPENSATE_KEY = "COMPENSATE";
 
     @Autowired

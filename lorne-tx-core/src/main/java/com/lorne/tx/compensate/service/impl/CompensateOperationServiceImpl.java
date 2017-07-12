@@ -71,8 +71,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     @Override
     public boolean delete(String id) {
-        //return jdbcTransactionRecoverRepository.remove(id)>0;
-        return true;
+        return jdbcTransactionRecoverRepository.remove(id)>0;
     }
 
     @Override

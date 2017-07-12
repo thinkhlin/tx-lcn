@@ -30,7 +30,10 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
     private TransactionServer txInServiceTransactionServer;
 
     @Autowired
-    private TransactionServer txCompensateTransactionServer;
+    private TransactionServer txRunningCompensateTransactionServer;
+
+    @Autowired
+    private TransactionServer txStartCompensateTransactionServer;
 
     @Autowired
     private NettyService nettyService;
@@ -38,9 +41,16 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
 
     public TransactionServer createTransactionServer(TxTransactionInfo info) throws Throwable {
 
-        /** 事务补偿业务处理**/
+        /** 事务补偿业务处理中**/
         if(CompensateServiceImpl.COMPENSATE_KEY.equals(info.getTxGroupId())){
-            return txCompensateTransactionServer;
+            //控制返回业务数据，但事务回滚。
+            return txRunningCompensateTransactionServer;
+        }
+
+        /** 事务补偿业务开始标示**/
+        if(info.getCompensate()!=null){
+            //正常处理，同模下将依旧执行该方法
+            return txStartCompensateTransactionServer;
         }
 
         /** 当都是空的时候表示是一般的业务处理。这里不做操作 **/
@@ -64,7 +74,6 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
             } else {
                 throw new Exception("tx-manager尚未链接成功,请检测tx-manager服务");
             }
-
         }
 
         /** 分布式事务已经开启，业务进行中 **/

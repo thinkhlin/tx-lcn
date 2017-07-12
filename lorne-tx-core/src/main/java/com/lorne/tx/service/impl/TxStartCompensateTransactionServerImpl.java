@@ -15,8 +15,8 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 /**
  * Created by yuliang on 2017/7/11.
  */
-@Service(value = "txCompensateTransactionServer")
-public class TxCompensateTransactionServerImpl implements TransactionServer {
+@Service(value = "txStartCompensateTransactionServer")
+public class TxStartCompensateTransactionServerImpl implements TransactionServer {
 
 
 
@@ -26,7 +26,6 @@ public class TxCompensateTransactionServerImpl implements TransactionServer {
 
     @Override
     public Object execute(ProceedingJoinPoint point, TxTransactionInfo info) throws Throwable {
-
         TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
         if(txTransactionLocal==null){
             txTransactionLocal = new TxTransactionLocal();
@@ -41,10 +40,10 @@ public class TxCompensateTransactionServerImpl implements TransactionServer {
         Object obj = null;
         try {
             obj =  point.proceed();
-        }catch (Throwable e){
-            throw e;
-        }finally {
+            txManager.commit(status);
+        }catch (Throwable e) {
             txManager.rollback(status);
+            throw e;
         }
         return obj;
     }

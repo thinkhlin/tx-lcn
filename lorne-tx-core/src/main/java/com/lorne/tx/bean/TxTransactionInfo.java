@@ -22,15 +22,19 @@ public class TxTransactionInfo {
     private TransactionLocal transactionLocal;
 
 
+    private TxTransactionCompensate compensate;
+
+
     private TransactionInvocation invocation;
 
 
-    public TxTransactionInfo(TxTransaction transaction, TxTransactionLocal txTransactionLocal, String txGroupId, TransactionLocal transactionLocal,TransactionInvocation invocation) {
+    public TxTransactionInfo(TxTransaction transaction, TxTransactionLocal txTransactionLocal, String txGroupId, TransactionLocal transactionLocal,TransactionInvocation invocation,TxTransactionCompensate compensate) {
         this.transaction = transaction;
         this.txTransactionLocal = txTransactionLocal;
         this.txGroupId = txGroupId;
         this.transactionLocal = transactionLocal;
         this.invocation = invocation;
+        this.compensate =compensate;
     }
 
     public TransactionLocal getTransactionLocal() {
@@ -49,6 +53,9 @@ public class TxTransactionInfo {
         return txGroupId;
     }
 
+    public TxTransactionCompensate getCompensate() {
+        return compensate;
+    }
 
     public TransactionInvocation getInvocation() {
         return invocation;
