@@ -1,10 +1,8 @@
 package com.lorne.tx.compensate.repository;
 
 import com.lorne.tx.compensate.model.TransactionRecover;
-import com.lorne.tx.serializer.KryoSerializer;
-import com.lorne.tx.serializer.ObjectSerializer;
-import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -16,55 +14,26 @@ import java.util.List;
  * @date 2017/7/12 10:36
  * @since JDK 1.8
  */
-public class JdbcTransactionRecoverRepository extends  CacheTransactionRecoverRepository {
-
-
-
-    private JdbcTemplate jdbcTemplate;
-
-
-
-    /**
-     * 后期可以写成通过spi获取序列化方式
-     */
-    private ObjectSerializer serializer = new KryoSerializer();
+public class JdbcTransactionRecoverRepository implements TransactionRecoverRepository {
 
 
     @Override
-    public int doCreate(TransactionRecover transactionRecover) {
+    public int create(TransactionRecover transactionRecover) {
         return 0;
     }
 
     @Override
-    public int doUpdate(TransactionRecover transactionRecover) {
+    public int remove(String id) {
         return 0;
     }
 
     @Override
-    public int doDelete(TransactionRecover transactionRecover) {
+    public int update(String id, Date lastTime, int retriedCount) {
         return 0;
     }
 
     @Override
-    public int doDelete(String id) {
-        return 0;
-    }
-
-    @Override
-    public TransactionRecover doFindOne(String id) {
+    public List<TransactionRecover> findAll() {
         return null;
-    }
-
-    @Override
-    public List<TransactionRecover> doListAll() {
-        return null;
-    }
-
-    public JdbcTemplate getJdbcTemplate() {
-        return jdbcTemplate;
-    }
-
-    public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
     }
 }

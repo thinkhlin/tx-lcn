@@ -2,6 +2,7 @@ package com.lorne.tx.compensate.repository;
 
 import com.lorne.tx.compensate.model.TransactionRecover;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -23,29 +24,24 @@ public interface TransactionRecoverRepository {
 
     /**
      * 删除对象
-     * @param transactionRecover 事务对象
+     * @param id 事务对象id
      * @return rows
      */
-    int remove(TransactionRecover transactionRecover);
+    int remove(String id);
 
 
     /**
      * 更改事务对象
-     * @param transactionRecover 事务对象
+     * @param id 事务对象id
+     * @param retriedCount 执行次数
      * @return rows
      */
-    int update(TransactionRecover transactionRecover);
+    int update(String id, Date lastTime, int retriedCount);
 
-    /**
-     * 根据id获取对象
-     * @param id 主键id
-     * @return TransactionRecover
-     */
-    TransactionRecover findById(String id);
 
     /**
      * 获取需要提交的事务
      * @return  List<TransactionRecover>
      */
-    List<TransactionRecover> listAll();
+    List<TransactionRecover> findAll();
 }

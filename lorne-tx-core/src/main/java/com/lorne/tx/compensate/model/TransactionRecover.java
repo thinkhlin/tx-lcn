@@ -1,8 +1,5 @@
 package com.lorne.tx.compensate.model;
 
-import com.lorne.tx.compensate.enums.TransactionStatusEnum;
-import com.lorne.tx.compensate.enums.TransactionTypeEnum;
-
 import java.io.Serializable;
 import java.util.Date;
 
@@ -35,6 +32,11 @@ public class TransactionRecover implements Serializable {
      */
     private Date createTime = new Date();
 
+
+    /**
+     * 创建时间
+     */
+    private Date lastTime = new Date();
 
     /**
      * 版本控制 防止并发问题
@@ -112,5 +114,13 @@ public class TransactionRecover implements Serializable {
 
     public void setTaskId(String taskId) {
         this.taskId = taskId;
+    }
+
+    public Date getLastTime() {
+        return lastTime;
+    }
+
+    public void setLastTime(Date lastTime) {
+        this.lastTime = lastTime;
     }
 }
