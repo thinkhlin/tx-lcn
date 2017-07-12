@@ -1,5 +1,6 @@
 package com.lorne.tx.utils;
 
+import com.lorne.tx.compensate.model.TransactionInvocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
@@ -11,13 +12,13 @@ public class MethodUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodUtils.class);
 
-    public static boolean invoke(ApplicationContext spring,String className,String methodName,Object... args){
+    public static boolean invoke(ApplicationContext spring,TransactionInvocation invocation){
         try {
-            Class clz = Class.forName(className);
-            Object  bean = spring.getBean(clz);
-            Object res = org.apache.commons.lang.reflect.MethodUtils.invokeMethod(bean,methodName,args);
+
+            Object  bean = spring.getBean(invocation.getTargetClazz());
+            Object res = org.apache.commons.lang.reflect.MethodUtils.invokeMethod(bean,invocation.getMethod(),invocation.getArgumentValues());
             System.out.println(res);
-            logger.info("invoke -> className:"+className+",methodName::"+methodName+",args:"+args+",res:"+res);
+            logger.info("invoke -> className:"+invocation.getTargetClazz()+",methodName::"+invocation.getMethod()+",args:"+invocation.getArgumentValues()+",res:"+res);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

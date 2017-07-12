@@ -1,4 +1,4 @@
-package com.lorne.tx.enums;
+package com.lorne.tx.compensate.enums;
 
 /**
  * <p>Description: .</p>

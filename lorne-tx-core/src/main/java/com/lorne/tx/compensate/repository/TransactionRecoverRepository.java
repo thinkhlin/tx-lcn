@@ -1,6 +1,6 @@
-package com.lorne.tx.repository;
+package com.lorne.tx.compensate.repository;
 
-import com.lorne.tx.bean.TransactionRecover;
+import com.lorne.tx.compensate.model.TransactionRecover;
 
 import java.util.List;
 

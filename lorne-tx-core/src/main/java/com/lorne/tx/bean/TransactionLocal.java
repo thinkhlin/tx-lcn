@@ -1,6 +1,7 @@
 package com.lorne.tx.bean;
 
 /**
+ * 本地事务识别控制对象
  * Created by lorne on 2017/6/5.
  */
 public class TransactionLocal {

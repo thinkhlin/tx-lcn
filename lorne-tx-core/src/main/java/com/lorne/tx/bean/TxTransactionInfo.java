@@ -1,10 +1,13 @@
 package com.lorne.tx.bean;
 
 import com.lorne.tx.annotation.TxTransaction;
+import com.lorne.tx.compensate.model.TransactionInvocation;
 
 import java.lang.reflect.Method;
 
 /**
+ *
+ * 切面控制对象
  * Created by lorne on 2017/6/8.
  */
 public class TxTransactionInfo {
@@ -18,25 +21,16 @@ public class TxTransactionInfo {
 
     private TransactionLocal transactionLocal;
 
-    private String className;
-    private String methodName;
-    private Object[] args;
+
+    private TransactionInvocation invocation;
 
 
-//    public TxTransactionInfo(TxTransaction transaction, TxTransactionLocal txTransactionLocal, String txGroupId, TransactionLocal transactionLocal) {
-//        this.transaction = transaction;
-//        this.txTransactionLocal = txTransactionLocal;
-//        this.txGroupId = txGroupId;
-//        this.transactionLocal = transactionLocal;
-//    }
-
-    public TxTransactionInfo(TxTransaction transaction, TxTransactionLocal txTransactionLocal, TransactionLocal transactionLocal, String className, String methodName, Object[] args) {
+    public TxTransactionInfo(TxTransaction transaction, TxTransactionLocal txTransactionLocal, String txGroupId, TransactionLocal transactionLocal,TransactionInvocation invocation) {
         this.transaction = transaction;
         this.txTransactionLocal = txTransactionLocal;
+        this.txGroupId = txGroupId;
         this.transactionLocal = transactionLocal;
-        this.className = className;
-        this.methodName = methodName;
-        this.args = args;
+        this.invocation = invocation;
     }
 
     public TransactionLocal getTransactionLocal() {
@@ -56,15 +50,7 @@ public class TxTransactionInfo {
     }
 
 
-    public String getClassName() {
-        return className;
-    }
-
-    public String getMethodName() {
-        return methodName;
-    }
-
-    public Object[] getArgs() {
-        return args;
+    public TransactionInvocation getInvocation() {
+        return invocation;
     }
 }

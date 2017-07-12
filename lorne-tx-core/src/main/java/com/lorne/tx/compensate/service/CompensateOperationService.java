@@ -1,8 +1,8 @@
 package com.lorne.tx.compensate.service;
 
 
-
-import com.lorne.tx.compensate.model.CompensateOperationData;
+import com.lorne.tx.compensate.model.TransactionInvocation;
+import com.lorne.tx.compensate.model.TransactionRecover;
 
 import java.util.List;
 
@@ -12,11 +12,13 @@ import java.util.List;
  */
 public interface CompensateOperationService {
 
-    List<CompensateOperationData> findAll();
+    List<TransactionRecover> findAll();
 
-    void execute(CompensateOperationData data);
+    void execute(TransactionRecover data);
 
-    String save(String className, String methodName, String groupId, String taskId, Object[] args);
+    String save(TransactionInvocation transactionInvocation,String groupId,String taskId);
 
     boolean delete(String id);
+
+    boolean updateRetriedCount(TransactionRecover recover);
 }

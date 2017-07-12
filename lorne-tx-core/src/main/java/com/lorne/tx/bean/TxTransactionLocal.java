@@ -1,6 +1,7 @@
 package com.lorne.tx.bean;
 
 /**
+ * 分布式事务远程调用控制对象
  * Created by lorne on 2017/6/5.
  */
 public class TxTransactionLocal {

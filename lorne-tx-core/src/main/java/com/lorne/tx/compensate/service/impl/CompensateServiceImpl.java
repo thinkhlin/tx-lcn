@@ -1,10 +1,10 @@
 package com.lorne.tx.compensate.service.impl;
 
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.compensate.model.CompensateOperationData;
+import com.lorne.tx.compensate.model.TransactionInvocation;
+import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.service.CompensateOperationService;
 import com.lorne.tx.compensate.service.CompensateService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +26,7 @@ public class CompensateServiceImpl implements CompensateService {
     @Override
     public void start() {
         // TODO: 2017/7/11  查找补偿数据
-        List<CompensateOperationData> list =  compensateOperationService.findAll();
+        List<TransactionRecover> list =  compensateOperationService.findAll();
 
         if(list==null||list.size()==0){
             return;
@@ -41,16 +41,16 @@ public class CompensateServiceImpl implements CompensateService {
         }
 
         // TODO: 2017/7/11  执行补偿业务 （只要业务执行未出现异常就算成功）
-        for(CompensateOperationData data:list){
+        for(TransactionRecover data:list){
             compensateOperationService.execute(data);
         }
     }
 
 
     @Override
-    public String saveTransactionInfo(String className, String methodName, String groupId, String taskId, Object... args) {
+    public String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId) {
         // TODO: 2017/7/11  记录补偿数据
-        return compensateOperationService.save(className,methodName,groupId,taskId,args);
+        return compensateOperationService.save(invocation,groupId,taskId);
     }
 
     @Override

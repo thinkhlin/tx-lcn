@@ -1,4 +1,4 @@
-package com.lorne.tx.bean;
+package com.lorne.tx.compensate.model;
 
 import java.io.Serializable;
 
@@ -11,6 +11,7 @@ import java.io.Serializable;
  * @since JDK 1.8
  */
 public class TransactionInvocation implements Serializable {
+
     private static final long serialVersionUID = 7722060715819141844L;
     /**
      * 事务执行器
@@ -24,20 +25,18 @@ public class TransactionInvocation implements Serializable {
      * 参数值
      */
     private Object[] argumentValues;
-    /**
-     * 参数类型
-     */
-    private Class[] argumentTypes;
+
 
     public TransactionInvocation() {
     }
 
-    public TransactionInvocation(Class targetClazz, String method, Object[] argumentValues, Class[] argumentTypes) {
+
+    public TransactionInvocation(Class targetClazz, String method, Object[] argumentValues) {
         this.targetClazz = targetClazz;
         this.method = method;
         this.argumentValues = argumentValues;
-        this.argumentTypes = argumentTypes;
     }
+
 
     public Class getTargetClazz() {
         return targetClazz;
@@ -51,7 +50,4 @@ public class TransactionInvocation implements Serializable {
         return argumentValues;
     }
 
-    public Class[] getArgumentTypes() {
-        return argumentTypes;
-    }
 }

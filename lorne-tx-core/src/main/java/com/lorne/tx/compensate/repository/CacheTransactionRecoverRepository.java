@@ -1,8 +1,8 @@
-package com.lorne.tx.repository;
+package com.lorne.tx.compensate.repository;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.lorne.tx.bean.TransactionRecover;
+import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.exception.TransactionRuntimeException;
 
 import java.util.List;
@@ -23,29 +23,31 @@ public abstract class CacheTransactionRecoverRepository  implements TransactionR
     private Cache<String,TransactionRecover> transactionRecoverCache;
 
 
-    protected abstract int doCreate(TransactionRecover transactionRecover);
+    public abstract int doCreate(TransactionRecover transactionRecover);
 
-    protected abstract int doUpdate(TransactionRecover transactionRecover);
+    public abstract int doUpdate(TransactionRecover transactionRecover);
 
-    protected abstract int doDelete(TransactionRecover transactionRecover);
+    public abstract int doDelete(TransactionRecover transactionRecover);
 
-    protected abstract TransactionRecover doFindOne(String id);
+    public abstract int doDelete(String id);
 
-    protected abstract List<TransactionRecover> doListAll();
+    public abstract TransactionRecover doFindOne(String id);
+
+    public abstract List<TransactionRecover> doListAll();
 
     public CacheTransactionRecoverRepository() {
         transactionRecoverCache = CacheBuilder.newBuilder().expireAfterAccess(expireDuration, TimeUnit.SECONDS).maximumSize(1000).build();
     }
 
-    protected void putToCache(TransactionRecover transactionRecover) {
+    public void putToCache(TransactionRecover transactionRecover) {
         transactionRecoverCache.put(transactionRecover.getId(), transactionRecover);
     }
 
-    protected void removeFromCache(TransactionRecover transactionRecover) {
+    public void removeFromCache(TransactionRecover transactionRecover) {
         transactionRecoverCache.invalidate(transactionRecover.getId());
     }
 
-    protected TransactionRecover findFromCache(String id) {
+    public TransactionRecover findFromCache(String id) {
         return transactionRecoverCache.getIfPresent(id);
     }
 

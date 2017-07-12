@@ -74,7 +74,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             return null;
         }
 
-        String compensateId = compensateService.saveTransactionInfo(info.getClassName(),info.getMethodName(),txGroup.getGroupId(),kid,info.getArgs());
+        String compensateId = compensateService.saveTransactionInfo(info.getInvocation(),txGroup.getGroupId(),kid);
 
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);

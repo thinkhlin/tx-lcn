@@ -1,6 +1,6 @@
-package com.lorne.tx.repository;
+package com.lorne.tx.compensate.repository;
 
-import com.lorne.tx.bean.TransactionRecover;
+import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.serializer.KryoSerializer;
 import com.lorne.tx.serializer.ObjectSerializer;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -31,27 +31,32 @@ public class JdbcTransactionRecoverRepository extends  CacheTransactionRecoverRe
 
 
     @Override
-    protected int doCreate(TransactionRecover transactionRecover) {
+    public int doCreate(TransactionRecover transactionRecover) {
         return 0;
     }
 
     @Override
-    protected int doUpdate(TransactionRecover transactionRecover) {
+    public int doUpdate(TransactionRecover transactionRecover) {
         return 0;
     }
 
     @Override
-    protected int doDelete(TransactionRecover transactionRecover) {
+    public int doDelete(TransactionRecover transactionRecover) {
         return 0;
     }
 
     @Override
-    protected TransactionRecover doFindOne(String id) {
+    public int doDelete(String id) {
+        return 0;
+    }
+
+    @Override
+    public TransactionRecover doFindOne(String id) {
         return null;
     }
 
     @Override
-    protected List<TransactionRecover> doListAll() {
+    public List<TransactionRecover> doListAll() {
         return null;
     }
 
