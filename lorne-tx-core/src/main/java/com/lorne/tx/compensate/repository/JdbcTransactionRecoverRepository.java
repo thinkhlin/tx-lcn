@@ -36,4 +36,9 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     public List<TransactionRecover> findAll() {
         return null;
     }
+
+    @Override
+    public void init() {
+
+    }
 }

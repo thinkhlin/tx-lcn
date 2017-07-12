@@ -17,7 +17,7 @@ import java.util.List;
  * Created by lorne on 2017/7/12.
  */
 @Service
-public class DbCompensateOperationServiceImpl  implements CompensateOperationService {
+public class CompensateOperationServiceImpl implements CompensateOperationService {
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -71,4 +71,8 @@ public class DbCompensateOperationServiceImpl  implements CompensateOperationSer
         return jdbcTransactionRecoverRepository.remove(id)>0;
     }
 
+    @Override
+    public void init() {
+        jdbcTransactionRecoverRepository.init();
+    }
 }

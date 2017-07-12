@@ -25,6 +25,10 @@ public class CompensateServiceImpl implements CompensateService {
 
     @Override
     public void start() {
+
+        // TODO: 2017/7/11  数据库创建等操作
+        compensateOperationService.init();
+
         // TODO: 2017/7/11  查找补偿数据
         List<TransactionRecover> list =  compensateOperationService.findAll();
 

@@ -44,4 +44,6 @@ public interface TransactionRecoverRepository {
      * @return  List<TransactionRecover>
      */
     List<TransactionRecover> findAll();
+
+    void init();
 }

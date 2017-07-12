@@ -21,4 +21,6 @@ public interface CompensateOperationService {
     boolean delete(String id);
 
     boolean updateRetriedCount(String id,int retriedCount);
+
+    void init();
 }
