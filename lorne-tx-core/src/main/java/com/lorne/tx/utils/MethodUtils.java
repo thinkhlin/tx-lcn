@@ -18,7 +18,7 @@ public class MethodUtils {
         try {
             Object  bean = spring.getBean(invocation.getTargetClazz());
             Object res = org.apache.commons.lang.reflect.MethodUtils.invokeMethod(bean,invocation.getMethod(),invocation.getArgumentValues(),invocation.getParameterTypes());
-            logger.info("invoke -> className:"+invocation.getTargetClazz()+",methodName::"+invocation.getMethod()+",args:"+invocation.getArgumentValues()+",res:"+res);
+            logger.info("事务补偿执行---> className:"+invocation.getTargetClazz()+",methodName::"+invocation.getMethod()+",args:"+invocation.getArgumentValues()+",res:"+res);
             return true;
         } catch (Exception e) {
             e.printStackTrace();

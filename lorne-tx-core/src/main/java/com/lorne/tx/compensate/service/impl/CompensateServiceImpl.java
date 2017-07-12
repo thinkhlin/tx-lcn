@@ -1,6 +1,5 @@
 package com.lorne.tx.compensate.service.impl;
 
-import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.service.CompensateOperationService;
@@ -39,14 +38,6 @@ public class CompensateServiceImpl implements CompensateService {
 
         if(list==null||list.size()==0){
             return;
-        }
-
-        //在各业务模块执行远程调用的时候判断一下groupId类型
-        TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
-        if(txTransactionLocal!=null){
-            txTransactionLocal.setHasCompensate(true);
-            txTransactionLocal.setGroupId(COMPENSATE_KEY);
-            TxTransactionLocal.setCurrent(txTransactionLocal);
         }
 
         // TODO: 2017/7/11  执行补偿业务 （只要业务执行未出现异常就算成功）

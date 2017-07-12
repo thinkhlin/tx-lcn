@@ -5,7 +5,7 @@
 
 	<groupId>com.lorne.tx</groupId>
 	<artifactId>springcloud-transaction</artifactId>
-	<version>2.1.1.RELEASE</version>
+	<version>2.2.0.RELEASE</version>
 
 	<name>springcloud-transaction</name>
 	<description>Demo project for Spring Boot</description>
@@ -88,7 +88,7 @@
 		<dependency>
 			<groupId>com.lorne.tx</groupId>
 			<artifactId>lorne-tx-core</artifactId>
-			<version>1.1.1.RELEASE</version>
+			<version>1.2.0.RELEASE</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>

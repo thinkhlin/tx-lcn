@@ -1,6 +1,7 @@
 package com.lorne.tx.service.impl;
 
 import com.lorne.tx.bean.TxTransactionInfo;
+import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionServer;
@@ -44,7 +45,12 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
         /** 事务补偿业务处理中**/
         if(CompensateServiceImpl.COMPENSATE_KEY.equals(info.getTxGroupId())){
             //控制返回业务数据，但事务回滚。
-            return txRunningCompensateTransactionServer;
+            if(TxTransactionLocal.current()!=null){
+                //事务合并到开始业务内 与 txInServiceTransactionServer处理一致
+                return txInServiceTransactionServer;
+            }else{
+                return txRunningCompensateTransactionServer;
+            }
         }
 
         /** 事务补偿业务开始标示**/
