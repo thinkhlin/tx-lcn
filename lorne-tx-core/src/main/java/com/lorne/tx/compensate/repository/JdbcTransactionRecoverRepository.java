@@ -86,13 +86,16 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         return recovers;
     }
 
-    private String modelName;
+
     private String tableName;
+
+
 
     @Override
     public void init(String modelName) {
-        this.modelName = modelName;
-        this.tableName = "t_"+modelName;
+
+
+        this.tableName = "lcn_tx_"+modelName.replaceAll("-","_");
 
         String selectSql = "select * from "+tableName;
 

@@ -1,5 +1,6 @@
 package com.lorne.tx.compensate.service.impl;
 
+import com.lorne.tx.Constants;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.service.CompensateOperationService;
@@ -34,16 +35,21 @@ public class CompensateServiceImpl implements CompensateService {
         compensateOperationService.init(modelNameService.getModelName());
 
         // TODO: 2017/7/11  查找补偿数据
-        List<TransactionRecover> list =  compensateOperationService.findAll();
+        final List<TransactionRecover> list =  compensateOperationService.findAll();
 
         if(list==null||list.size()==0){
             return;
         }
 
         // TODO: 2017/7/11  执行补偿业务 （只要业务执行未出现异常就算成功）
-        for(TransactionRecover data:list){
-            compensateOperationService.execute(data);
-        }
+        Constants.threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                for(TransactionRecover data:list){
+                    compensateOperationService.execute(data);
+                }
+            }
+        });
     }
 
 
