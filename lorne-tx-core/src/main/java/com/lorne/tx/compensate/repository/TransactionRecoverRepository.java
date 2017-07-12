@@ -45,5 +45,8 @@ public interface TransactionRecoverRepository {
      */
     List<TransactionRecover> findAll();
 
+    /**
+     * 创建表等操作
+     */
     void init();
 }
