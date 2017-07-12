@@ -22,5 +22,5 @@ public interface CompensateOperationService {
 
     boolean updateRetriedCount(String id,int retriedCount);
 
-    void init();
+    void init(String modelName);
 }

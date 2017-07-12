@@ -5,6 +5,7 @@ import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.service.CompensateOperationService;
 import com.lorne.tx.compensate.service.CompensateService;
+import com.lorne.tx.service.ModelNameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +24,14 @@ public class CompensateServiceImpl implements CompensateService {
     @Autowired
     private CompensateOperationService compensateOperationService;
 
+    @Autowired
+    private ModelNameService modelNameService;
+
     @Override
     public void start() {
 
         // TODO: 2017/7/11  数据库创建等操作
-        compensateOperationService.init();
+        compensateOperationService.init(modelNameService.getModelName());
 
         // TODO: 2017/7/11  查找补偿数据
         List<TransactionRecover> list =  compensateOperationService.findAll();

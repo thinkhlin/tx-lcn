@@ -1,5 +1,9 @@
 package com.lorne.tx.compensate.model;
 
+import com.lorne.tx.exception.TransactionException;
+import com.lorne.tx.serializer.JavaSerializer;
+import com.lorne.tx.serializer.ObjectSerializer;
+
 import java.io.Serializable;
 
 /**
@@ -13,6 +17,8 @@ import java.io.Serializable;
 public class TransactionInvocation implements Serializable {
 
     private static final long serialVersionUID = 7722060715819141844L;
+
+    private final static ObjectSerializer serializer = new JavaSerializer();
     /**
      * 事务执行器
      */
@@ -25,6 +31,25 @@ public class TransactionInvocation implements Serializable {
      * 参数值
      */
     private Object[] argumentValues;
+
+    public byte[] toSerializable(){
+        try {
+            return serializer.serialize(this);
+        } catch (TransactionException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    public static TransactionInvocation parser(byte[] bs){
+        try {
+            return serializer.deSerialize(bs,TransactionInvocation.class);
+        } catch (TransactionException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 
     public TransactionInvocation() {

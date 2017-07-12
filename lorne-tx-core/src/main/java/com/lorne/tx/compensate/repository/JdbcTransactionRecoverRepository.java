@@ -27,6 +27,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     private DruidDataSource dataSource;
 
 
+
     public JdbcTransactionRecoverRepository() {
         dataSource = new DruidDataSource();
         dataSource.setUrl(ConfigUtils.getString("tx.properties", "jdbc.url"));
@@ -45,37 +46,25 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     @Override
     public int create(TransactionRecover recover) {
-        String modelName = getModelName();
-        String tableName = "t_"+modelName;
         String sql = "insert into "+tableName+"(id,retried_count,create_time,last_time,version,group_id,task_id,invocation)" +
             " values(?,?,?,?,?,?,?,?)";
-        return executeUpdate(sql,recover.getId(),recover.getRetriedCount(),recover.getCreateTime(),recover.getLastTime(),recover.getVersion(),recover.getGroupId(),recover.getTaskId(),recover.getInvocation());
+        return executeUpdate(sql,recover.getId(),recover.getRetriedCount(),recover.getCreateTime(),recover.getLastTime(),recover.getVersion(),recover.getGroupId(),recover.getTaskId(),recover.getInvocation().toSerializable());
     }
 
     @Override
     public int remove(String id) {
-        String modelName = getModelName();
-        String tableName = "t_"+modelName;
         String sql = "delete from "+tableName +" where id = ? ";
         return executeUpdate(sql,id);
     }
 
     @Override
     public int update(String id, Date lastTime, int retriedCount) {
-        String modelName = getModelName();
-        String tableName = "t_"+modelName;
         String sql = "update "+tableName +" set last_time = ?, retried_count = ? where id = ? ";
         return executeUpdate(sql,lastTime,retriedCount,id);
     }
 
     @Override
     public List<TransactionRecover> findAll() {
-
-
-        String modelName = getModelName();
-
-        String tableName = "t_"+modelName;
-
         String selectSql = "select * from "+tableName;
         List<Map<String,Object>>  list =  executeQuery(selectSql);
 
@@ -90,23 +79,20 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
             recover.setTaskId((String)map.get("task_id"));
             recover.setGroupId((String)map.get("group_id"));
             recover.setVersion((Integer) map.get("version"));
-            recover.setInvocation((TransactionInvocation) map.get("invocation"));
-
+            byte[] bytes = (byte[]) map.get("invocation");
+            recover.setInvocation(TransactionInvocation.parser(bytes));
             recovers.add(recover);
         }
         return recovers;
     }
 
-    private String getModelName(){
-        return "zanshibuzhidao";
-    }
+    private String modelName;
+    private String tableName;
 
     @Override
-    public void init() {
-
-        String modelName = getModelName();
-
-        String tableName = "t_"+modelName;
+    public void init(String modelName) {
+        this.modelName = modelName;
+        this.tableName = "t_"+modelName;
 
         String selectSql = "select * from "+tableName;
 
