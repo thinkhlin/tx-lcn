@@ -25,7 +25,9 @@ public class TxManagerInterceptor {
         TxTransactionCompensate compensate = TxTransactionCompensate.current();
         String groupId = null;
         if(compensate==null){
-            groupId = RpcContext.getContext().getAttachment("tx-group");
+            try {
+                groupId = RpcContext.getContext().getAttachment("tx-group");
+            }catch (Exception e){}
         }
         return aspectBeforeService.around(groupId,point);
     }

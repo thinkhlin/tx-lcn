@@ -26,9 +26,11 @@ public class TxManagerInterceptor {
         TxTransactionCompensate compensate = TxTransactionCompensate.current();
         String groupId = null;
         if (compensate == null) {
-            RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-            HttpServletRequest request = requestAttributes == null ? null : ((ServletRequestAttributes) requestAttributes).getRequest();
-            groupId = request == null ? null : request.getHeader("tx-group");
+            try {
+                RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+                HttpServletRequest request = requestAttributes == null ? null : ((ServletRequestAttributes) requestAttributes).getRequest();
+                groupId = request == null ? null : request.getHeader("tx-group");
+            }catch (Exception e){}
         }
         return aspectBeforeService.around(groupId, point);
     }
