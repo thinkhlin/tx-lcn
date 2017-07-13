@@ -3,6 +3,7 @@ package com.lorne.tx.compensate.service;
 
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
+import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 
 import java.util.List;
 
@@ -11,6 +12,8 @@ import java.util.List;
  * Created by lorne on 2017/7/12.
  */
 public interface CompensateOperationService {
+
+    void setTransactionRecover(TransactionRecoverRepository recoverRepository);
 
     List<TransactionRecover> findAll();
 

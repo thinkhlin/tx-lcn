@@ -1,12 +1,16 @@
 package com.lorne.tx.compensate.service.impl;
 
 import com.lorne.core.framework.utils.KidUtils;
+import com.lorne.core.framework.utils.config.ConfigUtils;
+import com.lorne.core.framework.utils.http.HttpUtils;
 import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.CompensateOperationService;
 import com.lorne.tx.utils.MethodUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -23,13 +27,24 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     @Autowired
     private ApplicationContext applicationContext;
 
+    private Logger logger = LoggerFactory.getLogger(CompensateOperationServiceImpl.class);
 
-    @Autowired
-    private TransactionRecoverRepository jdbcTransactionRecoverRepository;
+    private TransactionRecoverRepository recoverRepository;
+
+    private String url;
+
+    public CompensateOperationServiceImpl() {
+        url =  ConfigUtils.getString("tx.properties","url");
+    }
+
+    @Override
+    public void setTransactionRecover(TransactionRecoverRepository recoverRepository) {
+        this.recoverRepository = recoverRepository;
+    }
 
     @Override
     public List<TransactionRecover> findAll() {
-        return jdbcTransactionRecoverRepository.findAll();
+        return recoverRepository.findAll();
     }
 
 
@@ -42,6 +57,9 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
                 TxTransactionCompensate.setCurrent(compensate);
                 boolean isOk =  MethodUtils.invoke(applicationContext,invocation);
                 if(isOk){
+                    //通知TM
+                    String json = HttpUtils.get(url+"Group?groupId="+data.getGroupId()+"&taskId="+data.getTaskId());
+                    logger.info("补偿通知tm->"+json);
                     delete(data.getId());
                 }else{
                     updateRetriedCount(data.getId(),data.getRetriedCount()+1);
@@ -57,7 +75,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
         recover.setTaskId(taskId);
         recover.setId(KidUtils.generateShortUuid());
         recover.setInvocation(transactionInvocation);
-        if(jdbcTransactionRecoverRepository.create(recover)>0){
+        if(recoverRepository.create(recover)>0){
             return recover.getId();
         }else{
             throw new RuntimeException("补偿数据库插入失败.");
@@ -66,16 +84,16 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     @Override
     public boolean updateRetriedCount(String id, int retriedCount) {
-        return jdbcTransactionRecoverRepository.update(id,new Date(),retriedCount)>0;
+        return recoverRepository.update(id,new Date(),retriedCount)>0;
     }
 
     @Override
     public boolean delete(String id) {
-        return jdbcTransactionRecoverRepository.remove(id)>0;
+        return recoverRepository.remove(id)>0;
     }
 
     @Override
     public void init(String modelName) {
-        jdbcTransactionRecoverRepository.init(modelName);
+        recoverRepository.init(modelName);
     }
 }

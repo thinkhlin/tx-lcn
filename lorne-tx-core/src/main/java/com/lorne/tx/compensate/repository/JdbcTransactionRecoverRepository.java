@@ -27,23 +27,6 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     private DruidDataSource dataSource;
 
 
-
-    public JdbcTransactionRecoverRepository() {
-        dataSource = new DruidDataSource();
-        dataSource.setUrl(ConfigUtils.getString("tx.properties", "jdbc.url"));
-        dataSource.setUsername(ConfigUtils.getString("tx.properties", "jdbc.username"));
-        dataSource.setPassword(ConfigUtils.getString("tx.properties", "jdbc.password"));
-        dataSource.setInitialSize(2);
-        dataSource.setMaxActive(20);
-        dataSource.setMinIdle(0);
-        dataSource.setMaxWait(60000);
-        dataSource.setValidationQuery("SELECT 1");
-        dataSource.setTestOnBorrow(false);
-        dataSource.setTestWhileIdle(true);
-        dataSource.setPoolPreparedStatements(false);
-    }
-
-
     @Override
     public int create(TransactionRecover recover) {
         String sql = "insert into "+tableName+"(id,retried_count,create_time,last_time,version,group_id,task_id,invocation)" +
@@ -85,14 +68,24 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         }
         return recovers;
     }
-
-
     private String tableName;
 
 
 
     @Override
     public void init(String modelName) {
+        dataSource = new DruidDataSource();
+        dataSource.setUrl(ConfigUtils.getString("tx.properties", "compensate.db.url"));
+        dataSource.setUsername(ConfigUtils.getString("tx.properties", "compensate.db.username"));
+        dataSource.setPassword(ConfigUtils.getString("tx.properties", "compensate.db.password"));
+        dataSource.setInitialSize(2);
+        dataSource.setMaxActive(20);
+        dataSource.setMinIdle(0);
+        dataSource.setMaxWait(60000);
+        dataSource.setValidationQuery("SELECT 1");
+        dataSource.setTestOnBorrow(false);
+        dataSource.setTestWhileIdle(true);
+        dataSource.setPoolPreparedStatements(false);
 
 
         this.tableName = "lcn_tx_"+modelName.replaceAll("-","_");

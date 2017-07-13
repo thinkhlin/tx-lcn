@@ -1,8 +1,11 @@
 package com.lorne.tx.compensate.service.impl;
 
+import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.tx.Constants;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
+import com.lorne.tx.compensate.repository.JdbcTransactionRecoverRepository;
+import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.CompensateOperationService;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.service.ModelNameService;
@@ -26,10 +29,16 @@ public class CompensateServiceImpl implements CompensateService {
     private CompensateOperationService compensateOperationService;
 
     @Autowired
+    private JdbcTransactionRecoverRepository recoverRepository;
+
+    @Autowired
     private ModelNameService modelNameService;
 
     @Override
     public void start() {
+        //// TODO: 2017/7/13 获取recoverRepository对象
+        TransactionRecoverRepository recoverRepository = loadTransactionRecoverRepository();
+        compensateOperationService.setTransactionRecover(recoverRepository);
 
         // TODO: 2017/7/11  数据库创建等操作
         compensateOperationService.init(modelNameService.getModelName());
@@ -50,6 +59,16 @@ public class CompensateServiceImpl implements CompensateService {
                 }
             }
         });
+    }
+
+    private TransactionRecoverRepository loadTransactionRecoverRepository() {
+        String type = ConfigUtils.getString("tx.properties","compensate.type");
+        switch (type){
+            case "db":{
+                return recoverRepository;
+            }
+        }
+        return recoverRepository;
     }
 
 
