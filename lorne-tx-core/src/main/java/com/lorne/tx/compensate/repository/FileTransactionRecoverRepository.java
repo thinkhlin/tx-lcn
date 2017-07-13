@@ -40,6 +40,7 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
 
     private volatile static boolean initialized;
 
+
     private static ObjectSerializer serializer;
 
     /**

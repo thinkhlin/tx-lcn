@@ -30,6 +30,8 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     private DruidDataSource dataSource;
 
+    private String dbType;
+
 
     @Override
     public int create(TransactionRecover recover) {
@@ -94,25 +96,63 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         dataSource.setTestWhileIdle(true);
         dataSource.setPoolPreparedStatements(false);
 
+        dbType = ConfigUtils.getString("tx.properties","compensate.db.dbType");
 
         this.tableName = "lcn_tx_"+modelName.replaceAll("-","_");
 
-        String dbType = dataSource.getDbType();
-        logger.info("dbType:"+dbType);
+//        String dbType = dataSource.getDbType();
+//        logger.info("dbType:"+dbType);
         //// TODO: 2017/7/13 扩展多中数据库的创建表语句
 
-        String createTableSql = "CREATE TABLE `" + tableName + "` (\n" +
-            "  `id` varchar(10) NOT NULL,\n" +
-            "  `retried_count` int(3) NOT NULL,\n" +
-            "  `create_time` datetime NOT NULL,\n" +
-            "  `last_time` datetime NOT NULL,\n" +
-            "  `version` int(2) NOT NULL,\n" +
-            "  `group_id` varchar(10) NOT NULL,\n" +
-            "  `task_id` varchar(10) NOT NULL,\n" +
-            "  `invocation` longblob NOT NULL,\n" +
-            "  PRIMARY KEY (`id`)\n" +
-            ")";
+        String createTableSql ="";
 
+        switch (dbType){
+            case "mysql":{
+                createTableSql =  "CREATE TABLE `" + tableName + "` (\n" +
+                    "  `id` varchar(10) NOT NULL,\n" +
+                    "  `retried_count` int(3) NOT NULL,\n" +
+                    "  `create_time` datetime NOT NULL,\n" +
+                    "  `last_time` datetime NOT NULL,\n" +
+                    "  `version` int(2) NOT NULL,\n" +
+                    "  `group_id` varchar(10) NOT NULL,\n" +
+                    "  `task_id` varchar(10) NOT NULL,\n" +
+                    "  `invocation` longblob NOT NULL,\n" +
+                    "  PRIMARY KEY (`id`)\n" +
+                    ")";
+                break;
+            }
+            case "oracle":{
+                createTableSql =  "CREATE TABLE `" + tableName + "` (\n" +
+                    "  `id` varchar(10) NOT NULL,\n" +
+                    "  `retried_count` int(3) NOT NULL,\n" +
+                    "  `create_time` date NOT NULL,\n" +
+                    "  `last_time` date NOT NULL,\n" +
+                    "  `version` int(2) NOT NULL,\n" +
+                    "  `group_id` varchar2(10) NOT NULL,\n" +
+                    "  `task_id` varchar2(10) NOT NULL,\n" +
+                    "  `invocation` BLOB NOT NULL,\n" +
+                    "  PRIMARY KEY (`id`)\n" +
+                    ")";
+                break;
+            }
+            case "sqlserver":{
+                createTableSql =  "CREATE TABLE `" + tableName + "` (\n" +
+                    "  `id` varchar(10) NOT NULL,\n" +
+                    "  `retried_count` int(3) NOT NULL,\n" +
+                    "  `create_time` datetime NOT NULL,\n" +
+                    "  `last_time` datetime NOT NULL,\n" +
+                    "  `version` int(2) NOT NULL,\n" +
+                    "  `group_id` nchar(10) NOT NULL,\n" +
+                    "  `task_id` nchar(10) NOT NULL,\n" +
+                    "  `invocation` varbinary NOT NULL,\n" +
+                    "  PRIMARY KEY (`id`)\n" +
+                    ")";
+                break;
+            }
+            default:{
+                throw new RuntimeException("dbType类型不支持,目前仅支持mysql oracle sqlserver.");
+            }
+        }
         executeUpdate(createTableSql);
     }
 
