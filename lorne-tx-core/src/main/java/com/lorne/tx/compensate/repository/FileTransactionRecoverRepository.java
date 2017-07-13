@@ -107,6 +107,10 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
             for (File file : files) {
                 TransactionRecover transaction = readTransaction(file);
                 transactionRecoverList.add(transaction);
+
+                transaction.setVersion(transaction.getVersion()+1);
+                writeFile(transaction);
+
             }
 
         }
