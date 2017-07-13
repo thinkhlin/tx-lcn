@@ -74,8 +74,8 @@ public class NettyServerServiceImpl implements NettyServerService {
                     });
 
             // Start the server.
-            b.bind(Constants.local.getPort());
-            logger.info("Socket started on port(s): " + Constants.local.getPort() + " (socket)");
+            b.bind(Constants.socketPort);
+            logger.info("Socket started on port(s): " + Constants.socketPort + " (socket)");
 
         } catch (Exception e) {
             // Shut down all event loops to terminate all threads.

@@ -4,6 +4,7 @@ import com.lorne.tx.Constants;
 import com.lorne.tx.model.TxServer;
 import com.lorne.tx.mq.service.NettyServerService;
 import com.lorne.tx.service.InitService;
+import com.netflix.eureka.EurekaServerContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -14,13 +15,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class InitServiceImpl implements InitService {
 
-
     @Autowired
     private NettyServerService nettyServerService;
-
-
-    @Value("${socket.ip}")
-    private String socketIp;
 
     @Value("${socket.port}")
     private int socketPort;
@@ -30,12 +26,9 @@ public class InitServiceImpl implements InitService {
 
     @Override
     public void start() {
-
         /**加载本地服务信息**/
-        TxServer txServer = new TxServer();
-        txServer.setIp(socketIp);
-        txServer.setPort(socketPort);
-        Constants.local = txServer;
+
+        Constants.socketPort = socketPort;
         Constants.maxConnection = maxConnection;
         nettyServerService.start();
     }

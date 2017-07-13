@@ -9,6 +9,8 @@ import com.lorne.tx.model.TxState;
 import com.lorne.tx.service.TxService;
 import com.lorne.tx.socket.SocketManager;
 import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.shared.Application;
+import com.netflix.eureka.EurekaServerContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -91,8 +93,8 @@ public class TxServiceImpl implements TxService {
     @Override
     public TxState getState() {
         TxState state = new TxState();
-        state.setIp(Constants.local.getIp());
-        state.setPort(Constants.local.getPort());
+        state.setIp(EurekaServerContextHolder.getInstance().getServerContext().getApplicationInfoManager().getEurekaInstanceConfig().getIpAddress());
+        state.setPort(Constants.socketPort);
         state.setMaxConnection(SocketManager.getInstance().getMaxConnection());
         state.setNowConnection(SocketManager.getInstance().getNowConnection());
         state.setTransactionWaitMaxTime(transaction_wait_max_time);

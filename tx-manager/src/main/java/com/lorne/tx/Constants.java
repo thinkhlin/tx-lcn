@@ -1,7 +1,5 @@
 package com.lorne.tx;
 
-import com.lorne.tx.model.TxServer;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -13,12 +11,10 @@ public class Constants {
 
     public static ExecutorService threadPool = null;
 
-    /**
-     * 本地服务信息
-     */
-    public static TxServer local = null;
 
     public static int maxConnection;
+
+    public static int socketPort;
 
     static {
         threadPool = Executors.newCachedThreadPool();
