@@ -4,6 +4,8 @@ import com.alibaba.druid.pool.DruidDataSource;
 import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -23,6 +25,8 @@ import java.util.Date;
 @Component
 public class JdbcTransactionRecoverRepository implements TransactionRecoverRepository {
 
+
+    private Logger logger = LoggerFactory.getLogger(JdbcTransactionRecoverRepository.class);
 
     private DruidDataSource dataSource;
 
@@ -48,8 +52,11 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     @Override
     public List<TransactionRecover> findAll() {
-        String selectSql = "select * from "+tableName;
+        String selectSql = "select * from "+tableName +" where version = 1 ";
         List<Map<String,Object>>  list =  executeQuery(selectSql);
+
+        String updateSql = "update "+tableName +" set version = version+1 ";
+        executeUpdate(updateSql);
 
         List<TransactionRecover> recovers = new ArrayList<>();
         for(Map<String,Object> map:list){
@@ -90,8 +97,6 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
         this.tableName = "lcn_tx_"+modelName.replaceAll("-","_");
 
-        String selectSql = "select * from "+tableName;
-
         String createTableSql = "CREATE TABLE `" + tableName + "` (\n" +
             "  `_id` int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
             "  `id` varchar(10) NOT NULL,\n" +
@@ -105,9 +110,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
             "  PRIMARY KEY (`_id`)\n" +
             ") ENGINE=InnoDB DEFAULT CHARSET=latin1;";
 
-         if(executeQuery(selectSql)==null){
-             executeUpdate(createTableSql);
-         }
+        executeUpdate(createTableSql);
     }
 
     private int executeUpdate(String sql, Object... params) {
@@ -124,7 +127,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
             int rs = ps.executeUpdate();
             return rs;
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("executeUpdate->"+e.getMessage());
         } finally {
             try {
                 if (ps != null) {
@@ -165,7 +168,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                 list.add(rowData);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
+            logger.error("executeQuery->"+e.getMessage());
         } finally {
             try {
                 if (rs != null) {
