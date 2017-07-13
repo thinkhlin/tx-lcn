@@ -46,7 +46,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     @Override
     public int update(String id, Date lastTime, int retriedCount) {
-        String sql = "update "+tableName +" set last_time = ?, retried_count = ? where id = ? ";
+        String sql = "update "+tableName +" set last_time = ?,set version = 1, retried_count = ? where id = ? ";
         return executeUpdate(sql,lastTime,retriedCount,id);
     }
 

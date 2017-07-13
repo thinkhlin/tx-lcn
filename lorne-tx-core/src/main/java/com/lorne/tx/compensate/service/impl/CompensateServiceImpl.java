@@ -4,6 +4,7 @@ import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.tx.Constants;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
+import com.lorne.tx.compensate.repository.FileTransactionRecoverRepository;
 import com.lorne.tx.compensate.repository.JdbcTransactionRecoverRepository;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.CompensateOperationService;
@@ -29,7 +30,10 @@ public class CompensateServiceImpl implements CompensateService {
     private CompensateOperationService compensateOperationService;
 
     @Autowired
-    private JdbcTransactionRecoverRepository recoverRepository;
+    private JdbcTransactionRecoverRepository jdbcTransactionRecoverRepository;
+
+    @Autowired
+    private FileTransactionRecoverRepository fileTransactionRecoverRepository;
 
     @Autowired
     private ModelNameService modelNameService;
@@ -65,10 +69,13 @@ public class CompensateServiceImpl implements CompensateService {
         String type = ConfigUtils.getString("tx.properties","compensate.type");
         switch (type){
             case "db":{
-                return recoverRepository;
+                return jdbcTransactionRecoverRepository;
+            }
+            case "file":{
+                return fileTransactionRecoverRepository;
             }
         }
-        return recoverRepository;
+        return fileTransactionRecoverRepository;
     }
 
 
