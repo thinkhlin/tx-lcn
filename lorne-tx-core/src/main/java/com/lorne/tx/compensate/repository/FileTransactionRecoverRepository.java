@@ -104,7 +104,7 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
                 }
             }
         } catch (Exception e) {
-            logger.error("create->"+e.getMessage());
+            logger.error("findAll->"+e.getMessage());
         }
         return list;
     }
