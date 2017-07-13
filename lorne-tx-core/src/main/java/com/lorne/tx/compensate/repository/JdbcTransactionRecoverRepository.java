@@ -97,8 +97,11 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
         this.tableName = "lcn_tx_"+modelName.replaceAll("-","_");
 
+        String dbType = dataSource.getDbType();
+        logger.info("dbType:"+dbType);
+        //// TODO: 2017/7/13 扩展多中数据库的创建表语句
+
         String createTableSql = "CREATE TABLE `" + tableName + "` (\n" +
-            "  `_id` int(11) unsigned NOT NULL AUTO_INCREMENT,\n" +
             "  `id` varchar(10) NOT NULL,\n" +
             "  `retried_count` int(3) NOT NULL,\n" +
             "  `create_time` datetime NOT NULL,\n" +
@@ -107,8 +110,8 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
             "  `group_id` varchar(10) NOT NULL,\n" +
             "  `task_id` varchar(10) NOT NULL,\n" +
             "  `invocation` longblob NOT NULL,\n" +
-            "  PRIMARY KEY (`_id`)\n" +
-            ") ENGINE=InnoDB DEFAULT CHARSET=latin1;";
+            "  PRIMARY KEY (`id`)\n" +
+            ")";
 
         executeUpdate(createTableSql);
     }
