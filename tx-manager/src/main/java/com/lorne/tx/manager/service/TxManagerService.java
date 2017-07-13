@@ -26,6 +26,10 @@ public interface TxManagerService {
     boolean checkTransactionGroup(String groupId,String taskId);
 
 
+    boolean checkTransactionGroupState(String groupId);
+
+
+
     boolean closeTransactionGroup(String groupId);
 
 

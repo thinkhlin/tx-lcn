@@ -110,6 +110,19 @@ public class TxManagerServiceImpl implements TxManagerService {
         return res;
     }
 
+
+    @Override
+    public boolean checkTransactionGroupState(String groupId) {
+        ValueOperations<String, String> value = redisTemplate.opsForValue();
+        String key = key_prefix_notify + groupId;
+        String json = value.get(key);
+        if (StringUtils.isEmpty(json)) {
+            return false;
+        }
+        TxGroup txGroup = TxGroup.parser(json);
+        return txGroup.getState()==1;
+    }
+
     @Override
     public boolean closeTransactionGroup(String groupId) {
         ValueOperations<String, String> value = redisTemplate.opsForValue();

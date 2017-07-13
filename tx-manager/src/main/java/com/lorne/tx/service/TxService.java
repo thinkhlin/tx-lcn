@@ -13,4 +13,6 @@ public interface TxService {
     TxState getState();
 
     boolean getServerGroup(String groupId,String taskId);
+
+    boolean getServerGroupState(String groupId);
 }

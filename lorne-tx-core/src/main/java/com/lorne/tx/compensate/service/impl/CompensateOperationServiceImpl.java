@@ -47,22 +47,29 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
         return recoverRepository.findAll();
     }
 
-
     @Override
     public void execute(TransactionRecover data) {
         if(data!=null){
             TransactionInvocation invocation =  data.getInvocation();
             if(invocation!=null){
-                TxTransactionCompensate compensate = new TxTransactionCompensate();
-                TxTransactionCompensate.setCurrent(compensate);
-                boolean isOk =  MethodUtils.invoke(applicationContext,invocation);
-                if(isOk){
-                    //通知TM
-                    String json = HttpUtils.get(url+"Group?groupId="+data.getGroupId()+"&taskId="+data.getTaskId());
-                    logger.info("补偿通知tm->"+json);
-                    delete(data.getId());
+                //通知TM
+                String groupState = HttpUtils.get(url+"GroupState?groupId="+data.getGroupId()+"&taskId="+data.getTaskId());
+                logger.info("获取补偿事务状态TM->"+groupState);
+
+                if("true".equals(groupState)){
+                    TxTransactionCompensate compensate = new TxTransactionCompensate();
+                    TxTransactionCompensate.setCurrent(compensate);
+                    boolean isOk =  MethodUtils.invoke(applicationContext,invocation);
+                    if(isOk){
+                        String notifyGroup = HttpUtils.get(url+"Group?groupId="+data.getGroupId()+"&taskId="+data.getTaskId());
+                        logger.info("补偿事务通知TM->"+notifyGroup);
+                        delete(data.getId());
+                    }else{
+                        updateRetriedCount(data.getId(),data.getRetriedCount()+1);
+                    }
                 }else{
-                    updateRetriedCount(data.getId(),data.getRetriedCount()+1);
+                    //回滚操作直接清理事务补偿日志
+                    delete(data.getId());
                 }
             }
         }

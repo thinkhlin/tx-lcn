@@ -38,6 +38,13 @@ public class TxManagerController {
         return txService.getServerGroup(groupId,taskId);
     }
 
+    @RequestMapping("/getServerGroupState")
+    @ResponseBody
+    public boolean getServerGroupState(@RequestParam("groupId") String groupId) {
+        return txService.getServerGroupState(groupId);
+    }
+
+
     @RequestMapping("/state")
     public TxState state() {
         return txService.getState();
