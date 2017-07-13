@@ -2,10 +2,8 @@ package com.lorne.tx.compensate.repository;
 
 import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.tx.compensate.model.TransactionRecover;
-import com.lorne.tx.exception.TransactionException;
-import com.lorne.tx.serializer.JavaSerializer;
+import com.lorne.tx.serializer.KryoSerializer;
 import com.lorne.tx.serializer.ObjectSerializer;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +13,6 @@ import org.springframework.util.StreamUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -23,7 +20,7 @@ import java.util.List;
 /**
  * <p>Description: .</p>
  * <p>Copyright: 2015-2017 happylifeplat.com All Rights Reserved</p>
- * jdbc实现
+ * 文件实现
  *
  * @author yu.xiao@happylifeplat.com
  * @version 1.0
@@ -44,7 +41,7 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
 
 
     public FileTransactionRecoverRepository() {
-        serializer = new JavaSerializer();
+        serializer = new KryoSerializer();
     }
 
     @Override
