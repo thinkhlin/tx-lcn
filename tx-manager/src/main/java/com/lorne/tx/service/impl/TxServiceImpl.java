@@ -9,8 +9,6 @@ import com.lorne.tx.model.TxState;
 import com.lorne.tx.service.TxService;
 import com.lorne.tx.socket.SocketManager;
 import com.netflix.appinfo.InstanceInfo;
-import com.netflix.discovery.shared.Application;
-import com.netflix.eureka.EurekaServerContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

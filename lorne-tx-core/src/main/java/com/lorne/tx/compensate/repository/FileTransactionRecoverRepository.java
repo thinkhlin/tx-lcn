@@ -32,8 +32,6 @@ import java.util.List;
 public class FileTransactionRecoverRepository implements TransactionRecoverRepository {
 
 
-   // private static final String rootPath = "/tx";
-
     private String tableName;
 
     private String filePath;
@@ -100,22 +98,19 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
      */
     @Override
     public List<TransactionRecover> findAll() {
-
         List<TransactionRecover> transactionRecoverList = Lists.newArrayList();
         File path = new File(filePath);
         File[] files = path.listFiles();
         if (files != null && files.length > 0) {
             for (File file : files) {
                 TransactionRecover transaction = readTransaction(file);
-                transactionRecoverList.add(transaction);
-
-                transaction.setVersion(transaction.getVersion()+1);
-                writeFile(transaction);
-
+                if(transaction.getVersion()==1) {
+                    transactionRecoverList.add(transaction);
+                    transaction.setVersion(transaction.getVersion() + 1);
+                    writeFile(transaction);
+                }
             }
-
         }
-
         return transactionRecoverList;
     }
 
@@ -225,23 +220,11 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
     }
 
     public static byte[] serialize(TransactionRecover transaction) throws Exception {
-      /*  Map<String, Object> map = Maps.newHashMap();
-        map.put("id", transaction.getId());
-        map.put("retried_count", transaction.getRetriedCount());
-        map.put("create_time", transaction.getCreateTime());
-        map.put("last_time", transaction.getLastTime());
-        map.put("version", transaction.getVersion());
-        map.put("group_id", transaction.getGroupId());
-        map.put("task_id", transaction.getTaskId());
-        map.put("invocation", serializer.serialize(transaction.getInvocation()));*/
-
         return serializer.serialize(transaction);
 
     }
 
     public static TransactionRecover deserialize(byte[] value) throws Exception {
-
         return serializer.deSerialize(value, TransactionRecover.class);
-
     }
 }

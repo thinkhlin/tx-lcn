@@ -32,6 +32,8 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     private String dbType;
 
+    private String tableName;
+
 
     @Override
     public int create(TransactionRecover recover) {
@@ -77,9 +79,6 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         }
         return recovers;
     }
-    private String tableName;
-
-
 
     @Override
     public void init(String modelName) {
