@@ -123,10 +123,10 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
             case "oracle":{
                 createTableSql =  "CREATE TABLE `" + tableName + "` (\n" +
                     "  `id` varchar(10) NOT NULL,\n" +
-                    "  `retried_count` int(3) NOT NULL,\n" +
-                    "  `create_time` date NOT NULL,\n" +
-                    "  `last_time` date NOT NULL,\n" +
-                    "  `version` int(2) NOT NULL,\n" +
+                    "  `retried_count` number(3,0) NOT NULL,\n" +
+                    "  `create_time` timestamp NOT NULL,\n" +
+                    "  `last_time` timestamp NOT NULL,\n" +
+                    "  `version` number(2,0) NOT NULL,\n" +
                     "  `group_id` varchar2(10) NOT NULL,\n" +
                     "  `task_id` varchar2(10) NOT NULL,\n" +
                     "  `invocation` BLOB NOT NULL,\n" +

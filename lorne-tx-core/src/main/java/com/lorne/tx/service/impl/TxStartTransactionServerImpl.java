@@ -43,16 +43,16 @@ public class TxStartTransactionServerImpl implements TransactionServer {
     private NettyService nettyService;
 
 
-    private void confirmAwait(ExecuteAwaitTask executeAwaitTask,Task task){
+    private void confirmAwait(ExecuteAwaitTask executeAwaitTask){
         if(executeAwaitTask.getState()==1){
-            task.signalTask();
+
         }else{
             try {
-                Thread.sleep(3);
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            confirmAwait(executeAwaitTask, task);
+            confirmAwait(executeAwaitTask);
         }
     }
 
@@ -72,6 +72,8 @@ public class TxStartTransactionServerImpl implements TransactionServer {
             @Override
             public void run() {
 
+                confirmAwait(executeAwaitTask);//进入等待以后才能后面处理
+
                 TxGroup txGroup = txManagerService.createTransactionGroup();
 
                 //获取不到模块信息重新连接，本次事务异常返回数据.
@@ -82,9 +84,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                             throw new ServiceException("添加事务组异常.");
                         }
                     });
-
-                    confirmAwait(executeAwaitTask,task);
-
+                    task.signalTask();
                     nettyService.restart();
                     return;
                 }

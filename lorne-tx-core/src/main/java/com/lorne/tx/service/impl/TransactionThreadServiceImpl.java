@@ -141,7 +141,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
              });
         } else {
             try {
-                Thread.sleep(3);
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
