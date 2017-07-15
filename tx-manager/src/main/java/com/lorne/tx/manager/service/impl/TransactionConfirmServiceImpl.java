@@ -138,7 +138,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
             countDownLatchHelper.addExecute(new IExecute<Boolean>() {
                 @Override
                 public Boolean execute() {
-                    JSONObject jsonObject = new JSONObject();
+                    final JSONObject jsonObject = new JSONObject();
                     jsonObject.put("a", "t");
                     jsonObject.put("c", checkSate);
                     jsonObject.put("t", txInfo.getKid());
