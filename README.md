@@ -44,6 +44,7 @@
 ```java
 
     @Override
+    @TxTransaction
     public boolean test() {
         //本地调用
         testDao.save();
@@ -54,7 +55,7 @@
 
 如上代码执行完成以后两个模块都将回滚事务。
 
-说明：只需要在分布式事务的**开启方**添加`@TxTransaction`注解即可。详细见demo教程
+说明：需要在分布式事务所有参与方都添加`@TxTransaction`注解。详细见demo教程
 
 
 ## 目录说明
