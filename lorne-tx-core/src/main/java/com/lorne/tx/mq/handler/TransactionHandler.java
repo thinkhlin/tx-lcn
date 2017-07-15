@@ -71,6 +71,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         String taskId = resObj.getString("t");
                         String key = resObj.getString("k");
                         Task task = ConditionUtils.getInstance().getTask(taskId);
+                        logger.info("接受通知数据->" + json);
                         String res = "";
                         if (task != null) {
                             if(!task.isNotify()){
@@ -98,35 +99,9 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         data.put("p", params);
 
                         SocketUtils.sendMsg(ctx,data.toString());
+                        logger.info("返回通知状态->" + data.toString());
                         break;
                     }
-//                    case "l": {
-//                        String taskId = resObj.getString("t");
-//                        String key = resObj.getString("k");
-//                        Task task = ConditionUtils.getInstance().getTask(taskId);
-//                        String res = "";
-//                        if (task != null) {
-//                            if (!task.isNotify()) {
-//                                task.setState(1);
-//                                res = "1";//尚未回滚
-//                            } else {
-//                                res = "0";//已经回滚
-//                            }
-//                        } else {
-//                            res = "0";//已经回滚
-//                        }
-//
-//                        JSONObject data = new JSONObject();
-//                        data.put("k", key);
-//                        data.put("a", action);
-//
-//                        JSONObject params = new JSONObject();
-//                        params.put("d", res);
-//                        data.put("p", params);
-//
-//                        SocketUtils.sendMsg(ctx,data.toString());
-//                        break;
-//                    }
                 }
 
             } else {

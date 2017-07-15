@@ -33,7 +33,7 @@ public class ThreadPoolUtils {
             int size = ConfigUtils.getInt("tx.properties", "max.thread.size");
             threadPool = Executors.newFixedThreadPool(size);
         } catch (Exception e) {
-            threadPool = Executors.newFixedThreadPool(10);
+            threadPool = Executors.newFixedThreadPool(500);
         }
         executorService = Executors.newScheduledThreadPool(50);
     }

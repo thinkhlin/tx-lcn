@@ -25,7 +25,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
 
     @Override
-    public TxGroup createTransactionGroup() {
+    public  TxGroup createTransactionGroup() {
         JSONObject jsonObject = new JSONObject();
         Request request = new Request("cg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
@@ -33,7 +33,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
     @Override
-    public TxGroup addTransactionGroup(String groupId, String taskId) {
+    public  TxGroup addTransactionGroup(String groupId, String taskId) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("t", taskId);
@@ -43,7 +43,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
 
-    private void thread(String groupId, ExecuteAwaitTask executeAwaitTask) {
+    private  void thread(String groupId, ExecuteAwaitTask executeAwaitTask) {
         if (executeAwaitTask.getState() == 1) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("g", groupId);
@@ -52,7 +52,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
             logger.info("closeTransactionGroup->" + json);
         } else {
             try {
-                Thread.sleep(3);
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -61,7 +61,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
     @Override
-    public void closeTransactionGroup(final String groupId, final ExecuteAwaitTask executeAwaitTask) {
+    public  void closeTransactionGroup(final String groupId, final ExecuteAwaitTask executeAwaitTask) {
         ThreadPoolUtils.getInstance().execute(new Runnable() {
             @Override
             public void run() {
@@ -71,7 +71,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
     @Override
-    public boolean notifyTransactionInfo(String groupId, String kid, boolean state) {
+    public  boolean notifyTransactionInfo(String groupId, String kid, boolean state) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("k", kid);
@@ -83,7 +83,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
 
     @Override
-    public int checkTransactionInfo(String groupId, String taskId) {
+    public  int checkTransactionInfo(String groupId, String taskId) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("t", taskId);

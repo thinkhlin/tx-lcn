@@ -1,6 +1,5 @@
 package com.lorne.tx.mq.model;
 
-import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.utils.KidUtils;
 
 /**
@@ -53,10 +52,11 @@ public class Request {
     }
 
     public String toMsg() {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("a", getAction());
-        jsonObject.put("k", getKey());
-        jsonObject.put("p", getParams());
-        return jsonObject.toString();
+//        JSONObject jsonObject = new JSONObject();
+//        jsonObject.put("a", getAction());
+//        jsonObject.put("k", getKey());
+//        jsonObject.put("p", getParams());
+        String json = "{\"a\":\""+getAction()+"\",\"k\":\""+getKey()+"\",\"p\":"+getParams()+"}";
+        return json;
     }
 }

@@ -41,10 +41,8 @@ public class TxStartTransactionServerImpl implements TransactionServer {
     private NettyService nettyService;
 
 
-    private void confirmAwait(ExecuteAwaitTask executeAwaitTask) {
-        if (executeAwaitTask.getState() == 1) {
-
-        } else {
+    private synchronized void confirmAwait(ExecuteAwaitTask executeAwaitTask) {
+        if (executeAwaitTask.getState() == 0) {
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {

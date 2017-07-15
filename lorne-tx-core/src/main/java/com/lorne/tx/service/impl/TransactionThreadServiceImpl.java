@@ -74,7 +74,6 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         }
 
         String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroup.getGroupId(), kid);
-
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = txManager.getTransaction(def);
@@ -109,7 +108,6 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         }
 
         isSend = txManagerService.notifyTransactionInfo(_groupId, kid, executeOk);
-
         ServiceThreadModel model = new ServiceThreadModel();
         model.setStatus(status);
         model.setWaitTask(waitTask);
