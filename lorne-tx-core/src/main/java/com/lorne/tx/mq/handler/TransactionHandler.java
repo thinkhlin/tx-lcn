@@ -8,7 +8,6 @@ import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.utils.SocketUtils;
-import com.lorne.tx.utils.ThreadPoolUtils;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -18,6 +17,9 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -40,6 +42,8 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     private String heartJson;
 
+    private Executor  threadPool = Executors.newFixedThreadPool(200);
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(200);
 
 
     public TransactionHandler(NettyService nettyService) {
@@ -185,7 +189,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         final String key = request.getKey();
         if (ctx != null && ctx.channel() != null && ctx.channel().isActive()) {
             Task task = ConditionUtils.getInstance().createTask(key);
-            ThreadPoolUtils.getInstance().schedule(new Runnable() {
+            executorService.schedule(new Runnable() {
                 @Override
                 public void run() {
                     Task task = ConditionUtils.getInstance().getTask(key);
@@ -202,7 +206,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
             }, 1, TimeUnit.SECONDS);
 
             final  ExecuteAwaitTask awaitTask = new ExecuteAwaitTask();
-            ThreadPoolUtils.getInstance().execute(new Runnable() {
+            threadPool.execute(new Runnable() {
                 @Override
                 public void run() {
                     sleepSend(awaitTask,request);
