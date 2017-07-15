@@ -1,6 +1,5 @@
 package com.lorne.tx.service.impl;
 
-import com.lorne.core.framework.Constant;
 import com.lorne.core.framework.exception.ServiceException;
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.config.ConfigUtils;
@@ -8,15 +7,15 @@ import com.lorne.core.framework.utils.http.HttpUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
-import com.lorne.tx.Constants;
 import com.lorne.tx.bean.TxTransactionInfo;
+import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
-import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
+import com.lorne.tx.utils.ThreadPoolUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,18 +44,18 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     private NettyService nettyService;
 
     @Autowired
-    private CompensateService  compensateService;
+    private CompensateService compensateService;
 
     private Logger logger = LoggerFactory.getLogger(TransactionThreadServiceImpl.class);
 
     private String url;
 
     public TransactionThreadServiceImpl() {
-       url =  ConfigUtils.getString("tx.properties","url");
+        url = ConfigUtils.getString("tx.properties", "url");
     }
 
     @Override
-    public ServiceThreadModel serviceInThread(TxTransactionInfo info,boolean signTask, String _groupId, Task task, ProceedingJoinPoint point) {
+    public ServiceThreadModel serviceInThread(TxTransactionInfo info, boolean signTask, String _groupId, Task task, ProceedingJoinPoint point) {
 
         String kid = KidUtils.generateShortUuid();
         TxGroup txGroup = txManagerService.addTransactionGroup(_groupId, kid);
@@ -74,7 +73,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             return null;
         }
 
-        String compensateId = compensateService.saveTransactionInfo(info.getInvocation(),txGroup.getGroupId(),kid);
+        String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroup.getGroupId(), kid);
 
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
@@ -122,9 +121,9 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     }
 
 
-    private void waitSignTask(Task task,boolean isNotifyOk, ExecuteAwaitTask executeAwaitTask,final ExecuteAwaitTask closeGroupTask) {
+    private void waitSignTask(Task task, boolean isNotifyOk, ExecuteAwaitTask executeAwaitTask, final ExecuteAwaitTask closeGroupTask) {
         if (executeAwaitTask.getState() == 1) {
-            if (isNotifyOk == false ) {
+            if (isNotifyOk == false) {
                 task.setBack(new IBack() {
                     @Override
                     public Object doing(Object... objects) throws Throwable {
@@ -132,45 +131,45 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                     }
                 });
             }
-             task.signalTask(new IBack() {
-                 @Override
-                 public Object doing(Object... objs) throws Throwable {
-                     closeGroupTask.setState(1);
-                     return null;
-                 }
-             });
+            task.signalTask(new IBack() {
+                @Override
+                public Object doing(Object... objs) throws Throwable {
+                    closeGroupTask.setState(1);
+                    return null;
+                }
+            });
         } else {
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            waitSignTask(task,isNotifyOk, executeAwaitTask,closeGroupTask);
+            waitSignTask(task, isNotifyOk, executeAwaitTask, closeGroupTask);
         }
     }
 
     @Override
-    public void serviceWait(boolean signTask,final Task task, final ServiceThreadModel model) {
+    public void serviceWait(boolean signTask, final Task task, final ServiceThreadModel model) {
         Task waitTask = model.getWaitTask();
         final String taskId = waitTask.getKey();
         TransactionStatus status = model.getStatus();
 
-        Constant.scheduledExecutorService.schedule(new Runnable() {
+        ThreadPoolUtils.getInstance().schedule(new Runnable() {
             @Override
             public void run() {
                 Task task = ConditionUtils.getInstance().getTask(taskId);
                 String groupId = model.getTxGroup().getGroupId();
                 if (task.getState() == 0) {
 
-                    int hasOk =  txManagerService.checkTransactionInfo(groupId,taskId);
-                    if(hasOk == 1){
+                    int hasOk = txManagerService.checkTransactionInfo(groupId, taskId);
+                    if (hasOk == 1) {
                         task.setState(1);
                         task.signalTask();
-                    }else{
-                        if(hasOk==-1){
+                    } else {
+                        if (hasOk == -1) {
                             // 发起http请求查询状态
-                            String json = HttpUtils.get(url+"Group?groupId="+groupId+"&taskId="+taskId);
-                            if(json.contains("true")){
+                            String json = HttpUtils.get(url + "Group?groupId=" + groupId + "&taskId=" + taskId);
+                            if (json.contains("true")) {
 
                                 task.setState(1);
                                 task.signalTask();
@@ -196,10 +195,10 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
         final ExecuteAwaitTask closeGroupTask = new ExecuteAwaitTask();
 
-        Constants.threadPool.execute(new Runnable() {
+        ThreadPoolUtils.getInstance().execute(new Runnable() {
             @Override
             public void run() {
-                waitSignTask(task,model.isNotifyOk(),mainTaskAwait,closeGroupTask); //执行顺序 2
+                waitSignTask(task, model.isNotifyOk(), mainTaskAwait, closeGroupTask); //执行顺序 2
             }
         });
 

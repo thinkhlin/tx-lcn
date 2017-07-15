@@ -8,6 +8,7 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.utils.SocketUtils;
+import com.lorne.tx.utils.ThreadPoolUtils;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -198,7 +199,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
             SocketUtils.sendMsg(ctx,request.toMsg());
 
-            Constant.scheduledExecutorService.schedule(new Runnable() {
+           ThreadPoolUtils.getInstance().schedule(new Runnable() {
                 @Override
                 public void run() {
                     Task task = ConditionUtils.getInstance().getTask(key);

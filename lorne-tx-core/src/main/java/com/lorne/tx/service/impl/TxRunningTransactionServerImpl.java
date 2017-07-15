@@ -3,12 +3,12 @@ package com.lorne.tx.service.impl;
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.Task;
-import com.lorne.tx.Constants;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.TransactionServer;
+import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ServiceThreadModel;
+import com.lorne.tx.utils.ThreadPoolUtils;
 import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
@@ -23,9 +23,7 @@ import org.springframework.stereotype.Service;
 @Service(value = "txRunningTransactionServer")
 public class TxRunningTransactionServerImpl implements TransactionServer {
 
-
     private Logger logger = LoggerFactory.getLogger(TxRunningTransactionServerImpl.class);
-
 
     @Autowired
     private TransactionThreadService transactionThreadService;
@@ -41,7 +39,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         final String taskId = KidUtils.generateShortUuid();
         final Task task = ConditionUtils.getInstance().createTask(taskId);
 
-        Constants.threadPool.execute(new Runnable() {
+        ThreadPoolUtils.getInstance().execute(new Runnable() {
             @Override
             public void run() {
 
@@ -59,7 +57,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 }
 
 
-                ServiceThreadModel model = transactionThreadService.serviceInThread(info,true, _groupId, task, point);
+                ServiceThreadModel model = transactionThreadService.serviceInThread(info, true, _groupId, task, point);
                 if (model == null) {
                     return;
                 }

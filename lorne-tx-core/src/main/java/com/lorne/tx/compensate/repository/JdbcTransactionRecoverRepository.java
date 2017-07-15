@@ -124,8 +124,8 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                 createTableSql =  "CREATE TABLE `" + tableName + "` (\n" +
                     "  `id` varchar(10) NOT NULL,\n" +
                     "  `retried_count` number(3,0) NOT NULL,\n" +
-                    "  `create_time` timestamp NOT NULL,\n" +
-                    "  `last_time` timestamp NOT NULL,\n" +
+                    "  `create_time` datetime  NOT NULL,\n" +
+                    "  `last_time` datetime  NOT NULL,\n" +
                     "  `version` number(2,0) NOT NULL,\n" +
                     "  `group_id` varchar2(10) NOT NULL,\n" +
                     "  `task_id` varchar2(10) NOT NULL,\n" +

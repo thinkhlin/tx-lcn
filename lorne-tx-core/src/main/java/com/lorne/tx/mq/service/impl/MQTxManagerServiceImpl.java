@@ -1,12 +1,12 @@
 package com.lorne.tx.mq.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.lorne.tx.Constants;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
+import com.lorne.tx.utils.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +62,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
     @Override
     public void closeTransactionGroup(final String groupId, final ExecuteAwaitTask executeAwaitTask) {
-        Constants.threadPool.execute(new Runnable() {
+        ThreadPoolUtils.getInstance().execute(new Runnable() {
             @Override
             public void run() {
                 thread(groupId, executeAwaitTask);
@@ -83,13 +83,13 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
 
     @Override
-    public int checkTransactionInfo(String groupId,String taskId) {
+    public int checkTransactionInfo(String groupId, String taskId) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("t", taskId);
         Request request = new Request("ckg", jsonObject.toString());
-        String json =  nettyService.sendMsg(request);
-        int res =  "1".equals(json)?1:(json==null)?-1:0;
+        String json = nettyService.sendMsg(request);
+        int res = "1".equals(json) ? 1 : (json == null) ? -1 : 0;
         return res;
     }
 }

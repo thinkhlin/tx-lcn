@@ -15,6 +15,7 @@ import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
 import com.lorne.tx.socket.SocketManager;
 import com.lorne.tx.socket.utils.SocketUtils;
+import com.lorne.tx.utils.ThreadPoolUtils;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,7 +128,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                     jsonObject.put("k", key);
                     final Task task = ConditionUtils.getInstance().createTask(key);
                     SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
-                    Constant.scheduledExecutorService.schedule(new Runnable() {
+                    ThreadPoolUtils.getInstance().schedule(new Runnable() {
                         @Override
                         public void run() {
                             task.setBack(new IBack() {

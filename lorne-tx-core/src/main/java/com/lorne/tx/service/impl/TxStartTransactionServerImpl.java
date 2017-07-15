@@ -5,16 +5,16 @@ import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
-import com.lorne.tx.Constants;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
-import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.TransactionServer;
+import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
+import com.lorne.tx.utils.ThreadPoolUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,19 +34,17 @@ public class TxStartTransactionServerImpl implements TransactionServer {
     @Autowired
     private MQTxManagerService txManagerService;
 
-
     @Autowired
     private TransactionThreadService transactionThreadService;
-
 
     @Autowired
     private NettyService nettyService;
 
 
-    private void confirmAwait(ExecuteAwaitTask executeAwaitTask){
-        if(executeAwaitTask.getState()==1){
+    private void confirmAwait(ExecuteAwaitTask executeAwaitTask) {
+        if (executeAwaitTask.getState() == 1) {
 
-        }else{
+        } else {
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
@@ -68,7 +66,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
 
         final ExecuteAwaitTask executeAwaitTask = new ExecuteAwaitTask();
 
-        Constants.threadPool.execute(new Runnable() {
+        ThreadPoolUtils.getInstance().execute(new Runnable() {
             @Override
             public void run() {
 
@@ -99,7 +97,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                 boolean signTask = false;
 
 
-                ServiceThreadModel model = transactionThreadService.serviceInThread(info,signTask, groupId, task, point);
+                ServiceThreadModel model = transactionThreadService.serviceInThread(info, signTask, groupId, task, point);
                 if (model == null) {
                     return;
                 }

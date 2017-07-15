@@ -7,6 +7,7 @@ import com.lorne.tx.manager.service.TransactionConfirmService;
 import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
+import com.lorne.tx.utils.ThreadPoolUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -134,7 +135,7 @@ public class TxManagerServiceImpl implements TxManagerService {
         final TxGroup txGroup = TxGroup.parser(json);
         txGroup.hasOvered();
         txGroup.setEndTime(System.currentTimeMillis());
-        Constants.threadPool.execute(new Runnable() {
+        ThreadPoolUtils.getInstance().execute(new Runnable() {
             @Override
             public void run() {
                 transactionConfirmService.confirm(txGroup);

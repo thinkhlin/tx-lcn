@@ -30,9 +30,14 @@ public class SocketManager {
 
     private static SocketManager manager = null;
 
-    public synchronized static SocketManager getInstance() {
-        if (manager == null)
-            manager = new SocketManager();
+    public static SocketManager getInstance() {
+        if (manager == null){
+            synchronized (SocketManager.class){
+                if(manager==null){
+                    manager = new SocketManager();
+                }
+            }
+        }
         return manager;
     }
 
