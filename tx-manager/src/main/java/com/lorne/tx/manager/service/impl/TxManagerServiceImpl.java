@@ -7,6 +7,8 @@ import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -41,6 +43,8 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     @Autowired
     private TransactionConfirmService transactionConfirmService;
+
+    private Logger logger = LoggerFactory.getLogger(TxManagerServiceImpl.class);
 
 
     @Override
@@ -78,6 +82,7 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     @Override
     public boolean checkTransactionGroup(String groupId, String taskId) {
+        logger.info("checkTransactionGroup->groupId:"+groupId+",taskId:"+taskId);
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix_notify + groupId;
         String json = value.get(key);
@@ -106,7 +111,7 @@ public class TxManagerServiceImpl implements TxManagerService {
         } else {
             value.set(key, txGroup.toJsonString());
         }
-
+        logger.info("end-checkTransactionGroup->groupId:"+groupId+",taskId:"+taskId+",res:"+res);
         return res;
     }
 

@@ -8,6 +8,7 @@ import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.core.framework.utils.thread.CountDownLatchHelper;
 import com.lorne.core.framework.utils.thread.IExecute;
+import com.lorne.tx.manager.model.ExecuteAwaitTask;
 import com.lorne.tx.manager.service.TransactionConfirmService;
 import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +38,8 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     private Logger logger = LoggerFactory.getLogger(TransactionConfirmServiceImpl.class);
 
     private ScheduledExecutorService executorService  = Executors.newScheduledThreadPool(50);
+
+    private Executor threadPool = Executors.newFixedThreadPool(50);
 
     @Autowired
     private TxManagerService txManagerService;
@@ -109,6 +113,19 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     }
 
 
+    private void awaitSend(ExecuteAwaitTask awaitTask, TxInfo txInfo,JSONObject jsonObject){
+        if(awaitTask.getState()==1){
+            SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
+        }else{
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            awaitSend(awaitTask, txInfo, jsonObject);
+        }
+    }
+
     /**
      * 事务提交或回归
      *
@@ -128,7 +145,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                     String key = KidUtils.generateShortUuid();
                     jsonObject.put("k", key);
                     final Task task = ConditionUtils.getInstance().createTask(key);
-                    SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
+
                     executorService.schedule(new Runnable() {
                         @Override
                         public void run() {
@@ -141,7 +158,22 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                             task.signalTask();
                         }
                     }, 1, TimeUnit.SECONDS);
-                    task.awaitTask();
+
+                    final ExecuteAwaitTask awaitTask = new ExecuteAwaitTask();
+
+                    threadPool.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            awaitSend(awaitTask,txInfo,jsonObject);
+                        }
+                    });
+                    task.awaitTask(new IBack() {
+                        @Override
+                        public Object doing(Object... objects) throws Throwable {
+                            awaitTask.setState(1);
+                            return null;
+                        }
+                    });
                     try {
                         String data = (String) task.getBack().doing();
                         // 1  成功 0 失败 -1 task为空 -2 超过
