@@ -37,7 +37,7 @@ public class TxManagerServiceImpl implements TxManagerService {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
-    private Executor threadPool = Executors.newFixedThreadPool(300);
+    private Executor threadPool = Executors.newFixedThreadPool(100);
 
     @Autowired
     private TransactionConfirmService transactionConfirmService;

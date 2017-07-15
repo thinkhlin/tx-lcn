@@ -83,12 +83,18 @@ public class CompensateServiceImpl implements CompensateService {
     @Override
     public String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId) {
         // TODO: 2017/7/11  记录补偿数据
-        return compensateOperationService.save(invocation,groupId,taskId);
+        //return compensateOperationService.save(invocation,groupId,taskId);
+
+        return "";
+
+
     }
 
     @Override
     public boolean deleteTransactionInfo(String id) {
         //TODO: 2017/7/11  删除补偿数据
-        return compensateOperationService.delete(id);
+        //return compensateOperationService.delete(id);
+
+        return true;
     }
 }

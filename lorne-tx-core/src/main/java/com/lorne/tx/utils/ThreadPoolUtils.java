@@ -32,10 +32,12 @@ public class ThreadPoolUtils {
         try {
             int size = ConfigUtils.getInt("tx.properties", "max.thread.size");
             threadPool = Executors.newFixedThreadPool(size);
+            executorService = Executors.newScheduledThreadPool(size);
         } catch (Exception e) {
+            executorService = Executors.newScheduledThreadPool(500);
             threadPool = Executors.newFixedThreadPool(500);
         }
-        executorService = Executors.newScheduledThreadPool(300);
+
     }
 
     public void execute(Runnable runnable) {

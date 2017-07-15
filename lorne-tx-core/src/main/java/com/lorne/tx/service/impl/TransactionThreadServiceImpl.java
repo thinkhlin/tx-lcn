@@ -15,6 +15,7 @@ import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
+import com.lorne.tx.utils.ThreadPoolUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +26,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -51,9 +49,6 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     private Logger logger = LoggerFactory.getLogger(TransactionThreadServiceImpl.class);
 
     private String url;
-
-    private Executor threadPool =  Executors.newFixedThreadPool(100);
-    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(200);
 
     public TransactionThreadServiceImpl() {
         url = ConfigUtils.getString("tx.properties", "url");
@@ -83,7 +78,6 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = txManager.getTransaction(def);
         Task waitTask = ConditionUtils.getInstance().createTask(kid);
-
         //发送数据是否成功
         boolean isSend = false;
 
@@ -111,7 +105,6 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             //通知TxManager调用失败
             executeOk = false;
         }
-
         isSend = txManagerService.notifyTransactionInfo(_groupId, kid, executeOk);
         ServiceThreadModel model = new ServiceThreadModel();
         model.setStatus(status);
@@ -141,6 +134,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                     return null;
                 }
             });
+            logger.info("返回业务数据");
         } else {
             try {
                 Thread.sleep(1);
@@ -157,7 +151,8 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         final String taskId = waitTask.getKey();
         TransactionStatus status = model.getStatus();
 
-        executorService.schedule(new Runnable() {
+
+        ThreadPoolUtils.getInstance().schedule(new Runnable() {
             @Override
             public void run() {
                 Task task = ConditionUtils.getInstance().getTask(taskId);
@@ -193,17 +188,19 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             }
         }, model.getTxGroup().getWaitTime(), TimeUnit.SECONDS);
 
+
         //主线程先执行
         final ExecuteAwaitTask mainTaskAwait = new ExecuteAwaitTask();
 
         final ExecuteAwaitTask closeGroupTask = new ExecuteAwaitTask();
 
-        threadPool.execute(new Runnable() {
+        Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 waitSignTask(task, model.isNotifyOk(), mainTaskAwait, closeGroupTask); //执行顺序 2
             }
-        });
+        };
+        ThreadPoolUtils.getInstance().execute(runnable);
 
 
         if (!signTask) {

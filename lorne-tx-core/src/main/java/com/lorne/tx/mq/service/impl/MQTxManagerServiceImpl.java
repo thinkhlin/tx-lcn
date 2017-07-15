@@ -6,13 +6,11 @@ import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
+import com.lorne.tx.utils.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /**
  * Created by lorne on 2017/6/30.
@@ -25,7 +23,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
     private Logger logger = LoggerFactory.getLogger(MQTxManagerServiceImpl.class);
 
-    private Executor threadPool  = Executors.newFixedThreadPool(100);
+
 
     @Override
     public  TxGroup createTransactionGroup() {
@@ -65,7 +63,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
     @Override
     public  void closeTransactionGroup(final String groupId, final ExecuteAwaitTask executeAwaitTask) {
-        threadPool.execute(new Runnable() {
+        ThreadPoolUtils.getInstance().execute(new Runnable() {
             @Override
             public void run() {
                 thread(groupId, executeAwaitTask);

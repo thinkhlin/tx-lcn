@@ -35,7 +35,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
     private Logger logger = LoggerFactory.getLogger(TransactionConfirmServiceImpl.class);
 
-    private ScheduledExecutorService executorService  = Executors.newScheduledThreadPool(300);
+    private ScheduledExecutorService executorService  = Executors.newScheduledThreadPool(50);
 
     @Autowired
     private TxManagerService txManagerService;
