@@ -138,7 +138,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
         try {
             QueueMsg msg = new QueueMsg();
             msg.setId(id);
-            msg.setType(1);
+            msg.setType(0);
 
             queueList.put(msg);
             return true;
