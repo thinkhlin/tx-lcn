@@ -8,6 +8,7 @@ import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.CompensateOperationService;
+import com.lorne.tx.exception.TransactionRuntimeException;
 import com.lorne.tx.utils.MethodUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Created by lorne on 2017/7/12.
@@ -33,8 +36,59 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     private String url;
 
+    /**
+     * 保存数据消息队列
+     */
+    private BlockingQueue<TransactionRecover> saveQueue;
+
+    /**
+     * 删除数据消息队列
+     */
+    private BlockingQueue<String> deleteQueue;
+
+
     public CompensateOperationServiceImpl() {
         url =  ConfigUtils.getString("tx.properties","url");
+        deleteQueue = new LinkedBlockingDeque<>();
+        saveQueue = new LinkedBlockingDeque<>();
+
+        new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                while (true){
+                    try {
+                        TransactionRecover recover = saveQueue.take();
+                        if(recover!=null){
+                            recoverRepository.create(recover);
+                        }
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        }.start();
+
+
+        new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                while (true){
+                    try {
+                        String id = deleteQueue.take();
+                        if(id!=null){
+                            recoverRepository.remove(id);
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        }.start();
     }
 
     @Override
@@ -82,10 +136,11 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
         recover.setTaskId(taskId);
         recover.setId(KidUtils.generateShortUuid());
         recover.setInvocation(transactionInvocation);
-        if(recoverRepository.create(recover)>0){
+        try {
+            saveQueue.put(recover);
             return recover.getId();
-        }else{
-            throw new RuntimeException("补偿数据库插入失败.");
+        } catch (InterruptedException e) {
+            throw new TransactionRuntimeException("补偿数据库插入失败.");
         }
     }
 
@@ -96,7 +151,12 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     @Override
     public boolean delete(String id) {
-        return recoverRepository.remove(id)>0;
+        try {
+            deleteQueue.put(id);
+            return true;
+        } catch (InterruptedException e) {
+            return false;
+        }
     }
 
     @Override
