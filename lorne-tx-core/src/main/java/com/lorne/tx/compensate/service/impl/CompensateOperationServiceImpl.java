@@ -37,38 +37,38 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     private String url;
 
-    /**
-     * 保存数据消息队列
-     */
-    private BlockingQueue<QueueMsg> queueList;
+//    /**
+//     * 保存数据消息队列
+//     */
+//    private BlockingQueue<QueueMsg> queueList;
 
 
 
     public CompensateOperationServiceImpl() {
         url =  ConfigUtils.getString("tx.properties","url");
-        queueList = new LinkedBlockingDeque<>();
-
-        new Thread(){
-            @Override
-            public void run() {
-                super.run();
-                while (true){
-                    try {
-                        QueueMsg msg = queueList.take();
-                        if(msg!=null){
-                            if(msg.getType()==1){
-                                recoverRepository.create(msg.getRecover());
-                            }else{
-                                recoverRepository.remove(msg.getId());
-                            }
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
-        }.start();
+//        queueList = new LinkedBlockingDeque<>();
+//
+//        new Thread(){
+//            @Override
+//            public void run() {
+//                super.run();
+//                while (true){
+//                    try {
+//                        QueueMsg msg = queueList.take();
+//                        if(msg!=null){
+//                            if(msg.getType()==1){
+//                                recoverRepository.create(msg.getRecover());
+//                            }else{
+//                                recoverRepository.remove(msg.getId());
+//                            }
+//                        }
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                }
+//            }
+//        }.start();
 
     }
 
@@ -88,10 +88,12 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             TransactionInvocation invocation =  data.getInvocation();
             if(invocation!=null){
                 //通知TM
-                String groupState = HttpUtils.get(url+"GroupState?groupId="+data.getGroupId()+"&taskId="+data.getTaskId());
+                String murl = url+"GroupState?groupId="+data.getGroupId();
+                logger.info("获取补偿事务状态url->"+murl);
+                String groupState = HttpUtils.get(murl);
                 logger.info("获取补偿事务状态TM->"+groupState);
 
-                if("true".equals(groupState)){
+                if(groupState.contains("true")){
                     TxTransactionCompensate compensate = new TxTransactionCompensate();
                     TxTransactionCompensate.setCurrent(compensate);
                     boolean isOk =  MethodUtils.invoke(applicationContext,invocation);
@@ -118,12 +120,13 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
         recover.setId(KidUtils.generateShortUuid());
         recover.setInvocation(transactionInvocation);
         try {
-            QueueMsg msg = new QueueMsg();
-            msg.setRecover(recover);
-            msg.setType(1);
-            queueList.put(msg);
+//            QueueMsg msg = new QueueMsg();
+//            msg.setRecover(recover);
+//            msg.setType(1);
+//            queueList.put(msg);
+            recoverRepository.create(recover);
             return recover.getId();
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             throw new TransactionRuntimeException("补偿数据库插入失败.");
         }
     }
@@ -136,13 +139,15 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     @Override
     public boolean delete(String id) {
         try {
-            QueueMsg msg = new QueueMsg();
-            msg.setId(id);
-            msg.setType(0);
+//            QueueMsg msg = new QueueMsg();
+//            msg.setId(id);
+//            msg.setType(0);
+//
+//            queueList.put(msg);
 
-            queueList.put(msg);
+            recoverRepository.remove(id);
             return true;
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             return false;
         }
     }
