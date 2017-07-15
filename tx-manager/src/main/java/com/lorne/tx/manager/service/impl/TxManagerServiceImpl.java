@@ -2,12 +2,10 @@ package com.lorne.tx.manager.service.impl;
 
 
 import com.lorne.core.framework.utils.KidUtils;
-import com.lorne.tx.Constants;
 import com.lorne.tx.manager.service.TransactionConfirmService;
 import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
-import com.lorne.tx.utils.ThreadPoolUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +14,8 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -23,7 +23,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Service
 public class TxManagerServiceImpl implements TxManagerService {
-
 
     @Value("${redis_save_max_time}")
     private int redis_save_max_time;
@@ -35,10 +34,10 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     private final static String key_prefix_notify = "tx_manager_notify_";
 
-
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
+    private Executor threadPool = Executors.newFixedThreadPool(300);
 
     @Autowired
     private TransactionConfirmService transactionConfirmService;
@@ -78,7 +77,7 @@ public class TxManagerServiceImpl implements TxManagerService {
     }
 
     @Override
-    public boolean checkTransactionGroup(String groupId,String taskId) {
+    public boolean checkTransactionGroup(String groupId, String taskId) {
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix_notify + groupId;
         String json = value.get(key);
@@ -86,26 +85,26 @@ public class TxManagerServiceImpl implements TxManagerService {
             return false;
         }
         TxGroup txGroup = TxGroup.parser(json);
-        boolean res =  txGroup.getState()==1;
+        boolean res = txGroup.getState() == 1;
 
-        for(TxInfo info:txGroup.getList()){
-            if(info.getKid().equals(taskId)){
+        for (TxInfo info : txGroup.getList()) {
+            if (info.getKid().equals(taskId)) {
                 info.setNotify(1);
             }
         }
 
         boolean isOver = true;
-        for(TxInfo info:txGroup.getList()){
-            if(info.getNotify()==0){
+        for (TxInfo info : txGroup.getList()) {
+            if (info.getNotify() == 0) {
                 isOver = false;
                 break;
             }
         }
 
-        if(isOver){
+        if (isOver) {
             redisTemplate.delete(key);
-        }else{
-            value.set(key,txGroup.toJsonString());
+        } else {
+            value.set(key, txGroup.toJsonString());
         }
 
         return res;
@@ -121,7 +120,7 @@ public class TxManagerServiceImpl implements TxManagerService {
             return false;
         }
         TxGroup txGroup = TxGroup.parser(json);
-        return txGroup.getState()==1;
+        return txGroup.getState() == 1;
     }
 
     @Override
@@ -135,7 +134,7 @@ public class TxManagerServiceImpl implements TxManagerService {
         final TxGroup txGroup = TxGroup.parser(json);
         txGroup.hasOvered();
         txGroup.setEndTime(System.currentTimeMillis());
-        ThreadPoolUtils.getInstance().execute(new Runnable() {
+        threadPool.execute(new Runnable() {
             @Override
             public void run() {
                 transactionConfirmService.confirm(txGroup);
@@ -168,12 +167,12 @@ public class TxManagerServiceImpl implements TxManagerService {
     @Override
     public void dealTxGroup(TxGroup txGroup, boolean hasOk) {
         String key = key_prefix + txGroup.getGroupId();
-        if(!hasOk) {
+        if (!hasOk) {
             //未通知成功
 
-            if(txGroup.getState()==1) {
+            if (txGroup.getState() == 1) {
                 ValueOperations<String, String> value = redisTemplate.opsForValue();
-                String newKey = key_prefix_notify+txGroup.getGroupId();
+                String newKey = key_prefix_notify + txGroup.getGroupId();
                 value.set(newKey, txGroup.toJsonString());
             }
 
@@ -185,7 +184,7 @@ public class TxManagerServiceImpl implements TxManagerService {
     @Override
     public boolean getHasOvertime(TxGroup txGroup) {
         long dt = 500;//网络消耗
-        double time = (txGroup.getEndTime()-txGroup.getStartTime()-dt)/1000;
-        return time>transaction_wait_max_time;
+        double time = (txGroup.getEndTime() - txGroup.getStartTime() - dt) / 1000;
+        return time > transaction_wait_max_time;
     }
 }

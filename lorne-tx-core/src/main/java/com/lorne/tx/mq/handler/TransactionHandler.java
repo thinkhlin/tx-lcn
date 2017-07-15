@@ -18,6 +18,9 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,6 +42,8 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     private NettyService nettyService;
 
     private String heartJson;
+
+    private ScheduledExecutorService   executorService = Executors.newScheduledThreadPool(300);
 
 
     public TransactionHandler(NettyService nettyService) {
@@ -174,7 +179,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
             SocketUtils.sendMsg(ctx,request.toMsg());
 
-           ThreadPoolUtils.getInstance().schedule(new Runnable() {
+            executorService.schedule(new Runnable() {
                 @Override
                 public void run() {
                     Task task = ConditionUtils.getInstance().getTask(key);

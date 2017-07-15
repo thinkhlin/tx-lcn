@@ -2,7 +2,6 @@ package com.lorne.tx.manager.service.impl;
 
 
 import com.alibaba.fastjson.JSONObject;
-import com.lorne.core.framework.Constant;
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
@@ -15,7 +14,6 @@ import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
 import com.lorne.tx.socket.SocketManager;
 import com.lorne.tx.socket.utils.SocketUtils;
-import com.lorne.tx.utils.ThreadPoolUtils;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
@@ -35,6 +35,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
     private Logger logger = LoggerFactory.getLogger(TransactionConfirmServiceImpl.class);
 
+    private ScheduledExecutorService executorService  = Executors.newScheduledThreadPool(300);
 
     @Autowired
     private TxManagerService txManagerService;
@@ -128,7 +129,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                     jsonObject.put("k", key);
                     final Task task = ConditionUtils.getInstance().createTask(key);
                     SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
-                    ThreadPoolUtils.getInstance().schedule(new Runnable() {
+                    executorService.schedule(new Runnable() {
                         @Override
                         public void run() {
                             task.setBack(new IBack() {

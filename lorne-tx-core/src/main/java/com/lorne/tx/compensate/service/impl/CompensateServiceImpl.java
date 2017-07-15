@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 
 /**
@@ -85,18 +83,12 @@ public class CompensateServiceImpl implements CompensateService {
     @Override
     public String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId) {
         // TODO: 2017/7/11  记录补偿数据
-      //  return compensateOperationService.save(invocation,groupId,taskId);
-
-        return "";
-
-
+        return compensateOperationService.save(invocation,groupId,taskId);
     }
 
     @Override
     public boolean deleteTransactionInfo(String id) {
         //TODO: 2017/7/11  删除补偿数据
-        //return compensateOperationService.delete(id);
-
-        return true;
+        return compensateOperationService.delete(id);
     }
 }

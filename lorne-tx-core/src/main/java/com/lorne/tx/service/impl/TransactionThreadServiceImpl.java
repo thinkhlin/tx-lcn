@@ -15,7 +15,6 @@ import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
-import com.lorne.tx.utils.ThreadPoolUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +25,9 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,6 +51,9 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     private Logger logger = LoggerFactory.getLogger(TransactionThreadServiceImpl.class);
 
     private String url;
+
+    private Executor threadPool =  Executors.newFixedThreadPool(100);
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(200);
 
     public TransactionThreadServiceImpl() {
         url = ConfigUtils.getString("tx.properties", "url");
@@ -152,7 +157,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         final String taskId = waitTask.getKey();
         TransactionStatus status = model.getStatus();
 
-        ThreadPoolUtils.getInstance().schedule(new Runnable() {
+        executorService.schedule(new Runnable() {
             @Override
             public void run() {
                 Task task = ConditionUtils.getInstance().getTask(taskId);
@@ -193,7 +198,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
         final ExecuteAwaitTask closeGroupTask = new ExecuteAwaitTask();
 
-        ThreadPoolUtils.getInstance().execute(new Runnable() {
+        threadPool.execute(new Runnable() {
             @Override
             public void run() {
                 waitSignTask(task, model.isNotifyOk(), mainTaskAwait, closeGroupTask); //执行顺序 2

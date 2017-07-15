@@ -35,7 +35,7 @@ public class ThreadPoolUtils {
         } catch (Exception e) {
             threadPool = Executors.newFixedThreadPool(500);
         }
-        executorService = Executors.newScheduledThreadPool(50);
+        executorService = Executors.newScheduledThreadPool(300);
     }
 
     public void execute(Runnable runnable) {
