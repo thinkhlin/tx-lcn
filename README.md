@@ -61,6 +61,47 @@
 
 说明：在使用LCN分布式事务时，只需要将事务的开始方法添加`@TxTransaction`注解即可。详细见demo教程
 
+## 关于@TxTransaction 使用说明
+
+  @TxTransaction注解与@Transactional注解类似。添加上@Transactional就支持事务了，同样的道理添加@TxTransaction就支持分布式事务了。
+  
+  若存在业务方法：a-b b-c b-d，那么开启本地事务只需要在a方法上添加@Transactional即可。
+  
+```java
+   
+    @Transactional
+    public void a(){
+        b();
+    }
+
+    public void b(){
+        c();
+        d();
+    }
+
+    public void c(){}
+
+    public void d(){}
+```
+   若存在业务模块：a-b b-c b-d，那么开启分布式事务只需要在a方法上添加@TxTransaction即可。
+  
+```java
+    @TxTransaction
+    public void a(){
+        b();
+    }
+
+    public void b(){
+        c();
+        d();
+    }
+
+    public void c(){}
+
+    public void d(){}
+```
+
+**会用@Transactional就会用@TxTransaction**
 
 ## 目录说明
 
