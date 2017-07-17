@@ -73,17 +73,17 @@ public class CompensateServiceImpl implements CompensateService {
             @Override
             public void run() {
                 while (true){
-                    try {
-                        Thread.sleep(1000*60);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                     final List<TransactionRecover> list = compensateOperationService.findAll(2);
                     if(list==null||list.size()==0){
                         return;
                     }
                     for(TransactionRecover data:list){
                         compensateOperationService.execute(data);
+                    }
+                    try {
+                        Thread.sleep(1000*60);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
             }
