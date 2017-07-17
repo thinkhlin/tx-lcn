@@ -13,6 +13,7 @@ import com.lorne.tx.utils.ThreadPoolUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 
@@ -38,18 +39,20 @@ public class CompensateServiceImpl implements CompensateService {
     @Autowired
     private ModelNameService modelNameService;
 
+    private TransactionRecoverRepository recoverRepository;
+
 
     @Override
     public void start() {
         //// TODO: 2017/7/13 获取recoverRepository对象
-        TransactionRecoverRepository recoverRepository = loadTransactionRecoverRepository();
+        recoverRepository = loadTransactionRecoverRepository();
         compensateOperationService.setTransactionRecover(recoverRepository);
 
         // TODO: 2017/7/11  数据库创建等操作
         compensateOperationService.init(modelNameService.getModelName());
 
         // TODO: 2017/7/11  查找补偿数据
-        final List<TransactionRecover> list =  compensateOperationService.findAll();
+        final List<TransactionRecover> list =  compensateOperationService.findAll(0);
 
         if(list==null||list.size()==0){
             return;
@@ -64,6 +67,27 @@ public class CompensateServiceImpl implements CompensateService {
                 }
             }
         });
+
+        // add Task
+        new Thread(){
+            @Override
+            public void run() {
+                while (true){
+                    try {
+                        Thread.sleep(1000*60);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    final List<TransactionRecover> list = compensateOperationService.findAll(2);
+                    if(list==null||list.size()==0){
+                        return;
+                    }
+                    for(TransactionRecover data:list){
+                        compensateOperationService.execute(data);
+                    }
+                }
+            }
+        }.start();
     }
 
     private TransactionRecoverRepository loadTransactionRecoverRepository() {
@@ -92,5 +116,10 @@ public class CompensateServiceImpl implements CompensateService {
     public boolean deleteTransactionInfo(String id) {
         //TODO: 2017/7/11  删除补偿数据
         return compensateOperationService.delete(id);
+    }
+
+    @Override
+    public void addTask(String compensateId) {
+        recoverRepository.update(compensateId,new Date(),2,1);
     }
 }

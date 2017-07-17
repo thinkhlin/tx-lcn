@@ -77,7 +77,7 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
      * @param retriedCount 执行次数  @return rows
      */
     @Override
-    public int update(String id, Date lastTime, int retriedCount) {
+    public int update(String id, Date lastTime,int state, int retriedCount) {
 
         String fullFileName = getFullFileName(id);
         File file = new File(fullFileName);
@@ -85,7 +85,7 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
             TransactionRecover transactionRecover = readTransaction(file);
             transactionRecover.setLastTime(lastTime);
             transactionRecover.setRetriedCount(retriedCount);
-            transactionRecover.setVersion(1);
+            transactionRecover.setState(state);
             writeFile(transactionRecover);
         }
         return 1;
@@ -97,16 +97,16 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
      * @return List<TransactionRecover>
      */
     @Override
-    public List<TransactionRecover> findAll() {
+    public List<TransactionRecover> findAll(int state) {
         List<TransactionRecover> transactionRecoverList = Lists.newArrayList();
         File path = new File(filePath);
         File[] files = path.listFiles();
         if (files != null && files.length > 0) {
             for (File file : files) {
                 TransactionRecover transaction = readTransaction(file);
-                if(transaction.getVersion()==1) {
+                if(transaction.getState()==state) {
                     transactionRecoverList.add(transaction);
-                    transaction.setVersion(transaction.getVersion() + 1);
+                    transaction.setState(1);
                     writeFile(transaction);
                 }
             }

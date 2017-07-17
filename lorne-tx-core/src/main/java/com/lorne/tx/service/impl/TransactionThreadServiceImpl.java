@@ -172,6 +172,19 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                         if (hasOk == -1) {
                             // 发起http请求查询状态
                             String json = HttpUtils.get(url + "Group?groupId=" + groupId + "&taskId=" + taskId);
+                            if(json==null){
+                                //请求tm访问失败
+                                task.setBack(new IBack() {
+                                    @Override
+                                    public Object doing(Object... objects) throws Throwable {
+                                        return -100;//自动回滚补偿时也没有访问到tm
+                                    }
+                                });
+
+                                task.signalTask();
+                                return;
+
+                            }
                             if (json.contains("true")) {
 
                                 task.setState(1);
@@ -249,8 +262,12 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             if (!signTask) {
                 task.signalTask();
             }
-
-            compensateService.deleteTransactionInfo(model.getCompensateId());
+            if(state!=-100) {
+                compensateService.deleteTransactionInfo(model.getCompensateId());
+            }else{
+                //定时请求TM资源确认状态
+                compensateService.addTask(model.getCompensateId());
+            }
         } catch (Throwable throwable) {
             txManager.rollback(status);
         } finally {

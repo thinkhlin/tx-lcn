@@ -15,7 +15,7 @@ public interface CompensateOperationService {
 
     void setTransactionRecover(TransactionRecoverRepository recoverRepository);
 
-    List<TransactionRecover> findAll();
+    List<TransactionRecover> findAll(int state);
 
     void execute(TransactionRecover data);
 
@@ -26,4 +26,6 @@ public interface CompensateOperationService {
     boolean updateRetriedCount(String id,int retriedCount);
 
     void init(String modelName);
+
+
 }

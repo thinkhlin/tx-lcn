@@ -37,9 +37,9 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     @Override
     public int create(TransactionRecover recover) {
-        String sql = "insert into "+tableName+"(id,retried_count,create_time,last_time,version,group_id,task_id,invocation)" +
+        String sql = "insert into "+tableName+"(id,retried_count,create_time,last_time,group_id,task_id,invocation,state)" +
             " values(?,?,?,?,?,?,?,?)";
-        return executeUpdate(sql,recover.getId(),recover.getRetriedCount(),recover.getCreateTime(),recover.getLastTime(),recover.getVersion(),recover.getGroupId(),recover.getTaskId(),recover.getInvocation().toSerializable());
+        return executeUpdate(sql,recover.getId(),recover.getRetriedCount(),recover.getCreateTime(),recover.getLastTime(),recover.getGroupId(),recover.getTaskId(),recover.getInvocation().toSerializable(),recover.getState());
     }
 
     @Override
@@ -49,17 +49,17 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     }
 
     @Override
-    public int update(String id, Date lastTime, int retriedCount) {
-        String sql = "update "+tableName +" set last_time = ?,set version = 1, retried_count = ? where id = ? ";
-        return executeUpdate(sql,lastTime,retriedCount,id);
+    public int update(String id, Date lastTime,int state, int retriedCount) {
+        String sql = "update "+tableName +" set last_time = ?,set state = ?, retried_count = ? where id = ? ";
+        return executeUpdate(sql,lastTime,state,retriedCount,id);
     }
 
     @Override
-    public List<TransactionRecover> findAll() {
-        String selectSql = "select * from "+tableName +" where version = 1 ";
-        List<Map<String,Object>>  list =  executeQuery(selectSql);
+    public List<TransactionRecover> findAll(int state) {
+        String selectSql = "select * from "+tableName +" where state = ? ";
+        List<Map<String,Object>>  list =  executeQuery(selectSql,state);
 
-        String updateSql = "update "+tableName +" set version = version+1 ";
+        String updateSql = "update "+tableName +" set state = 1 ";
         executeUpdate(updateSql);
 
         List<TransactionRecover> recovers = new ArrayList<>();
@@ -72,7 +72,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
             recover.setLastTime((Date)map.get("last_time"));
             recover.setTaskId((String)map.get("task_id"));
             recover.setGroupId((String)map.get("group_id"));
-            recover.setVersion((Integer) map.get("version"));
+            recover.setState((Integer) map.get("state"));
             byte[] bytes = (byte[]) map.get("invocation");
             recover.setInvocation(TransactionInvocation.parser(bytes));
             recovers.add(recover);
@@ -99,10 +99,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
         this.tableName = "lcn_tx_"+modelName.replaceAll("-","_");
 
-//        String dbType = dataSource.getDbType();
-//        logger.info("dbType:"+dbType);
-        //// TODO: 2017/7/13 扩展多中数据库的创建表语句
-
+        // TODO: 2017/7/13 扩展多中数据库的创建表语句
         String createTableSql ="";
 
         switch (dbType){
@@ -112,7 +109,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                     "  `retried_count` int(3) NOT NULL,\n" +
                     "  `create_time` datetime NOT NULL,\n" +
                     "  `last_time` datetime NOT NULL,\n" +
-                    "  `version` int(2) NOT NULL,\n" +
+                    "  `state` int(2) NOT NULL,\n" +
                     "  `group_id` varchar(10) NOT NULL,\n" +
                     "  `task_id` varchar(10) NOT NULL,\n" +
                     "  `invocation` longblob NOT NULL,\n" +
@@ -126,7 +123,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                     "  `retried_count` number(3,0) NOT NULL,\n" +
                     "  `create_time` datetime  NOT NULL,\n" +
                     "  `last_time` datetime  NOT NULL,\n" +
-                    "  `version` number(2,0) NOT NULL,\n" +
+                    "  `state` number(2,0) NOT NULL,\n" +
                     "  `group_id` varchar2(10) NOT NULL,\n" +
                     "  `task_id` varchar2(10) NOT NULL,\n" +
                     "  `invocation` BLOB NOT NULL,\n" +
@@ -140,7 +137,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                     "  `retried_count` int(3) NOT NULL,\n" +
                     "  `create_time` datetime NOT NULL,\n" +
                     "  `last_time` datetime NOT NULL,\n" +
-                    "  `version` int(2) NOT NULL,\n" +
+                    "  `state` int(2) NOT NULL,\n" +
                     "  `group_id` nchar(10) NOT NULL,\n" +
                     "  `task_id` nchar(10) NOT NULL,\n" +
                     "  `invocation` varbinary NOT NULL,\n" +

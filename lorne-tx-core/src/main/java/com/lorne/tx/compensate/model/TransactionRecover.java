@@ -38,10 +38,6 @@ public class TransactionRecover implements Serializable {
      */
     private Date lastTime = new Date();
 
-    /**
-     * 版本控制 防止并发问题
-     */
-    private int version = 1;
 
     /**
      * 事务组id
@@ -58,6 +54,14 @@ public class TransactionRecover implements Serializable {
      * 事务执行方法
      */
     private TransactionInvocation invocation;
+
+    /**
+     * 数据状态
+     * 0 : 未处理
+     * 1 : 执行中
+     * 2 : task任务扫描中
+     */
+    private int state;
 
     public String getId() {
         return id;
@@ -82,14 +86,6 @@ public class TransactionRecover implements Serializable {
 
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
     }
 
     public TransactionInvocation getInvocation() {
@@ -122,5 +118,13 @@ public class TransactionRecover implements Serializable {
 
     public void setLastTime(Date lastTime) {
         this.lastTime = lastTime;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setState(int state) {
+        this.state = state;
     }
 }

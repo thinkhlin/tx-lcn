@@ -4,7 +4,6 @@ import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.core.framework.utils.http.HttpUtils;
 import com.lorne.tx.bean.TxTransactionCompensate;
-import com.lorne.tx.compensate.model.QueueMsg;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
@@ -19,8 +18,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Created by lorne on 2017/7/12.
@@ -78,8 +75,8 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     }
 
     @Override
-    public List<TransactionRecover> findAll() {
-        return recoverRepository.findAll();
+    public List<TransactionRecover> findAll(int state) {
+        return recoverRepository.findAll(state);
     }
 
     @Override
@@ -92,6 +89,10 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
                 logger.info("获取补偿事务状态url->"+murl);
                 String groupState = HttpUtils.get(murl);
                 logger.info("获取补偿事务状态TM->"+groupState);
+
+                if(null==groupState){
+                    return;
+                }
 
                 if(groupState.contains("true")){
                     TxTransactionCompensate compensate = new TxTransactionCompensate();
@@ -133,7 +134,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     @Override
     public boolean updateRetriedCount(String id, int retriedCount) {
-        return recoverRepository.update(id,new Date(),retriedCount)>0;
+        return recoverRepository.update(id,new Date(),0,retriedCount)>0;
     }
 
     @Override

@@ -34,16 +34,17 @@ public interface TransactionRecoverRepository {
      * 更改事务对象
      * @param id 事务对象id
      * @param retriedCount 执行次数
+     * @param state 数据库状态
      * @return rows
      */
-    int update(String id, Date lastTime, int retriedCount);
+    int update(String id, Date lastTime,int state, int retriedCount);
 
 
     /**
      * 获取需要提交的事务
      * @return  List<TransactionRecover>
      */
-    List<TransactionRecover> findAll();
+    List<TransactionRecover> findAll(int state);
 
     /**
      * 创建表等操作
