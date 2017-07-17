@@ -123,7 +123,8 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
     public void init(String modelName) {
         serializer = new KryoSerializer();
         String configPath = ConfigUtils.getString("tx.properties", "compensate.file.path");
-        this.tableName = "lcn_tx_"+modelName.replaceAll("-","_");
+        String prefix = ConfigUtils.getString("tx.properties", "compensate.prefix");
+        this.tableName = "lcn_tx_"+prefix+"_"+modelName.replaceAll("-","_");
         filePath =configPath+"/"+tableName;
         File file = new File(filePath);
         if(!file.exists()){

@@ -96,8 +96,9 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         dataSource.setPoolPreparedStatements(false);
 
         dbType = ConfigUtils.getString("tx.properties","compensate.db.dbType");
+        String prefix = ConfigUtils.getString("tx.properties", "compensate.prefix");
 
-        this.tableName = "lcn_tx_"+modelName.replaceAll("-","_");
+        this.tableName = "lcn_tx_"+prefix+"_"+modelName.replaceAll("-","_");
 
         // TODO: 2017/7/13 扩展多中数据库的创建表语句
         String createTableSql ="";
