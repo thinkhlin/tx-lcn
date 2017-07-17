@@ -47,14 +47,14 @@ public class NettyServiceImpl implements NettyService {
     private Logger logger = LoggerFactory.getLogger(NettyServiceImpl.class);
 
     @Override
-    public void start() {
+    public synchronized void start() {
         nettyDistributeService.loadTxServer();
 
         String host = Constants.txServer.getHost();
         int port = Constants.txServer.getPort();
 
         transactionHandler = new TransactionHandler(this);
-        workerGroup = new NioEventLoopGroup(10);
+        workerGroup = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap(); // (1)
             b.group(workerGroup); // (2)
@@ -90,7 +90,7 @@ public class NettyServiceImpl implements NettyService {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         TransactionHandler.net_state = false;
         if (workerGroup != null) {
             workerGroup.shutdownGracefully();
@@ -98,7 +98,7 @@ public class NettyServiceImpl implements NettyService {
     }
 
     @Override
-    public void restart() {
+    public synchronized void restart() {
         close();
         start();
     }
