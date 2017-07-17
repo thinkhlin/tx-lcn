@@ -44,8 +44,8 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     private String heartJson;
 
-    private Executor  threadPool = Executors.newFixedThreadPool(200);
-    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(200);
+    private Executor  threadPool = Executors.newFixedThreadPool(800);
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(800);
 
 
     public TransactionHandler(NettyService nettyService) {
