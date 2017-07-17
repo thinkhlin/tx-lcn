@@ -1,6 +1,7 @@
 package com.lorne.tx.mq.handler;
 
 import com.alibaba.fastjson.JSONObject;
+import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
@@ -17,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -58,6 +60,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     }
 
+
     @Override
     public void channelRead(ChannelHandlerContext ctx, final Object msg) throws Exception {
         net_state = true;
@@ -87,7 +90,24 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                                     }
                                 });
                                 task.signalTask();
-                                res = "1";
+
+                                //确认事务通知方法已经执行完毕
+                                int count = 0;
+                                while (true){
+
+                                    if(task==null||task.isRemove()){
+                                        res = "1";
+                                        break;
+                                    }else{
+                                        if(count>800) {
+                                            res = "0";
+                                            break;
+                                        }
+                                    }
+                                    count++;
+                                    Thread.sleep(1);
+                                }
+
                             }else{
                                 res = "0";
                             }
