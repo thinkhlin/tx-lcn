@@ -8,7 +8,6 @@ import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.core.framework.utils.thread.CountDownLatchHelper;
 import com.lorne.core.framework.utils.thread.IExecute;
-import com.lorne.tx.manager.model.ExecuteAwaitTask;
 import com.lorne.tx.manager.service.TransactionConfirmService;
 import com.lorne.tx.manager.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
@@ -113,8 +112,8 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     }
 
 
-    private void awaitSend(ExecuteAwaitTask awaitTask, TxInfo txInfo,JSONObject jsonObject){
-        if(awaitTask.getState()==1){
+    private void awaitSend(Task task, TxInfo txInfo,JSONObject jsonObject){
+        if(task.isNotify()){
             SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
         }else{
             try {
@@ -122,7 +121,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            awaitSend(awaitTask, txInfo, jsonObject);
+            awaitSend(task, txInfo, jsonObject);
         }
     }
 
@@ -159,21 +158,13 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                         }
                     }, 1, TimeUnit.SECONDS);
 
-                    final ExecuteAwaitTask awaitTask = new ExecuteAwaitTask();
-
                     threadPool.execute(new Runnable() {
                         @Override
                         public void run() {
-                            awaitSend(awaitTask,txInfo,jsonObject);
+                            awaitSend(task,txInfo,jsonObject);
                         }
                     });
-                    task.awaitTask(new IBack() {
-                        @Override
-                        public Object doing(Object... objects) throws Throwable {
-                            awaitTask.setState(1);
-                            return null;
-                        }
-                    });
+                    task.awaitTask();
                     try {
                         String data = (String) task.getBack().doing();
                         // 1  成功 0 失败 -1 task为空 -2 超过

@@ -41,18 +41,6 @@ public class TxStartTransactionServerImpl implements TransactionServer {
     private NettyService nettyService;
 
 
-    private synchronized void confirmAwait(ExecuteAwaitTask executeAwaitTask) {
-        if (executeAwaitTask.getState() == 0) {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            confirmAwait(executeAwaitTask);
-        }
-    }
-
-
     @Override
     public Object execute(final ProceedingJoinPoint point, final TxTransactionInfo info) throws Throwable {
         //分布式事务开始执行
@@ -62,13 +50,10 @@ public class TxStartTransactionServerImpl implements TransactionServer {
         final String taskId = KidUtils.generateShortUuid();
         final Task task = ConditionUtils.getInstance().createTask(taskId);
 
-        final ExecuteAwaitTask executeAwaitTask = new ExecuteAwaitTask();
 
         ThreadPoolUtils.getInstance().execute(new Runnable() {
             @Override
             public void run() {
-
-                confirmAwait(executeAwaitTask);//进入等待以后才能后面处理
 
                 TxGroup txGroup = txManagerService.createTransactionGroup();
 
@@ -105,13 +90,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
         });
 
 
-        task.awaitTask(new IBack() {
-            @Override
-            public Object doing(Object... objs) throws Throwable {
-                executeAwaitTask.setState(1);
-                return null;
-            }
-        });
+        task.awaitTask();
         logger.info("tx-end");
         //分布式事务执行完毕
         try {

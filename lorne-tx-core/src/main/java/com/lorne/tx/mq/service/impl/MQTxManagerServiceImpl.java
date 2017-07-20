@@ -1,6 +1,7 @@
 package com.lorne.tx.mq.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
@@ -46,29 +47,24 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
 
-    private  void thread(String groupId, ExecuteAwaitTask executeAwaitTask) {
-        if (executeAwaitTask.getState() == 1) {
+    private  void thread(String groupId, Task task) {
+        if (task.isNotify()) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("g", groupId);
             Request request = new Request("ctg", jsonObject.toString());
             String json = nettyService.sendMsg(request);
             logger.info("closeTransactionGroup->" + json);
         } else {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            thread(groupId, executeAwaitTask);
+            thread(groupId, task);
         }
     }
 
     @Override
-    public  void closeTransactionGroup(final String groupId, final ExecuteAwaitTask executeAwaitTask) {
+    public  void closeTransactionGroup(final String groupId, final Task task) {
         threadPool.execute(new Runnable() {
             @Override
             public void run() {
-                thread(groupId, executeAwaitTask);
+                thread(groupId, task);
             }
         });
     }

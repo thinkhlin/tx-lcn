@@ -13,7 +13,6 @@ import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
-import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
@@ -122,32 +121,17 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     }
 
 
-    private void waitSignTask(Task task, boolean isNotifyOk, ExecuteAwaitTask executeAwaitTask, final ExecuteAwaitTask closeGroupTask) {
-        if (executeAwaitTask.getState() == 1) {
-            if (isNotifyOk == false) {
-                task.setBack(new IBack() {
-                    @Override
-                    public Object doing(Object... objects) throws Throwable {
-                        throw new ServiceException("修改事务组状态异常.");
-                    }
-                });
-            }
-            task.signalTask(new IBack() {
+    private void waitSignTask(Task task, boolean isNotifyOk) {
+        if (isNotifyOk == false) {
+            task.setBack(new IBack() {
                 @Override
-                public Object doing(Object... objs) throws Throwable {
-                    closeGroupTask.setState(1);
-                    return null;
+                public Object doing(Object... objects) throws Throwable {
+                    throw new ServiceException("修改事务组状态异常.");
                 }
             });
-            logger.info("返回业务数据");
-        } else {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            waitSignTask(task, isNotifyOk, executeAwaitTask, closeGroupTask);
         }
+        task.signalTask();
+        logger.info("返回业务数据");
     }
 
     @Override
@@ -207,31 +191,19 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         }, model.getTxGroup().getWaitTime(), TimeUnit.SECONDS);
 
 
-        //主线程先执行
-        final ExecuteAwaitTask mainTaskAwait = new ExecuteAwaitTask();
-
-        final ExecuteAwaitTask closeGroupTask = new ExecuteAwaitTask();
-
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                waitSignTask(task, model.isNotifyOk(), mainTaskAwait, closeGroupTask); //执行顺序 2
+                waitSignTask(task, model.isNotifyOk()); //执行顺序 2
             }
         };
         threadPool.execute(runnable);
 
-
         if (!signTask) {
-            txManagerService.closeTransactionGroup(model.getTxGroup().getGroupId(), closeGroupTask); //执行顺序 3
+            txManagerService.closeTransactionGroup(model.getTxGroup().getGroupId(), task); //执行顺序 3
         }
         logger.info("进入回滚等待.");
-        waitTask.awaitTask(new IBack() {
-            @Override
-            public Object doing(Object... objs) throws Throwable {
-                mainTaskAwait.setState(1);// 执行顺序 1
-                return null;
-            }
-        });
+        waitTask.awaitTask();
 
         try {
             int state = (Integer) waitTask.getBack().doing();
