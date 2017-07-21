@@ -36,6 +36,9 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     private final static String key_prefix_notify = "tx_manager_notify_";
 
+    //网络消耗
+    private final  static  long dt = 500;
+
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
@@ -69,10 +72,18 @@ public class TxManagerServiceImpl implements TxManagerService {
             return null;
         }
         TxGroup txGroup = TxGroup.parser(json);
-        TxInfo txInfo = new TxInfo();
-        txInfo.setModelName(modelName);
-        txInfo.setKid(taskId);
+        long now = System.currentTimeMillis();
+        double time = (now - txGroup.getStartTime() - dt) / 1000;
+        if(time > transaction_wait_max_time){
+            //事务超时，返回失败
+            return null;
+        }
+
         if (txGroup != null) {
+            TxInfo txInfo = new TxInfo();
+            txInfo.setModelName(modelName);
+            txInfo.setKid(taskId);
+
             txGroup.addTransactionInfo(txInfo);
             value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
             return txGroup;
@@ -188,7 +199,7 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     @Override
     public boolean getHasOvertime(TxGroup txGroup) {
-        long dt = 500;//网络消耗
+
         double time = (txGroup.getEndTime() - txGroup.getStartTime() - dt) / 1000;
         return time > transaction_wait_max_time;
     }
