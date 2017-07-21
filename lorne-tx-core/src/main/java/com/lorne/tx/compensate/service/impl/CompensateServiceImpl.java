@@ -65,6 +65,7 @@ public class CompensateServiceImpl implements CompensateService {
         final List<TransactionRecover> list =  compensateOperationService.findAll(0);
 
         if(list==null||list.size()==0){
+            hasCompensate = false;
             return;
         }
 
