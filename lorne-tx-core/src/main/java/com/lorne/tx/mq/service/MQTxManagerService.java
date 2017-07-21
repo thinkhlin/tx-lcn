@@ -2,7 +2,7 @@ package com.lorne.tx.mq.service;
 
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.mq.model.TxGroup;
-import com.lorne.tx.service.model.ExecuteAwaitTask;
+
 
 /**
  * Created by lorne on 2017/6/7.

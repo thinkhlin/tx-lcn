@@ -1,13 +1,11 @@
 package com.lorne.tx.mq.handler;
 
 import com.alibaba.fastjson.JSONObject;
-import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyService;
-import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.utils.SocketUtils;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,7 +16,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -192,23 +189,18 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void sleepSend(ExecuteAwaitTask awaitTask, Request request){
-        if(awaitTask.getState()==1){
+    private void sleepSend(Task task, Request request){
+        if(task.isNotify()){
             SocketUtils.sendMsg(ctx,request.toMsg());
         }else{
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            sleepSend(awaitTask, request);
+            sleepSend(task, request);
         }
     }
 
     public String sendMsg(final Request request) {
         final String key = request.getKey();
         if (ctx != null && ctx.channel() != null && ctx.channel().isActive()) {
-            Task task = ConditionUtils.getInstance().createTask(key);
+            final Task task = ConditionUtils.getInstance().createTask(key);
             executorService.schedule(new Runnable() {
                 @Override
                 public void run() {
@@ -225,21 +217,15 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                 }
             }, 1, TimeUnit.SECONDS);
 
-            final  ExecuteAwaitTask awaitTask = new ExecuteAwaitTask();
+
             threadPool.execute(new Runnable() {
                 @Override
                 public void run() {
-                    sleepSend(awaitTask,request);
+                    sleepSend(task,request);
                 }
             });
 
-            task.awaitTask(new IBack() {
-                @Override
-                public Object doing(Object... objects) throws Throwable {
-                    awaitTask.setState(1);
-                    return null;
-                }
-            });
+            task.awaitTask();
 
             Object msg = null;
             try {
