@@ -127,16 +127,20 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
 
     private void waitSignTask(Task task, boolean isNotifyOk) {
-        if (isNotifyOk == false) {
-            task.setBack(new IBack() {
-                @Override
-                public Object doing(Object... objects) throws Throwable {
-                    throw new ServiceException("修改事务组状态异常.");
-                }
-            });
+        if(task.isAwait()) {
+            if (isNotifyOk == false) {
+                task.setBack(new IBack() {
+                    @Override
+                    public Object doing(Object... objects) throws Throwable {
+                        throw new ServiceException("修改事务组状态异常.");
+                    }
+                });
+            }
+            task.signalTask();
+            logger.info("返回业务数据");
+        }else{
+            waitSignTask(task,isNotifyOk);
         }
-        task.signalTask();
-        logger.info("返回业务数据");
     }
 
     @Override
