@@ -7,12 +7,12 @@ import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
+import com.lorne.tx.mq.handler.TransactionHandler;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.TransactionThreadService;
-import com.lorne.tx.service.model.ExecuteAwaitTask;
 import com.lorne.tx.service.model.ServiceThreadModel;
 import com.lorne.tx.utils.ThreadPoolUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -66,7 +66,9 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                         }
                     });
                     task.signalTask();
-                    nettyService.restart();
+                    if(!TransactionHandler.net_state) {
+                        nettyService.restart();
+                    }
                     return;
                 }
 

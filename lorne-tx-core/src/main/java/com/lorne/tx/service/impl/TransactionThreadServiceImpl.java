@@ -9,6 +9,7 @@ import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.compensate.service.CompensateService;
+import com.lorne.tx.mq.handler.TransactionHandler;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
@@ -73,7 +74,9 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
             task.signalTask();
-            nettyService.restart();
+            if(!TransactionHandler.net_state) {
+                nettyService.restart();
+            }
             return null;
         }
 
