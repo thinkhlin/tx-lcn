@@ -8,13 +8,16 @@ import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ServiceThreadModel;
-import com.lorne.tx.utils.ThreadPoolUtils;
+import com.lorne.tx.utils.ThreadPoolSizeHelper;
 import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * 分布式事务启动开始时的业务处理
@@ -29,6 +32,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
     private TransactionThreadService transactionThreadService;
 
 
+    private Executor threadPool  = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getStartSize());
+
     @Override
     public Object execute(final ProceedingJoinPoint point, final TxTransactionInfo info) throws Throwable {
         //分布式事务开始执行
@@ -39,7 +44,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         final String taskId = KidUtils.generateShortUuid();
         final Task task = ConditionUtils.getInstance().createTask(taskId);
 
-        ThreadPoolUtils.getInstance().execute(new Runnable() {
+        threadPool.execute(new Runnable() {
             @Override
             public void run() {
 

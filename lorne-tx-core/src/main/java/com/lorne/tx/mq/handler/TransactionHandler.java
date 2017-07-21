@@ -7,6 +7,7 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.utils.SocketUtils;
+import com.lorne.tx.utils.ThreadPoolSizeHelper;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -41,8 +42,8 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     private String heartJson;
 
-    private Executor  threadPool = Executors.newFixedThreadPool(800);
-    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(800);
+    private Executor  threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getHandlerSize());
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(ThreadPoolSizeHelper.getInstance().getHandlerSize());
 
 
     public TransactionHandler(NettyService nettyService) {

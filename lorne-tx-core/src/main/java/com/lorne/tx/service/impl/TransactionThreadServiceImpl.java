@@ -15,6 +15,7 @@ import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ServiceThreadModel;
+import com.lorne.tx.utils.ThreadPoolSizeHelper;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,8 +53,9 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
     private String url;
 
-    private Executor  threadPool = Executors.newFixedThreadPool(100);
-    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(100);
+    private Executor  threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
+
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
 
     public TransactionThreadServiceImpl() {
         url = ConfigUtils.getString("tx.properties", "url");

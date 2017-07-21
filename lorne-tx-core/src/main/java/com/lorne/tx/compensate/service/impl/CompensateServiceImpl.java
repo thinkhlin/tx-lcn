@@ -9,12 +9,14 @@ import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.CompensateOperationService;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.service.ModelNameService;
-import com.lorne.tx.utils.ThreadPoolUtils;
+import com.lorne.tx.utils.ThreadPoolSizeHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 /**
@@ -42,6 +44,8 @@ public class CompensateServiceImpl implements CompensateService {
     private TransactionRecoverRepository recoverRepository;
 
 
+    private Executor threadPool  = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getCompensateSize());
+
     @Override
     public void start() {
         //// TODO: 2017/7/13 获取recoverRepository对象
@@ -59,7 +63,7 @@ public class CompensateServiceImpl implements CompensateService {
         }
 
         // TODO: 2017/7/11  执行补偿业务 （只要业务执行未出现异常就算成功）
-        ThreadPoolUtils.getInstance().execute(new Runnable() {
+        threadPool.execute(new Runnable() {
             @Override
             public void run() {
                 for(TransactionRecover data:list){
