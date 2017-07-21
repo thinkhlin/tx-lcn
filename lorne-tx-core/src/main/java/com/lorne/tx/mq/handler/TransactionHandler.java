@@ -191,7 +191,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sleepSend(Task task, Request request){
-        if(task.isNotify()){
+        if(task.isAwait()){
             SocketUtils.sendMsg(ctx,request.toMsg());
         }else{
             sleepSend(task, request);
