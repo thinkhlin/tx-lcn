@@ -32,7 +32,7 @@ public class CompensateServiceImpl implements CompensateService {
     public final static String COMPENSATE_KEY = "COMPENSATE";
 
 
-    public static boolean hasCompensate = false;
+    //public static boolean hasCompensate = false;
 
 
     @Autowired
@@ -52,7 +52,7 @@ public class CompensateServiceImpl implements CompensateService {
     @Override
     public void start() {
 
-        hasCompensate = true;
+        //hasCompensate = true;
 
         //// TODO: 2017/7/13 获取recoverRepository对象
         recoverRepository = loadTransactionRecoverRepository();
@@ -65,7 +65,7 @@ public class CompensateServiceImpl implements CompensateService {
         final List<TransactionRecover> list =  compensateOperationService.findAll(0);
 
         if(list==null||list.size()==0){
-            hasCompensate = false;
+           // hasCompensate = false;
             return;
         }
 
@@ -93,7 +93,7 @@ public class CompensateServiceImpl implements CompensateService {
             }
         }.start();
 
-        hasCompensate = false;
+        //hasCompensate = false;
     }
 
     private TransactionRecoverRepository loadTransactionRecoverRepository() {

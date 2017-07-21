@@ -19,7 +19,7 @@ public class ThreadPoolSizeHelper {
     private final int inCompensateSize=10;
 
     //handler消息发送最大值
-    private final int handlerSize=inThreadSize*4;
+    private final int handlerSize=inThreadSize*5;
 
     private static ThreadPoolSizeHelper instance;
 
