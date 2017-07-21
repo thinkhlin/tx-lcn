@@ -10,7 +10,7 @@ public class ThreadPoolSizeHelper {
     private final int startSize=100;
 
     //分布式事务业务线程处理最大值
-    private final int inThreadSize=100;
+    private final int inThreadSize=startSize;
 
     //补偿事务线程处理最大值
     private final int compensateSize=10;
@@ -19,7 +19,7 @@ public class ThreadPoolSizeHelper {
     private final int inCompensateSize=10;
 
     //handler消息发送最大值
-    private final int handlerSize=500;
+    private final int handlerSize=inThreadSize*4;
 
     private static ThreadPoolSizeHelper instance;
 
