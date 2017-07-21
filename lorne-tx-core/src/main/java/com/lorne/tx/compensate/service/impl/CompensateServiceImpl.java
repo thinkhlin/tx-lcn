@@ -1,6 +1,8 @@
 package com.lorne.tx.compensate.service.impl;
 
 import com.lorne.core.framework.utils.config.ConfigUtils;
+import com.lorne.core.framework.utils.thread.CountDownLatchHelper;
+import com.lorne.core.framework.utils.thread.IExecute;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.repository.FileTransactionRecoverRepository;
@@ -29,6 +31,10 @@ public class CompensateServiceImpl implements CompensateService {
     //补偿事务标示 识别groupId （远程调用时传递的参数）
     public final static String COMPENSATE_KEY = "COMPENSATE";
 
+
+    public static boolean hasCompensate = false;
+
+
     @Autowired
     private CompensateOperationService compensateOperationService;
 
@@ -43,11 +49,11 @@ public class CompensateServiceImpl implements CompensateService {
 
     private TransactionRecoverRepository recoverRepository;
 
-
-    private Executor threadPool  = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getCompensateSize());
-
     @Override
     public void start() {
+
+        hasCompensate = true;
+
         //// TODO: 2017/7/13 获取recoverRepository对象
         recoverRepository = loadTransactionRecoverRepository();
         compensateOperationService.setTransactionRecover(recoverRepository);
@@ -62,16 +68,9 @@ public class CompensateServiceImpl implements CompensateService {
             return;
         }
 
-        // TODO: 2017/7/11  执行补偿业务 （只要业务执行未出现异常就算成功）
-        threadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                for(TransactionRecover data:list){
-                    compensateOperationService.execute(data);
-                }
-            }
-        });
-
+        for(final TransactionRecover data:list){
+            compensateOperationService.execute(data);
+        }
         // add Task
         new Thread(){
             @Override
@@ -92,6 +91,8 @@ public class CompensateServiceImpl implements CompensateService {
                 }
             }
         }.start();
+
+        hasCompensate = false;
     }
 
     private TransactionRecoverRepository loadTransactionRecoverRepository() {

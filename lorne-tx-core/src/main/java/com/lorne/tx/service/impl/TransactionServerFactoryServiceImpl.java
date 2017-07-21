@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 /**
  * Created by lorne on 2017/6/8.
  */
@@ -98,7 +99,12 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
         if (info.getTransaction() != null && info.getTxTransactionLocal() == null && StringUtils.isEmpty(info.getTxGroupId())) {
             //检查socket通讯是否正常 （当启动事务的主业务方法执行完以后，再执行其他业务方法时将进入txInServiceTransactionServer业务处理）
             if (nettyService.checkState()) {
-                return txStartTransactionServer;
+                if(CompensateServiceImpl.hasCompensate){
+                    //事务补偿未执行完毕
+                    throw new Exception("事务补偿运行中,请稍后再试.");
+                }else {
+                    return txStartTransactionServer;
+                }
             } else {
                 throw new Exception("tx-manager尚未链接成功,请检测tx-manager服务");
             }
@@ -108,12 +114,16 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
         if (info.getTxTransactionLocal() != null || StringUtils.isNotEmpty(info.getTxGroupId())) {
             //检查socket通讯是否正常 （第一次执行时启动txRunningTransactionServer的业务处理控制，然后嵌套调用其他事务的业务方法时都并到txInServiceTransactionServer业务处理下）
             if (nettyService.checkState()) {
-                if(info.getTxTransactionLocal() != null){
-                    return txInServiceTransactionServer;
-                }else{
-                    return txRunningTransactionServer;
+                if(CompensateServiceImpl.hasCompensate){
+                    //事务补偿未执行完毕
+                    throw new Exception("事务补偿运行中,请稍后再试.");
+                }else {
+                    if(info.getTxTransactionLocal() != null){
+                        return txInServiceTransactionServer;
+                    }else{
+                        return txRunningTransactionServer;
+                    }
                 }
-
             } else {
                 throw new Exception("tx-manager尚未链接成功,请检测tx-manager服务");
             }

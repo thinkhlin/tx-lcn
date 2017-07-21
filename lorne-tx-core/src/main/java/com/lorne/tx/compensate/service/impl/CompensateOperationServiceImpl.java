@@ -45,9 +45,9 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     private BlockingQueue<QueueMsg> queueList;
 
 
-    private final int threadSize = 100;
+    //private final int threadSize = 100;
 
-    private  final Executor threadPools = Executors.newFixedThreadPool(threadSize);
+    //private  final Executor threadPools = Executors.newFixedThreadPool(threadSize);
 
 
 
@@ -111,8 +111,8 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             QueueMsg msg = new QueueMsg();
             msg.setRecover(recover);
             msg.setType(1);
-            queueList.put(msg);
-//            recoverRepository.create(recover);
+           // queueList.put(msg);
+            recoverRepository.create(recover);
             return recover.getId();
         } catch (Exception e) {
             throw new TransactionRuntimeException("补偿数据库插入失败.");
@@ -130,8 +130,8 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             QueueMsg msg = new QueueMsg();
             msg.setId(id);
             msg.setType(0);
-            queueList.put(msg);
-          //  recoverRepository.remove(id);
+           // queueList.put(msg);
+            recoverRepository.remove(id);
             return true;
         } catch (Exception e) {
             return false;
@@ -142,28 +142,28 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     public void init(String modelName) {
         recoverRepository.init(modelName);
 
-        for(int i=0;i<threadSize;i++){
-            threadPools.execute(new Runnable() {
-                @Override
-                public void run() {
-                    while (true){
-                        try {
-                            QueueMsg msg = queueList.take();
-                            if(msg!=null){
-                                if(msg.getType()==1){
-                                    recoverRepository.create(msg.getRecover());
-                                }else{
-                                    recoverRepository.remove(msg.getId());
-                                }
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                }
-            });
-        }
+//        for(int i=0;i<threadSize;i++){
+//            threadPools.execute(new Runnable() {
+//                @Override
+//                public void run() {
+//                    while (true){
+//                        try {
+//                            QueueMsg msg = queueList.take();
+//                            if(msg!=null){
+//                                if(msg.getType()==1){
+//                                    recoverRepository.create(msg.getRecover());
+//                                }else{
+//                                    recoverRepository.remove(msg.getId());
+//                                }
+//                            }
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//
+//                    }
+//                }
+//            });
+//        }
 
     }
 }

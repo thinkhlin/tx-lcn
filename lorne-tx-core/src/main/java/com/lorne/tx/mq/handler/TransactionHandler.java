@@ -194,6 +194,11 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         if(task.isAwait()){
             SocketUtils.sendMsg(ctx,request.toMsg());
         }else{
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             sleepSend(task, request);
         }
     }
