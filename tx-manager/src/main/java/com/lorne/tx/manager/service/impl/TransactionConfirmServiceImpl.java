@@ -38,7 +38,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
     private ScheduledExecutorService executorService  = Executors.newScheduledThreadPool(50);
 
-    private Executor threadPool = Executors.newFixedThreadPool(50);
+    private Executor threadPool = Executors.newFixedThreadPool(200);
 
     @Autowired
     private TxManagerService txManagerService;
@@ -113,7 +113,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
 
     private void awaitSend(Task task, TxInfo txInfo,JSONObject jsonObject){
-        if(task.isNotify()){
+        if(task.isAwait()){
             SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
         }else{
             try {

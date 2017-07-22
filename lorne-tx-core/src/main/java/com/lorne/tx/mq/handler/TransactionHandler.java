@@ -32,7 +32,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
      * false 未链接
      * true 连接中
      */
-    public static boolean net_state = false;
+    public static volatile boolean net_state = false;
 
     private Logger logger = LoggerFactory.getLogger(TransactionHandler.class);
 

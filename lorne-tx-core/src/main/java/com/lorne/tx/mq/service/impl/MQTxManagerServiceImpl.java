@@ -54,6 +54,11 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
             String json = nettyService.sendMsg(request);
             logger.info("closeTransactionGroup->" + json);
         } else {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             thread(groupId, task);
         }
     }
