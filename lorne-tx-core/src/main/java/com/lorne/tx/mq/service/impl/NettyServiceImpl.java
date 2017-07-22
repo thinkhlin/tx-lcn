@@ -43,11 +43,17 @@ public class NettyServiceImpl implements NettyService {
 
     private int allIdleTime = 10;
 
+    private static volatile  boolean isStarting = false;
+
 
     private Logger logger = LoggerFactory.getLogger(NettyServiceImpl.class);
 
     @Override
     public synchronized void start() {
+        if(isStarting){
+            return;
+        }
+        isStarting= true;
         nettyDistributeService.loadTxServer();
 
         String host = Constants.txServer.getHost();
@@ -79,6 +85,8 @@ public class NettyServiceImpl implements NettyService {
         } catch (Exception e) {
             e.printStackTrace();
 
+            isStarting = false;
+
             //断开重新连接机制
             close();
 
@@ -91,9 +99,11 @@ public class NettyServiceImpl implements NettyService {
 
     @Override
     public synchronized void close() {
-        TransactionHandler.net_state = false;
         if (workerGroup != null) {
             workerGroup.shutdownGracefully();
+            workerGroup = null;
+            TransactionHandler.net_state = false;
+            isStarting = false;
         }
     }
 
