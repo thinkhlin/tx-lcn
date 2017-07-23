@@ -150,7 +150,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
-        ctx.close();
+        //ctx.close();
     }
 
     @Override
