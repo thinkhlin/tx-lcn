@@ -46,8 +46,8 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
 
-    private  void thread(String groupId, Task task) {
-        if (task.isNotify()) {
+    private  void thread(String groupId, Task waitTask) {
+        if (waitTask.isAwait()) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("g", groupId);
             Request request = new Request("ctg", jsonObject.toString());
@@ -59,16 +59,16 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            thread(groupId, task);
+            thread(groupId, waitTask);
         }
     }
 
     @Override
-    public  void closeTransactionGroup(final String groupId, final Task task) {
+    public  void closeTransactionGroup(final String groupId, final Task waitTask) {
         threadPool.execute(new Runnable() {
             @Override
             public void run() {
-                thread(groupId, task);
+                thread(groupId, waitTask);
             }
         });
     }

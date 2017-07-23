@@ -32,7 +32,7 @@ public interface MQTxManagerService {
      * @param groupId
      * @return
      */
-    void closeTransactionGroup(String groupId, Task task);
+    void closeTransactionGroup(String groupId, Task waitTask);
 
 
     /**
