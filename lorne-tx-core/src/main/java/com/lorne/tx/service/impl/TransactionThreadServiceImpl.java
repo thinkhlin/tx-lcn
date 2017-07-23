@@ -218,9 +218,15 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             int state = (Integer) waitTask.getBack().doing();
             logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state);
             if (state == 1) {
-                txManager.commit(status);
+                synchronized (this) {
+                    txManager.commit(status);
+                    waitTask.remove();
+                }
             } else {
-                txManager.rollback(status);
+                synchronized (this) {
+                    txManager.rollback(status);
+                    waitTask.remove();
+                }
                 if (state == -1) {
                     task.setBack(new IBack() {
                         @Override
@@ -238,7 +244,6 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                     });
                 }
             }
-
             //主程序的业务数据返回
             if (!signTask) {
                 task.signalTask();
@@ -251,10 +256,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             }
         } catch (Throwable throwable) {
             txManager.rollback(status);
-        } finally {
-            waitTask.remove();
         }
     }
-
 
 }

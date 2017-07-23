@@ -93,7 +93,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                                 int count = 0;
                                 while (true){
 
-                                    if(task==null||task.isRemove()){
+                                    if(task.isRemove()){
                                         res = "1";
                                         break;
                                     }else{
