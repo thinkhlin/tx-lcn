@@ -11,6 +11,7 @@ import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.CompensateOperationService;
 import com.lorne.tx.exception.TransactionRuntimeException;
 import com.lorne.tx.utils.MethodUtils;
+import com.lorne.tx.utils.ThreadPoolSizeHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,9 +46,8 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     private BlockingQueue<QueueMsg> queueList;
 
 
-    //private final int threadSize = 100;
 
-    //private  final Executor threadPools = Executors.newFixedThreadPool(threadSize);
+    private  final Executor threadPools = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getMqSize());
 
 
 
@@ -111,8 +111,8 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             QueueMsg msg = new QueueMsg();
             msg.setRecover(recover);
             msg.setType(1);
-           // queueList.put(msg);
-            recoverRepository.create(recover);
+            queueList.put(msg);
+           // recoverRepository.create(recover);
             return recover.getId();
         } catch (Exception e) {
             throw new TransactionRuntimeException("补偿数据库插入失败.");
@@ -130,8 +130,8 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             QueueMsg msg = new QueueMsg();
             msg.setId(id);
             msg.setType(0);
-           // queueList.put(msg);
-            recoverRepository.remove(id);
+            queueList.put(msg);
+           // recoverRepository.remove(id);
             return true;
         } catch (Exception e) {
             return false;
@@ -142,28 +142,39 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     public void init(String modelName) {
         recoverRepository.init(modelName);
 
-//        for(int i=0;i<threadSize;i++){
-//            threadPools.execute(new Runnable() {
-//                @Override
-//                public void run() {
-//                    while (true){
-//                        try {
-//                            QueueMsg msg = queueList.take();
-//                            if(msg!=null){
-//                                if(msg.getType()==1){
-//                                    recoverRepository.create(msg.getRecover());
-//                                }else{
-//                                    recoverRepository.remove(msg.getId());
-//                                }
-//                            }
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//
-//                    }
-//                }
-//            });
-//        }
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                for(int i=0;i<ThreadPoolSizeHelper.getInstance().getMqSize();i++){
+                    threadPools.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            while (true){
+                                try {
+                                    QueueMsg msg = queueList.take();
+                                    if(msg!=null){
+                                        if(msg.getType()==1){
+                                            recoverRepository.create(msg.getRecover());
+                                        }else{
+                                            recoverRepository.remove(msg.getId());
+                                        }
+                                    }
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+
+                            }
+                        }
+                    });
+                }
+            }
+        };
+
+        Thread  thread =  new Thread(runnable);
+        thread.start();
+
+        Thread  shutdownHook =  new Thread(runnable);
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
 
     }
 }

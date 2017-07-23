@@ -21,6 +21,11 @@ public class ThreadPoolSizeHelper {
     //handler消息发送最大值
     private final int handlerSize=inThreadSize*5;
 
+
+    //消息队列处理线程
+    private final int mqSize=inThreadSize;
+
+
     private static ThreadPoolSizeHelper instance;
 
     public static ThreadPoolSizeHelper getInstance() {
@@ -60,4 +65,7 @@ public class ThreadPoolSizeHelper {
     }
 
 
+    public int getMqSize() {
+        return mqSize;
+    }
 }
