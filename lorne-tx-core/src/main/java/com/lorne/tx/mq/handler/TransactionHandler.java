@@ -80,30 +80,36 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         logger.info("接受通知数据->" + json);
                         String res = "";
                         if (task != null) {
-                            if(!task.isNotify()){
-                                task.setBack(new IBack() {
-                                    @Override
-                                    public Object doing(Object... objects) throws Throwable {
-                                        return state;
-                                    }
-                                });
-                                task.signalTask();
+                            if(!task.isNotify()){   //还没有通知
 
-                                //确认事务通知方法已经执行完毕
-                                int count = 0;
-                                while (true){
-
-                                    if(task.isRemove()){
-                                        res = "1";
-                                        break;
-                                    }else{
-                                        if(count>800) {
-                                            res = "0";
-                                            break;
+                                if(task.isAwait()) {   //已经等待
+                                    task.setBack(new IBack() {
+                                        @Override
+                                        public Object doing(Object... objects) throws Throwable {
+                                            return state;
                                         }
+                                    });
+                                    task.signalTask();
+
+                                    //确认事务通知方法已经执行完毕
+                                    int count = 0;
+                                    while (true) {
+
+                                        if (task.isRemove()) {
+                                            res = "1";
+                                            break;
+                                        } else {
+                                            if (count > 800) {
+                                                res = "0";
+                                                break;
+                                            }
+                                        }
+                                        count++;
+                                        Thread.sleep(1);
                                     }
-                                    count++;
-                                    Thread.sleep(1);
+                                }else{
+                                    //模块自动进入超时业务
+                                    res = "0";
                                 }
 
                             }else{

@@ -162,6 +162,7 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     @Override
     public boolean notifyTransactionInfo(String groupId, String kid, boolean state) {
+        long t1 = System.currentTimeMillis();
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix + groupId;
         String json = value.get(key);
@@ -176,6 +177,14 @@ public class TxManagerServiceImpl implements TxManagerService {
             }
         }
         value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
+        long t2 = System.currentTimeMillis();
+        double time = (t2 - t1 - dt) / 1000;
+        if(time > transaction_wait_max_time){
+            //超时恢复数据
+            TxGroup oldGroup = TxGroup.parser(json);
+            value.set(key, oldGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
+            return false;
+        }
         return true;
     }
 

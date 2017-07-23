@@ -16,6 +16,7 @@ import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ServiceThreadModel;
 import com.lorne.tx.utils.ThreadPoolSizeHelper;
+import org.apache.commons.lang.math.RandomUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +27,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -53,7 +55,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
     private String url;
 
-    private Executor  threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
+    private Executor threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
 
     private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
 
@@ -76,7 +78,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
             task.signalTask();
-            if(!TransactionHandler.net_state) {
+            if (!TransactionHandler.net_state) {
                 nettyService.restart();
             }
             return null;
@@ -126,7 +128,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     }
 
 
-    private void waitSignTask(Task task,boolean signTask, boolean isNotifyOk) {
+    private void waitSignTask(Task task, boolean signTask, boolean isNotifyOk) {
         if (isNotifyOk == false) {
             task.setBack(new IBack() {
                 @Override
@@ -135,19 +137,14 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
         }
-        if(signTask) {
+        if (signTask) {
             task.signalTask();
             logger.info("返回业务数据");
         }
     }
 
-    @Override
-    public void serviceWait(final boolean signTask, final Task task, final ServiceThreadModel model) {
-        final Task waitTask = model.getWaitTask();
-        final String taskId = waitTask.getKey();
-        TransactionStatus status = model.getStatus();
-
-
+    //等待线程
+    private void schedule(final ServiceThreadModel model, final String taskId,long time) {
         executorService.schedule(new Runnable() {
             @Override
             public void run() {
@@ -163,7 +160,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                         if (hasOk == -1) {
                             // 发起http请求查询状态
                             String json = HttpUtils.get(url + "Group?groupId=" + groupId + "&taskId=" + taskId);
-                            if(json==null){
+                            if (json == null) {
                                 //请求tm访问失败
                                 task.setBack(new IBack() {
                                     @Override
@@ -195,13 +192,35 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                     }
                 }
             }
-        }, model.getTxGroup().getWaitTime(), TimeUnit.SECONDS);
+        }, time, TimeUnit.MILLISECONDS);
+    }
 
+    @Override
+    public void serviceWait(final boolean signTask, final Task task, final ServiceThreadModel model) {
+        final Task waitTask = model.getWaitTask();
+        final String taskId = waitTask.getKey();
+        TransactionStatus status = model.getStatus();
+
+        long st = model.getTxGroup().getStartTime();
+        long et = System.currentTimeMillis();
+
+        int tmTime = model.getTxGroup().getWaitTime();
+
+        //int time = tmTime - ((int) (et - st) / 1000);
+        long time = tmTime*1000 - ((int) (et - st));
+        if (time <= 500) {
+            //直接返回超时数据
+            transactionConfirm(-2, waitTask, status, model, task, signTask);
+            return;
+        }
+
+        //等待线程
+        schedule(model, taskId,time);
 
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                waitSignTask(task,signTask, model.isNotifyOk()); //执行顺序 2
+                waitSignTask(task, signTask, model.isNotifyOk()); //执行顺序 2
             }
         };
         threadPool.execute(runnable);
@@ -211,54 +230,60 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         }
         logger.info("进入回滚等待.");
         waitTask.awaitTask();
-
         try {
             int state = (Integer) waitTask.getBack().doing();
             logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state);
-
-            transactionLock(state,status,model.getCompensateId(),waitTask);
-
-            if (state == -1) {
-                task.setBack(new IBack() {
-                    @Override
-                    public Object doing(Object... objs) throws Throwable {
-                        throw new Throwable("事务模块网络异常.");
-                    }
-                });
-            }
-            if (state == -2) {
-                task.setBack(new IBack() {
-                    @Override
-                    public Object doing(Object... objs) throws Throwable {
-                        throw new Throwable("事务模块超时异常.");
-                    }
-                });
-            }
-
-            //主程序的业务数据返回
-            if (!signTask) {
-                task.signalTask();
-            }
-            if(state==-100) {
-                //定时请求TM资源确认状态
-                compensateService.addTask(model.getCompensateId());
-            }
-
+            //事务确认操作
+            transactionConfirm(state, waitTask, status, model, task, signTask);
         } catch (Throwable throwable) {
             txManager.rollback(status);
         }
     }
 
+
+    //事务确认状态
+    private void transactionConfirm(int state, Task waitTask, TransactionStatus status, ServiceThreadModel model, Task task, boolean signTask) {
+        transactionLock(state, status, model.getCompensateId(), waitTask);
+
+        if (state == -1) {
+            task.setBack(new IBack() {
+                @Override
+                public Object doing(Object... objs) throws Throwable {
+                    throw new Throwable("事务模块网络异常.");
+                }
+            });
+        }
+        if (state == -2) {
+            task.setBack(new IBack() {
+                @Override
+                public Object doing(Object... objs) throws Throwable {
+                    throw new Throwable("事务模块超时异常.");
+                }
+            });
+        }
+
+        //主程序的业务数据返回
+        if (!signTask) {
+            task.signalTask();
+        }
+        if (state == -100) {
+            //定时请求TM资源确认状态
+            compensateService.addTask(model.getCompensateId());
+        }
+    }
+
+    //以下代码必须确保原子性
     private synchronized void transactionLock(int state, TransactionStatus status, String compensateId, Task waitTask) {
         if (state == 1) {
             txManager.commit(status);
             compensateService.deleteTransactionInfo(compensateId);
-            waitTask.remove();
+            if (waitTask != null)
+                waitTask.remove();
         } else {
             txManager.rollback(status);
             compensateService.deleteTransactionInfo(compensateId);
-            waitTask.remove();
+            if (waitTask != null)
+                waitTask.remove();
         }
     }
-
 }
