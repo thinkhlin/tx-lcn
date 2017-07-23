@@ -16,7 +16,6 @@ import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ServiceThreadModel;
 import com.lorne.tx.utils.ThreadPoolSizeHelper;
-import org.apache.commons.lang.math.RandomUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import java.util.Random;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -274,13 +272,13 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
     //以下代码必须确保原子性
     private synchronized void transactionLock(int state, TransactionStatus status, String compensateId, Task waitTask) {
-        if (state == 1) {
-            txManager.commit(status);
-            compensateService.deleteTransactionInfo(compensateId);
-            if (waitTask != null)
-                waitTask.remove();
-        } else {
-            txManager.rollback(status);
+        try {
+            if (state == 1) {
+                txManager.commit(status);
+            } else {
+                txManager.rollback(status);
+            }
+        }finally {
             compensateService.deleteTransactionInfo(compensateId);
             if (waitTask != null)
                 waitTask.remove();
