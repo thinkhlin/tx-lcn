@@ -7,7 +7,7 @@ public class ThreadPoolSizeHelper {
 
 
     //分布式事务可进入的线程最大值
-    private final int startSize=100;
+    private final int startSize=30;
 
     //分布式事务业务线程处理最大值
     private final int inThreadSize=startSize;
