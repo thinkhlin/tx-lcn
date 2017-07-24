@@ -61,6 +61,26 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         url = ConfigUtils.getString("tx.properties", "url");
     }
 
+
+
+    @Override
+    public Object secondExecute(Task groupTask,final ProceedingJoinPoint point) throws Throwable {
+        String key  = (String) groupTask.getBack().doing();
+        Task waitTask  = ConditionUtils.getInstance().getTask(key);
+        Object obj =  waitTask.execute(new IBack() {
+            @Override
+            public Object doing(Object... objs) throws Throwable {
+               return point.proceed();
+            }
+        });
+
+        if(obj instanceof  Throwable){
+            throw (Throwable) obj;
+        }
+
+        return obj;
+    }
+
     @Override
     public ServiceThreadModel serviceInThread(TxTransactionInfo info, boolean signTask, String _groupId, Task task, ProceedingJoinPoint point) {
 

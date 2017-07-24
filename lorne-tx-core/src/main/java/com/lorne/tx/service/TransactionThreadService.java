@@ -14,4 +14,6 @@ public interface TransactionThreadService {
 
 
     void serviceWait(boolean signTask, Task task, ServiceThreadModel model);
+
+    Object secondExecute(Task groupTask , ProceedingJoinPoint point)throws Throwable;
 }

@@ -2,6 +2,7 @@ package com.lorne.tx.service.impl;
 
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
+import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
@@ -9,12 +10,14 @@ import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.TransactionThreadService;
 import com.lorne.tx.service.model.ServiceThreadModel;
 import com.lorne.tx.utils.ThreadPoolSizeHelper;
-import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -39,7 +42,12 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         //分布式事务开始执行
         logger.info("tx-running-start");
 
-        final String groupId = info.getTxTransactionLocal() == null ? null : info.getTxTransactionLocal().getGroupId();
+        final String txGroupId = info.getTxGroupId();
+        Task groupTask =  ConditionUtils.getInstance().getTask(txGroupId);
+        if(groupTask!=null){
+            //当同一个事务下的业务进入切面时，合并业务执行。
+            return transactionThreadService.secondExecute(groupTask,point);
+        }
 
         final String taskId = KidUtils.generateShortUuid();
         final Task task = ConditionUtils.getInstance().createTask(taskId);
@@ -48,26 +56,28 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             @Override
             public void run() {
 
-                String _groupId = "";
-                if (StringUtils.isEmpty(groupId)) {
-                    String txGroupId = info.getTxGroupId();
-                    _groupId = txGroupId;
-                    if (StringUtils.isNotEmpty(txGroupId)) {
-                        TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
-                        txTransactionLocal.setGroupId(txGroupId);
-                        TxTransactionLocal.setCurrent(txTransactionLocal);
-                    }
-                } else {
-                    _groupId = groupId;
-                }
+                TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
+                txTransactionLocal.setGroupId(txGroupId);
+                TxTransactionLocal.setCurrent(txTransactionLocal);
 
 
-                ServiceThreadModel model = transactionThreadService.serviceInThread(info, true, _groupId, task, point);
+                final ServiceThreadModel model = transactionThreadService.serviceInThread(info, true, txGroupId, task, point);
                 if (model == null) {
                     return;
                 }
+
+                Task groupTask = ConditionUtils.getInstance().createTask(txGroupId);
+                groupTask.setBack(new IBack() {
+                    @Override
+                    public Object doing(Object... objs) throws Throwable {
+                        return model.getWaitTask().getKey();
+                    }
+                });
+
                 logger.info("taskId-id-tx-running:" + model.getWaitTask().getKey());
                 transactionThreadService.serviceWait(true, task, model);
+
+                groupTask.remove();
             }
         });
 
