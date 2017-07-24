@@ -59,4 +59,9 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     public boolean getHasOvertime(TxGroup txGroup) {
         return txManagerService.getHasOvertime(txGroup);
     }
+
+    @Override
+    public int getDelayTime() {
+        return txManagerService.getDelayTime();
+    }
 }

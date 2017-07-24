@@ -36,6 +36,11 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     private Logger logger = LoggerFactory.getLogger(TransactionHandler.class);
 
+    /**
+     * 自动返回数据时间，必须要小于事务模块最大相应时间.(通过心跳获取)
+     */
+    private volatile int delay = 1;
+
     private ChannelHandlerContext ctx;
 
     private NettyService nettyService;
@@ -46,8 +51,9 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(ThreadPoolSizeHelper.getInstance().getHandlerSize());
 
 
-    public TransactionHandler(NettyService nettyService) {
+    public TransactionHandler(NettyService nettyService,int delay) {
         this.nettyService = nettyService;
+        this.delay = delay;
 
         //心跳包
         JSONObject heartJo = new JSONObject();
@@ -147,6 +153,15 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         });
                         task.signalTask();
                     }
+                }else{
+                    final String data = resObj.getString("d");
+                    if(StringUtils.isNotEmpty(data)){
+                        try {
+                            delay = Integer.parseInt(data);
+                        }catch (Exception e){
+                            delay = 1;
+                        }
+                    }
                 }
             }
         }
@@ -155,7 +170,6 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
-       // ctx.close();
     }
 
     @Override
@@ -227,7 +241,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         task.signalTask();
                     }
                 }
-            }, 1, TimeUnit.SECONDS);
+            }, delay, TimeUnit.SECONDS);
 
 
             threadPool.execute(new Runnable() {

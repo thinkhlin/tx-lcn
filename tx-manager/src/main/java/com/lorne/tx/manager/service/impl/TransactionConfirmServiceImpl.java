@@ -156,7 +156,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                             });
                             task.signalTask();
                         }
-                    }, 1, TimeUnit.SECONDS);
+                    }, txManagerService.getDelayTime(), TimeUnit.SECONDS);
 
                     threadPool.execute(new Runnable() {
                         @Override

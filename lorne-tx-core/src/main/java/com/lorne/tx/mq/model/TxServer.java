@@ -10,7 +10,8 @@ public class TxServer {
 
     private int port;
     private String host;
-
+    private int heart;
+    private int delay;
 
     public int getPort() {
         return port;
@@ -29,9 +30,25 @@ public class TxServer {
     }
 
 
+    public int getHeart() {
+        return heart;
+    }
+
+    public void setHeart(int heart) {
+        this.heart = heart;
+    }
+
+    public int getDelay() {
+        return delay;
+    }
+
+    public void setDelay(int delay) {
+        this.delay = delay;
+    }
+
     @Override
     public String toString() {
-        return "host:" + host + ",port:" + port;
+        return "host:" + host + ",port:" + port+",heart:"+heart+",delay:"+delay;
     }
 
     public static TxServer parser(String json) {
@@ -40,6 +57,8 @@ public class TxServer {
             TxServer txServer = new TxServer();
             txServer.setPort(jsonObject.getInteger("port"));
             txServer.setHost(jsonObject.getString("ip"));
+            txServer.setHeart(jsonObject.getInteger("heart"));
+            txServer.setDelay(jsonObject.getInteger("delay"));
             return txServer;
         } catch (Exception e) {
             e.printStackTrace();

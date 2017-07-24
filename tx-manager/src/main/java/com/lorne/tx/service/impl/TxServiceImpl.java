@@ -31,6 +31,13 @@ public class TxServiceImpl implements TxService {
     @Value("${transaction_wait_max_time}")
     private int transaction_wait_max_time;
 
+    @Value("${transaction_netty_heart_time}")
+    private int transaction_netty_heart_time;
+
+    @Value("${transaction_netty_delay_time}")
+    private int transaction_netty_delay_time;
+
+
     @Autowired
     private TxManagerService managerService;
 
@@ -99,6 +106,8 @@ public class TxServiceImpl implements TxService {
         state.setNowConnection(SocketManager.getInstance().getNowConnection());
         state.setTransactionWaitMaxTime(transaction_wait_max_time);
         state.setRedisSaveMaxTime(redis_save_max_time);
+        state.setTransactionNettyDelayTime(transaction_netty_delay_time);
+        state.setTransactionNettyHeartTime(transaction_netty_heart_time);
         state.setSlbList(getServices());
         return state;
     }

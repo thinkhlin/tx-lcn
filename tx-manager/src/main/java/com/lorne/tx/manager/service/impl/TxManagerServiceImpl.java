@@ -33,6 +33,10 @@ public class TxManagerServiceImpl implements TxManagerService {
     @Value("${transaction_wait_max_time}")
     private int transaction_wait_max_time;
 
+    @Value("${transaction_netty_delay_time}")
+    private int transaction_netty_delay_time;
+
+
     private final static String key_prefix = "tx_manager_default_";
 
     private final static String key_prefix_notify = "tx_manager_notify_";
@@ -216,5 +220,10 @@ public class TxManagerServiceImpl implements TxManagerService {
 
         double time = (txGroup.getEndTime() - txGroup.getStartTime() - dt) / 1000;
         return time > transaction_wait_max_time;
+    }
+
+    @Override
+    public int getDelayTime() {
+        return transaction_netty_delay_time;
     }
 }

@@ -31,6 +31,18 @@ public class TxState {
      */
     private int transactionWaitMaxTime;
 
+
+    /**
+     *  transaction_netty_heart_time
+     */
+    private int transactionNettyHeartTime;
+
+    /**
+     *  transaction_netty_delay_time
+     */
+    private int transactionNettyDelayTime;
+
+
     /**
      * redis_save_max_time
      */
@@ -96,5 +108,21 @@ public class TxState {
 
     public void setSlbList(List<String> slbList) {
         this.slbList = slbList;
+    }
+
+    public int getTransactionNettyHeartTime() {
+        return transactionNettyHeartTime;
+    }
+
+    public void setTransactionNettyHeartTime(int transactionNettyHeartTime) {
+        this.transactionNettyHeartTime = transactionNettyHeartTime;
+    }
+
+    public int getTransactionNettyDelayTime() {
+        return transactionNettyDelayTime;
+    }
+
+    public void setTransactionNettyDelayTime(int transactionNettyDelayTime) {
+        this.transactionNettyDelayTime = transactionNettyDelayTime;
     }
 }

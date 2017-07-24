@@ -57,9 +57,21 @@
             </tr>
             <tr>
                 <th scope="row">
-                    事务模块最大等待时间(秒)
+                    事务模块最大相应等待时间(秒)
                 </th>
                 <td><span th:text="${info.transactionWaitMaxTime}"></span></td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    TxManager模块心跳间隔时间(秒)
+                </th>
+                <td><span th:text="${info.transactionNettyHeartTime}"></span></td>
+            </tr>
+            <tr>
+                <th scope="row">
+                    TxManager模块通讯最大等待时间(秒)
+                </th>
+                <td><span th:text="${info.transactionNettyDelayTime}"></span></td>
             </tr>
             <tr>
                 <th scope="row">

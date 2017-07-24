@@ -37,11 +37,6 @@ public class NettyServiceImpl implements NettyService {
 
     private EventLoopGroup workerGroup;
 
-    private int readerIdleTime = 10;
-
-    private int writerIdleTime = 10;
-
-    private int allIdleTime = 10;
 
     private static volatile  boolean isStarting = false;
 
@@ -58,8 +53,10 @@ public class NettyServiceImpl implements NettyService {
 
         String host = Constants.txServer.getHost();
         int port = Constants.txServer.getPort();
+        final int heart = Constants.txServer.getHeart();
+        int delay = Constants.txServer.getDelay();
 
-        transactionHandler = new TransactionHandler(this);
+        transactionHandler = new TransactionHandler(this,delay);
         workerGroup = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap(); // (1)
@@ -70,7 +67,7 @@ public class NettyServiceImpl implements NettyService {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
 
-                    ch.pipeline().addLast("timeout", new IdleStateHandler(readerIdleTime, writerIdleTime, allIdleTime, TimeUnit.SECONDS));
+                    ch.pipeline().addLast("timeout", new IdleStateHandler(heart, heart, heart, TimeUnit.SECONDS));
 
                     ch.pipeline().addLast(new LengthFieldPrepender(4, false));
                     ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));

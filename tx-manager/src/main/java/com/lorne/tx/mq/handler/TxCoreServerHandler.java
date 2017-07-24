@@ -102,7 +102,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
 
                 //心跳包
                 case "h": {
-                    res = "1";
+                    res = String.valueOf(txManagerService.getDelayTime());
                     break;
                 }
 

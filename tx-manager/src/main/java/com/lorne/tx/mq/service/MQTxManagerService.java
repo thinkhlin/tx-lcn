@@ -50,4 +50,6 @@ public interface MQTxManagerService {
     boolean getHasOvertime(TxGroup txGroup);
 
 
+    int getDelayTime();
+
 }

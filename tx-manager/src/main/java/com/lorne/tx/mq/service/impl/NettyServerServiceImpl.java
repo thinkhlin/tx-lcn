@@ -19,6 +19,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -42,15 +43,15 @@ public class NettyServerServiceImpl implements NettyServerService {
     private TxCoreServerHandler txCoreServerHandler;
 
 
-    private int readerIdleTime = 20;
+    @Value("${transaction_netty_heart_time}")
+    private int transaction_netty_heart_time;
 
-    private int writerIdleTime = 20;
 
-    private int allIdleTime = 20;
 
 
     @Override
     public void start() {
+        int heartTime = transaction_netty_heart_time+10;
         txCoreServerHandler = new TxCoreServerHandler(mqTxManagerService);
         bossGroup = new NioEventLoopGroup(10); // (1)
         workerGroup = new NioEventLoopGroup();
@@ -63,7 +64,7 @@ public class NettyServerServiceImpl implements NettyServerService {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast("timeout", new IdleStateHandler(readerIdleTime, writerIdleTime, allIdleTime, TimeUnit.SECONDS));
+                            ch.pipeline().addLast("timeout", new IdleStateHandler(heartTime, heartTime, heartTime, TimeUnit.SECONDS));
 
                             ch.pipeline().addLast(new LengthFieldPrepender(4, false));
                             ch.pipeline().addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));

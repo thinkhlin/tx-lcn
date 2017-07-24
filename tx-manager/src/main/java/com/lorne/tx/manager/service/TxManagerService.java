@@ -49,5 +49,6 @@ public interface TxManagerService {
 
     boolean getHasOvertime(TxGroup txGroup);
 
+    int getDelayTime();
 
 }
