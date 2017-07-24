@@ -91,8 +91,20 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                 if (model == null) {
                     return;
                 }
-                logger.info("taskId-id-tx:" + model.getWaitTask().getKey());
+
+                Task groupTask = ConditionUtils.getInstance().createTask(txGroup.getGroupId());
+                final String waitTaskKey = model.getWaitTask().getKey();
+                groupTask.setBack(new IBack() {
+                    @Override
+                    public Object doing(Object... objs) throws Throwable {
+                        return waitTaskKey;
+                    }
+                });
+
+                logger.info("taskId-id-tx:" + waitTaskKey);
                 transactionThreadService.serviceWait(signTask, task, model);
+
+                groupTask.remove();
             }
         });
 

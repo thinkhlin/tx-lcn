@@ -44,8 +44,9 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
         final String txGroupId = info.getTxGroupId();
         Task groupTask =  ConditionUtils.getInstance().getTask(txGroupId);
-        if(groupTask!=null){
-            //当同一个事务下的业务进入切面时，合并业务执行。
+
+        //当同一个事务下的业务进入切面时，合并业务执行。
+        if(groupTask!=null&&!groupTask.isNotify()){
             return transactionThreadService.secondExecute(groupTask,point);
         }
 
@@ -61,20 +62,21 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 TxTransactionLocal.setCurrent(txTransactionLocal);
 
 
-                final ServiceThreadModel model = transactionThreadService.serviceInThread(info, true, txGroupId, task, point);
+                ServiceThreadModel model = transactionThreadService.serviceInThread(info, true, txGroupId, task, point);
                 if (model == null) {
                     return;
                 }
 
                 Task groupTask = ConditionUtils.getInstance().createTask(txGroupId);
+                final String waitTaskKey = model.getWaitTask().getKey();
                 groupTask.setBack(new IBack() {
                     @Override
                     public Object doing(Object... objs) throws Throwable {
-                        return model.getWaitTask().getKey();
+                        return waitTaskKey;
                     }
                 });
 
-                logger.info("taskId-id-tx-running:" + model.getWaitTask().getKey());
+                logger.info("taskId-id-tx-running:" + waitTaskKey);
                 transactionThreadService.serviceWait(true, task, model);
 
                 groupTask.remove();
