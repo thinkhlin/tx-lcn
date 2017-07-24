@@ -1,5 +1,6 @@
 package com.lorne.tx.mq.service;
 
+import com.lorne.tx.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 
 /**
@@ -8,10 +9,9 @@ import com.lorne.tx.mq.model.TxGroup;
 public interface MQTxManagerService {
 
 
+
     /**
-     * 创建事务组
-     *
-     * @return
+     * 创建事物组
      */
     TxGroup createTransactionGroup();
 
@@ -24,12 +24,12 @@ public interface MQTxManagerService {
     TxGroup addTransactionGroup(String groupId, String taskId, String modelName);
 
 
-    /**
-     * 关闭事务组-进入事务提交第一阶段
-     *
-     * @param groupId
-     * @return
-     */
+    boolean checkTransactionGroup(String groupId,String taskId);
+
+
+    boolean checkTransactionGroupState(String groupId);
+
+
     boolean closeTransactionGroup(String groupId);
 
 
@@ -41,7 +41,13 @@ public interface MQTxManagerService {
      * @param state
      * @return
      */
-    boolean notifyTransactionInfo(String groupId, String kid, boolean state);
+    NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state);
+
+
+    void dealTxGroup(TxGroup txGroup, boolean hasOk );
+
+
+    boolean getHasOvertime(TxGroup txGroup);
 
 
 }

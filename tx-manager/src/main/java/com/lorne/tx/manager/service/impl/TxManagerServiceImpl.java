@@ -4,6 +4,7 @@ package com.lorne.tx.manager.service.impl;
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.tx.manager.service.TransactionConfirmService;
 import com.lorne.tx.manager.service.TxManagerService;
+import com.lorne.tx.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
 import org.apache.commons.lang.StringUtils;
@@ -161,13 +162,14 @@ public class TxManagerServiceImpl implements TxManagerService {
 
 
     @Override
-    public boolean notifyTransactionInfo(String groupId, String kid, boolean state) {
+    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
+        NotifyMsg notifyMsg = new NotifyMsg();
         long t1 = System.currentTimeMillis();
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix + groupId;
         String json = value.get(key);
         if (StringUtils.isEmpty(json)) {
-            return false;
+            return null;
         }
         TxGroup txGroup = TxGroup.parser(json);
         List<TxInfo> list = txGroup.getList();
@@ -179,13 +181,16 @@ public class TxManagerServiceImpl implements TxManagerService {
         value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
         long t2 = System.currentTimeMillis();
         double time = (t2 - t1 - dt) / 1000;
+        notifyMsg.setState(1);
+        notifyMsg.setNowTime(System.currentTimeMillis());
         if(time > transaction_wait_max_time){
             //超时恢复数据
             TxGroup oldGroup = TxGroup.parser(json);
             value.set(key, oldGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
-            return false;
+            notifyMsg.setState(0);
+            return notifyMsg;
         }
-        return true;
+        return notifyMsg;
     }
 
 

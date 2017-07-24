@@ -1,6 +1,7 @@
 package com.lorne.tx.mq.service.impl;
 
 import com.lorne.tx.manager.service.TxManagerService;
+import com.lorne.tx.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,28 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
 
     @Override
-    public boolean notifyTransactionInfo(String groupId, String kid, boolean state) {
+    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
         return txManagerService.notifyTransactionInfo(groupId, kid, state);
+    }
+
+
+    @Override
+    public boolean checkTransactionGroup(String groupId, String taskId) {
+        return txManagerService.checkTransactionGroup(groupId, taskId);
+    }
+
+    @Override
+    public boolean checkTransactionGroupState(String groupId) {
+        return txManagerService.checkTransactionGroupState(groupId);
+    }
+
+    @Override
+    public void dealTxGroup(TxGroup txGroup, boolean hasOk) {
+        txManagerService.dealTxGroup(txGroup, hasOk);
+    }
+
+    @Override
+    public boolean getHasOvertime(TxGroup txGroup) {
+        return txManagerService.getHasOvertime(txGroup);
     }
 }

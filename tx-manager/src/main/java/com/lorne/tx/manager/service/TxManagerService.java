@@ -1,5 +1,6 @@
 package com.lorne.tx.manager.service;
 
+import com.lorne.tx.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 
 /**
@@ -29,7 +30,6 @@ public interface TxManagerService {
     boolean checkTransactionGroupState(String groupId);
 
 
-
     boolean closeTransactionGroup(String groupId);
 
 
@@ -41,7 +41,7 @@ public interface TxManagerService {
      * @param state
      * @return
      */
-    boolean notifyTransactionInfo(String groupId, String kid, boolean state);
+    NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state);
 
 
     void dealTxGroup(TxGroup txGroup, boolean hasOk );

@@ -1,6 +1,7 @@
 package com.lorne.tx.mq.service;
 
 import com.lorne.core.framework.utils.task.Task;
+import com.lorne.tx.mq.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 
 
@@ -43,7 +44,7 @@ public interface MQTxManagerService {
      * @param state
      * @return
      */
-    boolean notifyTransactionInfo(String groupId, String kid, boolean state);
+    NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state);
 
 
     int checkTransactionInfo(String groupId,String taskId);

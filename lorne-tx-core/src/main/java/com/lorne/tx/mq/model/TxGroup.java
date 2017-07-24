@@ -4,6 +4,7 @@ package com.lorne.tx.mq.model;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -81,6 +82,9 @@ public class TxGroup {
 
     public static TxGroup parser(String json) {
         try {
+            if(StringUtils.isEmpty(json)){
+                return null;
+            }
             JSONObject jsonObject = JSONObject.parseObject(json);
             TxGroup txGroup = new TxGroup();
             txGroup.setGroupId(jsonObject.getString("g"));

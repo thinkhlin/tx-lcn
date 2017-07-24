@@ -2,7 +2,7 @@ package com.lorne.tx.mq.service.impl;
 
 import com.lorne.tx.Constants;
 import com.lorne.tx.mq.handler.TxCoreServerHandler;
-import com.lorne.tx.manager.service.TxManagerService;
+import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyServerService;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -13,7 +13,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
-import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -32,7 +31,7 @@ public class NettyServerServiceImpl implements NettyServerService {
 
 
     @Autowired
-    private TxManagerService txManagerService;
+    private MQTxManagerService mqTxManagerService;
 
 
     private Logger logger = LoggerFactory.getLogger(NettyServerServiceImpl.class);
@@ -52,7 +51,7 @@ public class NettyServerServiceImpl implements NettyServerService {
 
     @Override
     public void start() {
-        txCoreServerHandler = new TxCoreServerHandler(txManagerService);
+        txCoreServerHandler = new TxCoreServerHandler(mqTxManagerService);
         bossGroup = new NioEventLoopGroup(10); // (1)
         workerGroup = new NioEventLoopGroup();
         try {

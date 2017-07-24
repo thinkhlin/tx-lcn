@@ -9,7 +9,9 @@ import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.manager.service.TxManagerService;
+import com.lorne.tx.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
+import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.socket.SocketManager;
 import com.lorne.tx.socket.utils.SocketUtils;
 import io.netty.channel.ChannelHandler;
@@ -26,9 +28,9 @@ import org.apache.commons.lang.StringUtils;
 @ChannelHandler.Sharable
 public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
 
-    private TxManagerService txManagerService;
+    private MQTxManagerService txManagerService;
 
-    public TxCoreServerHandler(TxManagerService txManagerService) {
+    public TxCoreServerHandler(MQTxManagerService txManagerService) {
         this.txManagerService = txManagerService;
     }
 
@@ -56,7 +58,9 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                     String modelName = ctx.channel().remoteAddress().toString();
                     if (StringUtils.isNotEmpty(modelName)) {
                         TxGroup txGroup = txManagerService.addTransactionGroup(groupId, taskId, modelName);
-                        res = txGroup.toJsonString(false);
+                        if(txGroup!=null) {
+                            res = txGroup.toJsonString(false);
+                        }
                     } else {
                         res = "";
                     }
@@ -67,8 +71,12 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                     String groupId = params.getString("g");
                     String kid = params.getString("k");
                     int state = params.getInteger("s");
-                    boolean bs = txManagerService.notifyTransactionInfo(groupId, kid, state == 1);
-                    res = bs ? "1" : "0";
+                    NotifyMsg resMsg = txManagerService.notifyTransactionInfo(groupId, kid, state == 1);
+                    if(resMsg==null){
+                        res = "";
+                    }else {
+                        res = resMsg.toJsonString();
+                    }
                     break;
                 }
 

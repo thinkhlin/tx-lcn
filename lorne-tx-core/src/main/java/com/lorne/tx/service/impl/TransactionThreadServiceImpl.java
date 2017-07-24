@@ -10,6 +10,7 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.mq.handler.TransactionHandler;
+import com.lorne.tx.mq.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
@@ -26,7 +27,6 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -53,7 +53,6 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
     private String url;
 
-    private Executor threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
 
     private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
 
@@ -87,8 +86,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = txManager.getTransaction(def);
         Task waitTask = ConditionUtils.getInstance().createTask(kid);
-        //发送数据是否成功
-        boolean isSend = false;
+
 
         //执行是否成功
         boolean executeOk = false;
@@ -114,32 +112,32 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             //通知TxManager调用失败
             executeOk = false;
         }
-        isSend = txManagerService.notifyTransactionInfo(_groupId, kid, executeOk);
-        ServiceThreadModel model = new ServiceThreadModel();
-        model.setStatus(status);
-        model.setWaitTask(waitTask);
-        model.setTxGroup(txGroup);
-        model.setNotifyOk(isSend);
-        model.setCompensateId(compensateId);
-        return model;
+        NotifyMsg notifyMsg  = txManagerService.notifyTransactionInfo(_groupId, kid, executeOk);
 
-    }
+        if (notifyMsg == null||notifyMsg.getState()==0) {
+            //修改事务组状态异常
+            txManager.rollback(status);
 
-
-    private void waitSignTask(Task task, boolean signTask, boolean isNotifyOk) {
-        if (isNotifyOk == false) {
             task.setBack(new IBack() {
                 @Override
                 public Object doing(Object... objects) throws Throwable {
                     throw new ServiceException("修改事务组状态异常.");
                 }
             });
-        }
-        if (signTask) {
             task.signalTask();
-            logger.info("返回业务数据");
+            return null;
         }
+
+        ServiceThreadModel model = new ServiceThreadModel();
+        model.setStatus(status);
+        model.setWaitTask(waitTask);
+        model.setTxGroup(txGroup);
+        model.setNotifyMsg(notifyMsg);
+        model.setCompensateId(compensateId);
+        return model;
+
     }
+
 
     //等待线程
     private void schedule(final ServiceThreadModel model, final String taskId,long time) {
@@ -200,11 +198,10 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         TransactionStatus status = model.getStatus();
 
         long st = model.getTxGroup().getStartTime();
-        long et = System.currentTimeMillis();
+        long et =model.getNotifyMsg().getNowTime();
 
         int tmTime = model.getTxGroup().getWaitTime();
 
-        //int time = tmTime - ((int) (et - st) / 1000);
         long time = tmTime*1000 - ((int) (et - st));
         if (time <= 500) {
             //直接返回超时数据
@@ -215,17 +212,14 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         //等待线程
         schedule(model, taskId,time);
 
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                waitSignTask(task, signTask, model.isNotifyOk()); //执行顺序 2
-            }
-        };
-        threadPool.execute(runnable);
-
-        if (!signTask) {
-            txManagerService.closeTransactionGroup(model.getTxGroup().getGroupId(), waitTask); //执行顺序 3
+        if (signTask) {
+            task.signalTask();
+            logger.info("返回业务数据");
+        }else{
+            //关闭事务组
+            txManagerService.closeTransactionGroup(model.getTxGroup().getGroupId(), waitTask);
         }
+
         logger.info("进入回滚等待.");
         waitTask.awaitTask();
         try {

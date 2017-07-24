@@ -2,10 +2,12 @@ package com.lorne.tx.mq.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.utils.task.Task;
+import com.lorne.tx.mq.model.NotifyMsg;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,14 +76,14 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
     @Override
-    public  boolean notifyTransactionInfo(String groupId, String kid, boolean state) {
+    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("k", kid);
         jsonObject.put("s", state ? 1 : 0);
         Request request = new Request("nti", jsonObject.toString());
         String json = nettyService.sendMsg(request);
-        return "1".equals(json);
+        return NotifyMsg.parser(json);
     }
 
 

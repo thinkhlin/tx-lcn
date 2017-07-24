@@ -1,6 +1,7 @@
 package com.lorne.tx.service.model;
 
 import com.lorne.core.framework.utils.task.Task;
+import com.lorne.tx.mq.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 import org.springframework.transaction.TransactionStatus;
 
@@ -12,7 +13,7 @@ public class ServiceThreadModel {
     private Task waitTask;
     private TransactionStatus status;
     private TxGroup txGroup;
-    private boolean notifyOk;
+    private NotifyMsg notifyMsg;
     private String compensateId;
 
 
@@ -40,12 +41,12 @@ public class ServiceThreadModel {
         this.txGroup = txGroup;
     }
 
-    public boolean isNotifyOk() {
-        return notifyOk;
+    public NotifyMsg getNotifyMsg() {
+        return notifyMsg;
     }
 
-    public void setNotifyOk(boolean notifyOk) {
-        this.notifyOk = notifyOk;
+    public void setNotifyMsg(NotifyMsg notifyMsg) {
+        this.notifyMsg = notifyMsg;
     }
 
     public String getCompensateId() {
