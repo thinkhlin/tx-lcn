@@ -17,10 +17,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Created by lorne on 2017/6/30.
@@ -227,7 +224,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         final String key = request.getKey();
         if (ctx != null && ctx.channel() != null && ctx.channel().isActive()) {
             final Task task = ConditionUtils.getInstance().createTask(key);
-            executorService.schedule(new Runnable() {
+            ScheduledFuture future =  executorService.schedule(new Runnable() {
                 @Override
                 public void run() {
                     Task task = ConditionUtils.getInstance().getTask(key);
@@ -252,6 +249,10 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
             });
 
             task.awaitTask();
+
+            if(!future.isDone()){
+                future.cancel(false);
+            }
 
             Object msg = null;
             try {

@@ -21,10 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 
 /**
@@ -145,7 +142,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                     jsonObject.put("k", key);
                     final Task task = ConditionUtils.getInstance().createTask(key);
 
-                    executorService.schedule(new Runnable() {
+                    ScheduledFuture future =  executorService.schedule(new Runnable() {
                         @Override
                         public void run() {
                             task.setBack(new IBack() {
@@ -165,6 +162,12 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                         }
                     });
                     task.awaitTask();
+
+                    if(!future.isDone()){
+                        future.cancel(false);
+                    }
+
+
                     try {
                         String data = (String) task.getBack().doing();
                         // 1  成功 0 失败 -1 task为空 -2 超过

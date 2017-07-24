@@ -29,6 +29,7 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -81,9 +82,10 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             return null;
         }
 
+        //一直获取连接导致数据库连接到最大值️
         String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroup.getGroupId(), kid);
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         TransactionStatus status = txManager.getTransaction(def);
         Task waitTask = ConditionUtils.getInstance().createTask(kid);
 
@@ -92,7 +94,10 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         boolean executeOk = false;
 
         try {
+
+
             final Object res = point.proceed();
+
             task.setBack(new IBack() {
                 @Override
                 public Object doing(Object... objects) throws Throwable {
@@ -140,8 +145,8 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
 
     //等待线程
-    private void schedule(final ServiceThreadModel model, final String taskId,long time) {
-        executorService.schedule(new Runnable() {
+    private ScheduledFuture schedule(final ServiceThreadModel model, final String taskId,long time) {
+       return  executorService.schedule(new Runnable() {
             @Override
             public void run() {
                 Task task = ConditionUtils.getInstance().getTask(taskId);
@@ -210,7 +215,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         }
 
         //等待线程
-        schedule(model, taskId,time);
+        ScheduledFuture future =  schedule(model, taskId,time);
 
         if (signTask) {
             task.signalTask();
@@ -222,6 +227,12 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
         logger.info("进入回滚等待.");
         waitTask.awaitTask();
+
+        //关闭自动回滚业务
+        if(!future.isDone()){
+            future.cancel(false);
+        }
+
         try {
             int state = (Integer) waitTask.getBack().doing();
             logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state);
@@ -265,7 +276,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     }
 
     //以下代码必须确保原子性
-    private synchronized void transactionLock(int state, TransactionStatus status, String compensateId, Task waitTask) {
+    private void transactionLock(int state, TransactionStatus status, String compensateId, Task waitTask) {
         try {
             if (state == 1) {
                 txManager.commit(status);

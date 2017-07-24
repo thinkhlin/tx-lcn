@@ -97,7 +97,7 @@ public class TxManagerServiceImpl implements TxManagerService {
     }
 
     @Override
-    public boolean checkTransactionGroup(String groupId, String taskId) {
+    public synchronized boolean checkTransactionGroup(String groupId, String taskId) {
         logger.info("checkTransactionGroup->groupId:"+groupId+",taskId:"+taskId);
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix_notify + groupId;
