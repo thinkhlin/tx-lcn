@@ -69,7 +69,7 @@ public class TxManagerServiceImpl implements TxManagerService {
     }
 
     @Override
-    public TxGroup addTransactionGroup(String groupId, String taskId, String modelName) {
+    public TxGroup addTransactionGroup(String groupId, String taskId,int isGroup, String modelName) {
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix + groupId;
         String json = value.get(key);
@@ -88,7 +88,7 @@ public class TxManagerServiceImpl implements TxManagerService {
             TxInfo txInfo = new TxInfo();
             txInfo.setModelName(modelName);
             txInfo.setKid(taskId);
-
+            txInfo.setIsGroup(isGroup);
             txGroup.addTransactionInfo(txInfo);
             value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
             return txGroup;

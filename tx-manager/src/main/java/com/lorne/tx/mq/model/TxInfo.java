@@ -16,6 +16,8 @@ public class TxInfo extends JsonModel {
 
     private int notify;
 
+    private int isGroup;
+
     private Channel channel;
 
     public int getState() {
@@ -56,5 +58,13 @@ public class TxInfo extends JsonModel {
 
     public void setNotify(int notify) {
         this.notify = notify;
+    }
+
+    public int getIsGroup() {
+        return isGroup;
+    }
+
+    public void setIsGroup(int isGroup) {
+        this.isGroup = isGroup;
     }
 }

@@ -64,13 +64,68 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
 
 
     @Override
-    public Object secondExecute(Task groupTask,final ProceedingJoinPoint point) throws Throwable {
+    public Object secondExecute(final TxTransactionInfo info,Task groupTask,final ProceedingJoinPoint point) throws Throwable {
+        logger.info("tx-second-running-start");
+
+        //需要添加事务组，修改事务状态
         String key  = (String) groupTask.getBack().doing();
         Task waitTask  = ConditionUtils.getInstance().getTask(key);
+
+        final String groupId = groupTask.getKey();
+
+
         Object obj =  waitTask.execute(new IBack() {
             @Override
             public Object doing(Object... objs) throws Throwable {
-               return point.proceed();
+
+                String kid = KidUtils.generateShortUuid();
+                String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, kid);
+                DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+                def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+                TransactionStatus status = txManager.getTransaction(def);
+
+
+                TxGroup txGroup = txManagerService.addTransactionGroup(groupId, kid,true);
+
+                //获取不到模块信息重新连接，本次事务异常返回数据.
+                if (txGroup == null) {
+                    if (!TransactionHandler.net_state) {
+                        nettyService.restart();
+                    }
+                    compensateService.deleteTransactionInfo(compensateId);
+                    throw new ServiceException("添加事务组异常.");
+                }
+
+                try {
+                    Object obj = point.proceed();
+                    NotifyMsg notifyMsg  = txManagerService.notifyTransactionInfo(groupId, kid, true);
+
+                    if (notifyMsg == null||notifyMsg.getState()==0) {
+                        //修改事务组状态异常
+                        txManager.rollback(status);
+
+                        compensateService.deleteTransactionInfo(compensateId);
+                        throw new ServiceException("修改事务组状态异常.");
+
+                    }
+                    txManager.commit(status);
+                    compensateService.deleteTransactionInfo(compensateId);
+                    return obj;
+                }catch (Throwable e){
+                    NotifyMsg notifyMsg  = txManagerService.notifyTransactionInfo(groupId, kid, false);
+
+                    if (notifyMsg == null||notifyMsg.getState()==0) {
+                        //修改事务组状态异常
+                        txManager.rollback(status);
+                        compensateService.deleteTransactionInfo(compensateId);
+                        throw new ServiceException("修改事务组状态异常.");
+
+                    }
+
+                    txManager.rollback(status);
+                    compensateService.deleteTransactionInfo(compensateId);
+                    throw e;
+                }
             }
         });
 
@@ -78,6 +133,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             throw (Throwable) obj;
         }
 
+        logger.info("tx-second-running-end");
         return obj;
     }
 
@@ -85,7 +141,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
     public ServiceThreadModel serviceInThread(TxTransactionInfo info, boolean signTask, String _groupId, Task task, ProceedingJoinPoint point) {
 
         String kid = KidUtils.generateShortUuid();
-        TxGroup txGroup = txManagerService.addTransactionGroup(_groupId, kid);
+        TxGroup txGroup = txManagerService.addTransactionGroup(_groupId, kid,false);
 
         //获取不到模块信息重新连接，本次事务异常返回数据.
         if (txGroup == null) {
@@ -142,7 +198,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         if (notifyMsg == null||notifyMsg.getState()==0) {
             //修改事务组状态异常
             txManager.rollback(status);
-
+            compensateService.deleteTransactionInfo(compensateId);
             task.setBack(new IBack() {
                 @Override
                 public Object doing(Object... objects) throws Throwable {

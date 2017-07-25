@@ -21,7 +21,7 @@ public interface TxManagerService {
      *
      * @return
      */
-    TxGroup addTransactionGroup(String groupId, String taskId, String modelName);
+    TxGroup addTransactionGroup(String groupId, String taskId, int isGroup,String modelName);
 
 
     boolean checkTransactionGroup(String groupId,String taskId);

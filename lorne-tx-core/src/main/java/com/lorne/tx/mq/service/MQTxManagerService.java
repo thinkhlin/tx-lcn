@@ -24,7 +24,7 @@ public interface MQTxManagerService {
      *
      * @return
      */
-    TxGroup addTransactionGroup(String groupId, String taskId);
+    TxGroup  addTransactionGroup(String groupId, String taskId,boolean isGroup);
 
 
     /**

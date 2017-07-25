@@ -33,9 +33,9 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
     private Logger logger = LoggerFactory.getLogger(TransactionConfirmServiceImpl.class);
 
-    private ScheduledExecutorService executorService  = Executors.newScheduledThreadPool(50);
+    private ScheduledExecutorService executorService  = Executors.newScheduledThreadPool(100);
 
-    private Executor threadPool = Executors.newFixedThreadPool(200);
+    private Executor threadPool = Executors.newFixedThreadPool(100);
 
     @Autowired
     private TxManagerService txManagerService;
@@ -131,61 +131,63 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     private boolean transaction(List<TxInfo> list, final int checkSate) {
         CountDownLatchHelper<Boolean> countDownLatchHelper = new CountDownLatchHelper<>();
         for (final TxInfo txInfo : list) {
-            countDownLatchHelper.addExecute(new IExecute<Boolean>() {
-                @Override
-                public Boolean execute() {
-                    final JSONObject jsonObject = new JSONObject();
-                    jsonObject.put("a", "t");
-                    jsonObject.put("c", checkSate);
-                    jsonObject.put("t", txInfo.getKid());
-                    String key = KidUtils.generateShortUuid();
-                    jsonObject.put("k", key);
-                    final Task task = ConditionUtils.getInstance().createTask(key);
+            if(txInfo.getIsGroup()==0) {
+                countDownLatchHelper.addExecute(new IExecute<Boolean>() {
+                    @Override
+                    public Boolean execute() {
+                        final JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("a", "t");
+                        jsonObject.put("c", checkSate);
+                        jsonObject.put("t", txInfo.getKid());
+                        String key = KidUtils.generateShortUuid();
+                        jsonObject.put("k", key);
+                        final Task task = ConditionUtils.getInstance().createTask(key);
 
-                    ScheduledFuture future =  executorService.schedule(new Runnable() {
-                        @Override
-                        public void run() {
-                            task.setBack(new IBack() {
-                                @Override
-                                public Object doing(Object... objs) throws Throwable {
-                                    return "-2";
-                                }
-                            });
-                            task.signalTask();
+                        ScheduledFuture future = executorService.schedule(new Runnable() {
+                            @Override
+                            public void run() {
+                                task.setBack(new IBack() {
+                                    @Override
+                                    public Object doing(Object... objs) throws Throwable {
+                                        return "-2";
+                                    }
+                                });
+                                task.signalTask();
+                            }
+                        }, txManagerService.getDelayTime() * 3, TimeUnit.SECONDS);
+
+                        threadPool.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                awaitSend(task, txInfo, jsonObject);
+                            }
+                        });
+                        task.awaitTask();
+
+                        if (!future.isDone()) {
+                            future.cancel(false);
                         }
-                    }, txManagerService.getDelayTime()*3, TimeUnit.SECONDS);
 
-                    threadPool.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            awaitSend(task,txInfo,jsonObject);
+
+                        try {
+                            String data = (String) task.getBack().doing();
+                            // 1  成功 0 失败 -1 task为空 -2 超过
+                            boolean res = "1".equals(data);
+
+                            if ("1".equals(data) || "0".equals(data)) {
+                                txInfo.setNotify(1);
+                            }
+
+                            return res;
+                        } catch (Throwable throwable) {
+                            throwable.printStackTrace();
+                            return false;
+                        } finally {
+                            task.remove();
                         }
-                    });
-                    task.awaitTask();
-
-                    if(!future.isDone()){
-                        future.cancel(false);
                     }
-
-
-                    try {
-                        String data = (String) task.getBack().doing();
-                        // 1  成功 0 失败 -1 task为空 -2 超过
-                        boolean res =  "1".equals(data);
-
-                        if("1".equals(data)||"0".equals(data)){
-                            txInfo.setNotify(1);
-                        }
-
-                        return res;
-                    } catch (Throwable throwable) {
-                        throwable.printStackTrace();
-                        return false;
-                    } finally {
-                        task.remove();
-                    }
-                }
-            });
+                });
+            }
         }
 
         List<Boolean> hasOks = countDownLatchHelper.execute().getData();
@@ -197,55 +199,6 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
         return true;
     }
 
-
-//    private boolean lock(List<TxInfo> list) {
-//        for (final TxInfo txInfo : list) {
-//            CountDownLatchHelper<Boolean> countDownLatchHelper = new CountDownLatchHelper<>();
-//            countDownLatchHelper.addExecute(new IExecute<Boolean>() {
-//                @Override
-//                public Boolean execute() {
-//                    JSONObject jsonObject = new JSONObject();
-//                    jsonObject.put("a", "l");
-//                    jsonObject.put("t", txInfo.getKid());
-//                    String key = KidUtils.generateShortUuid();
-//                    jsonObject.put("k", key);
-//                    final Task task = ConditionUtils.getInstance().createTask(key);
-//                    SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
-//                    Constant.scheduledExecutorService.schedule(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            task.setBack(new IBack() {
-//                                @Override
-//                                public Object doing(Object... objs) throws Throwable {
-//                                    return "0";
-//                                }
-//                            });
-//                            task.signalTask();
-//                        }
-//                    }, 1, TimeUnit.SECONDS);
-//                    task.awaitTask();
-//                    try {
-//                        String data = (String) task.getBack().doing();
-//                        return "1".equals(data);
-//                    } catch (Throwable throwable) {
-//                        throwable.printStackTrace();
-//                    } finally {
-//                        task.remove();
-//                    }
-//                    return false;
-//                }
-//            });
-//            List<Boolean> isLocks = countDownLatchHelper.execute().getData();
-//            for (boolean bl : isLocks) {
-//                if (bl == false) {
-//                    return false;
-//                }
-//            }
-//
-//        }
-//
-//        return true;
-//    }
 
 
 }

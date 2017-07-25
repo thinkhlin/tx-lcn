@@ -39,17 +39,18 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
     @Override
     public Object execute(final ProceedingJoinPoint point, final TxTransactionInfo info) throws Throwable {
-        //分布式事务开始执行
-        logger.info("tx-running-start");
+
 
         final String txGroupId = info.getTxGroupId();
         Task groupTask =  ConditionUtils.getInstance().getTask(txGroupId);
 
         //当同一个事务下的业务进入切面时，合并业务执行。
         if(groupTask!=null&&!groupTask.isNotify()){
-            return transactionThreadService.secondExecute(groupTask,point);
+            return transactionThreadService.secondExecute(info,groupTask,point);
         }
 
+        //分布式事务开始执行
+        logger.info("tx-running-start");
         final String taskId = KidUtils.generateShortUuid();
         final Task task = ConditionUtils.getInstance().createTask(taskId);
 

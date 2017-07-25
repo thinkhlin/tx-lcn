@@ -55,9 +55,10 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                 case "atg": {
                     String groupId = params.getString("g");
                     String taskId = params.getString("t");
+                    int isGroup = params.getInteger("s");
                     String modelName = ctx.channel().remoteAddress().toString();
                     if (StringUtils.isNotEmpty(modelName)) {
-                        TxGroup txGroup = txManagerService.addTransactionGroup(groupId, taskId, modelName);
+                        TxGroup txGroup = txManagerService.addTransactionGroup(groupId, taskId, isGroup,modelName);
                         if(txGroup!=null) {
                             res = txGroup.toJsonString(false);
                         }

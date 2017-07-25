@@ -38,10 +38,11 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
     @Override
-    public  TxGroup addTransactionGroup(String groupId, String taskId) {
+    public  TxGroup addTransactionGroup(String groupId, String taskId,boolean isGroup) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("t", taskId);
+        jsonObject.put("s", isGroup?1:0);
         Request request = new Request("atg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
         return TxGroup.parser(json);
