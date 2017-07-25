@@ -10,6 +10,7 @@ import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.CompensateOperationService;
 import com.lorne.tx.exception.TransactionRuntimeException;
+import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.utils.MethodUtils;
 import com.lorne.tx.utils.ThreadPoolSizeHelper;
 import org.slf4j.Logger;
@@ -45,14 +46,29 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
      */
     private BlockingQueue<QueueMsg> queueList;
 
+    /**
+     * 是否可以优雅关闭 程序可配置
+     */
+    private boolean hasGracefulClose = false;
+
+    @Autowired
+    private NettyService nettyService;
 
 
     private  final Executor threadPools = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getMqSize());
 
 
-
     public CompensateOperationServiceImpl() {
         url =  ConfigUtils.getString("tx.properties","url");
+        int state = 0;
+        try {
+            state = ConfigUtils.getInt("tx.properties","graceful.close");
+        }catch (Exception e){
+            state = 0;
+        }
+        if(state==1){
+            hasGracefulClose = true;
+        }
         queueList = new  LinkedBlockingDeque<>();
     }
 
@@ -111,8 +127,11 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             QueueMsg msg = new QueueMsg();
             msg.setRecover(recover);
             msg.setType(1);
-            queueList.put(msg);
-           // recoverRepository.create(recover);
+            if(hasGracefulClose) {
+                queueList.put(msg);
+            }else {
+                recoverRepository.create(recover);
+            }
             return recover.getId();
         } catch (Exception e) {
             throw new TransactionRuntimeException("补偿数据库插入失败.");
@@ -130,8 +149,12 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             QueueMsg msg = new QueueMsg();
             msg.setId(id);
             msg.setType(0);
-            queueList.put(msg);
-           // recoverRepository.remove(id);
+
+            if(hasGracefulClose) {
+                queueList.put(msg);
+            }else {
+                recoverRepository.remove(id);
+            }
             return true;
         } catch (Exception e) {
             return false;
@@ -142,42 +165,58 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     public void init(String modelName) {
         recoverRepository.init(modelName);
 
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                for(int i=0;i<ThreadPoolSizeHelper.getInstance().getMqSize();i++){
-                    threadPools.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            while (true){
-                                try {
-                                    QueueMsg msg = queueList.take();
-                                    if(msg!=null){
-                                        if(msg.getType()==1){
-                                            recoverRepository.create(msg.getRecover());
-                                        }else{
-                                            int rs = recoverRepository.remove(msg.getId());
-                                            if(rs==0){
-                                                delete(msg.getId());
+        if(hasGracefulClose) {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < ThreadPoolSizeHelper.getInstance().getMqSize(); i++) {
+                        threadPools.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                while (true) {
+                                    try {
+                                        QueueMsg msg = queueList.take();
+                                        if (msg != null) {
+                                            if (msg.getType() == 1) {
+                                                recoverRepository.create(msg.getRecover());
+                                            } else {
+                                                int rs = recoverRepository.remove(msg.getId());
+                                                if (rs == 0) {
+                                                    delete(msg.getId());
+                                                }
                                             }
                                         }
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
                                     }
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
+
                                 }
-
                             }
-                        }
-                    });
+                        });
+                    }
                 }
-            }
-        };
+            };
 
-        Thread  thread =  new Thread(runnable);
-        thread.start();
+            Thread thread = new Thread(runnable);
+            thread.start();
 
-        Thread  shutdownHook =  new Thread(runnable);
-        Runtime.getRuntime().addShutdownHook(shutdownHook);
+
+            /**关闭时需要操作的业务**/
+
+            Thread shutdownQueueList = new Thread(runnable);
+            Runtime.getRuntime().addShutdownHook(shutdownQueueList);
+
+
+            Thread shutdownNetty = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    nettyService.close();
+                }
+            });
+            Runtime.getRuntime().addShutdownHook(shutdownNetty);
+
+
+        }
 
     }
 }
