@@ -66,8 +66,10 @@ public class TxStartTransactionServerImpl implements TransactionServer {
         ServiceThreadModel model = new ServiceThreadModel();
         Object res;
         try {
-            res = point.proceed();
             String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, waitTaskKey);
+
+            res = point.proceed();
+
             model.setCompensateId(compensateId);
         } catch ( Throwable throwable) {
             res = throwable;

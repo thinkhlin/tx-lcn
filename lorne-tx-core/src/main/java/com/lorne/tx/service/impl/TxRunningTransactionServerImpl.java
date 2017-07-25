@@ -94,9 +94,10 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
                 try {
 
-                    Object obj = point.proceed();
 
                     String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, kid);
+
+                    Object obj = point.proceed();
 
                     TxGroup txGroup = txManagerService.addTransactionGroup(groupId, kid,true);
 
@@ -220,9 +221,9 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
         try {
 
-            final Object res = point.proceed();
-
             String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), _groupId, kid);
+
+            final Object res = point.proceed();
 
             task.setBack(new IBack() {
                 @Override
