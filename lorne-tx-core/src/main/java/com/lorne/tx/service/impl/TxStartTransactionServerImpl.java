@@ -67,7 +67,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                     task.setBack(new IBack() {
                         @Override
                         public Object doing(Object... objects) throws Throwable {
-                            throw new ServiceException("添加事务组异常.");
+                            throw new ServiceException("创建事务组异常.");
                         }
                     });
                     task.signalTask();
