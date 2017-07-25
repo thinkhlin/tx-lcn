@@ -251,6 +251,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 return null;
             }
 
+
             ServiceThreadModel model = new ServiceThreadModel();
             model.setStatus(status);
             model.setWaitTask(waitTask);
@@ -346,12 +347,12 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             return;
         }
 
-        //等待线程
-        ScheduledFuture future =  schedule(model, taskId,time);
-
 
         task.signalTask();
         logger.info("返回业务数据");
+
+        //等待线程
+        ScheduledFuture future =  schedule(model, taskId,time);
 
 
         logger.info("进入回滚等待.");
