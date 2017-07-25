@@ -1,6 +1,7 @@
 package com.lorne.tx.manager.service.impl;
 
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.task.ConditionUtils;
@@ -42,7 +43,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
     @Override
     public void confirm(TxGroup txGroup) {
-        logger.info("end:" + txGroup.toJsonString());
+      //  logger.info("end:" + txGroup.toJsonString());
     //    boolean checkState = true;
 
 
@@ -191,14 +192,17 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
         }
 
         List<Boolean> hasOks = countDownLatchHelper.execute().getData();
+
+        boolean hasOk = true;
         for (boolean bl : hasOks) {
             if (bl == false) {
-                return false;
+                hasOk =  false;
+                break;
             }
         }
-        return true;
+        logger.info("--->"+hasOk+",list:" +list.toString());
+        return hasOk;
     }
-
 
 
 }

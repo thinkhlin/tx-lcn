@@ -1,5 +1,6 @@
 package com.lorne.tx.mq.model;
 
+import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.model.JsonModel;
 import io.netty.channel.Channel;
 
@@ -61,5 +62,15 @@ public class TxInfo extends JsonModel {
 
     public void setIsGroup(int isGroup) {
         this.isGroup = isGroup;
+    }
+
+    @Override
+    public String toString() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("kid",getKid());
+        jsonObject.put("modelName",getModelName());
+        jsonObject.put("notify",getNotify());
+        jsonObject.put("isGroup",getIsGroup());
+        return jsonObject.toString();
     }
 }
