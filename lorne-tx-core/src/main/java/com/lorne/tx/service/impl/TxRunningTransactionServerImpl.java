@@ -10,10 +10,8 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.service.CompensateService;
-import com.lorne.tx.mq.handler.TransactionHandler;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
-import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.model.ServiceThreadModel;
 import com.lorne.tx.utils.ThreadPoolSizeHelper;
@@ -46,9 +44,6 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
     @Autowired
     private MQTxManagerService txManagerService;
 
-
-    @Autowired
-    private NettyService nettyService;
 
     @Autowired
     private CompensateService compensateService;
@@ -103,9 +98,6 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
                     //获取不到模块信息重新连接，本次事务异常返回数据.
                     if (txGroup == null) {
-                        if (!TransactionHandler.net_state) {
-                            nettyService.restart();
-                        }
                         txManager.rollback(status);
                         throw new ServiceException("添加事务组异常.");
                     }else{
@@ -194,22 +186,6 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
     public ServiceThreadModel serviceInThread(TxTransactionInfo info, String _groupId, Task task, ProceedingJoinPoint point) {
 
         String kid = KidUtils.generateShortUuid();
-//        TxGroup txGroup = txManagerService.addTransactionGroup(_groupId, kid,false);
-//
-//        //获取不到模块信息重新连接，本次事务异常返回数据.
-//        if (txGroup == null) {
-//            task.setBack(new IBack() {
-//                @Override
-//                public Object doing(Object... objects) throws Throwable {
-//                    throw new ServiceException("添加事务组异常.");
-//                }
-//            });
-//            task.signalTask();
-//            if (!TransactionHandler.net_state) {
-//                nettyService.restart();
-//            }
-//            return null;
-//        }
 
         //一直获取连接导致数据库连接到最大值️
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();

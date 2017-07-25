@@ -8,10 +8,8 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.service.CompensateService;
-import com.lorne.tx.mq.handler.TransactionHandler;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
-import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.model.ServiceThreadModel;
 import com.lorne.tx.utils.ThreadPoolSizeHelper;
@@ -41,9 +39,6 @@ public class TxStartTransactionServerImpl implements TransactionServer {
     @Autowired
     private MQTxManagerService txManagerService;
 
-
-    @Autowired
-    private NettyService nettyService;
 
     @Autowired
     private PlatformTransactionManager txManager;
@@ -110,9 +105,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
                         }
                     });
                     task.signalTask();
-                    if(!TransactionHandler.net_state) {
-                        nettyService.restart();
-                    }
+
                     return;
                 }
 

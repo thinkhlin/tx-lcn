@@ -21,7 +21,7 @@ public class NettyDistributeServiceImpl implements NettyDistributeService {
     private Logger logger = LoggerFactory.getLogger(NettyDistributeServiceImpl.class);
 
     @Override
-    public void loadTxServer() {
+    public synchronized void loadTxServer() {
         if (Constants.txServer == null) {
             getTxServer();
             return;
@@ -32,7 +32,7 @@ public class NettyDistributeServiceImpl implements NettyDistributeService {
         }
     }
 
-    private void getTxServer() {
+    private  void getTxServer() {
         //获取负载均衡服务地址
         String url = ConfigUtils.getString("tx.properties", "url");
         //获取服务器ip
