@@ -102,13 +102,17 @@ public class TxManagerServiceImpl implements TxManagerService {
     }
 
     @Override
-    public synchronized boolean checkTransactionGroup(String groupId, String taskId) {
+    public  boolean checkTransactionGroup(String groupId, String taskId) {
         logger.info("checkTransactionGroup->groupId:"+groupId+",taskId:"+taskId);
         ValueOperations<String, String> value = redisTemplate.opsForValue();
-        String key = key_prefix_notify + groupId;
+        String key = key_prefix + groupId;
         String json = value.get(key);
         if (StringUtils.isEmpty(json)) {
-            return false;
+            key = key_prefix_notify + groupId;
+            json = value.get(key);
+            if (StringUtils.isEmpty(json)) {
+                return false;
+            }
         }
         TxGroup txGroup = TxGroup.parser(json);
         boolean res = txGroup.getState() == 1;
@@ -128,7 +132,9 @@ public class TxManagerServiceImpl implements TxManagerService {
         }
 
         if (isOver) {
-            redisTemplate.delete(key);
+            if(key.startsWith(key_prefix_notify)) {
+                redisTemplate.delete(key);
+            }
         } else {
             value.set(key, txGroup.toJsonString());
         }

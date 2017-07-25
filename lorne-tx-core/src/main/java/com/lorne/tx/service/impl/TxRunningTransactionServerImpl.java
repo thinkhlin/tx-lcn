@@ -263,6 +263,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 if (task.getState() == 0) {
 
                     int hasOk = txManagerService.checkTransactionInfo(groupId, taskId);
+                    logger.info("自动超时补偿(socket)->groupId:"+groupId+",taskId:"+taskId+",res:"+hasOk);
                     if (hasOk == 1) {
                         task.setState(1);
                         task.signalTask();
@@ -270,6 +271,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                         if (hasOk == -1) {
                             // 发起http请求查询状态
                             String json = HttpUtils.get(url + "Group?groupId=" + groupId + "&taskId=" + taskId);
+                            logger.info("自动超时补偿(http)->groupId:"+groupId+",taskId:"+taskId+",res:"+json);
                             if (json == null) {
                                 //请求tm访问失败
                                 task.setBack(new IBack() {
