@@ -160,7 +160,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
 
     public void serviceWait(final Task task, final ServiceThreadModel model) {
         final Task waitTask = model.getWaitTask();
-       // final String taskId = waitTask.getKey();
+        final String taskId = waitTask.getKey();
         TransactionStatus status = model.getStatus();
 
         long st = model.getTxGroup().getStartTime();
@@ -171,17 +171,20 @@ public class TxStartTransactionServerImpl implements TransactionServer {
         long time = tmTime*1000 - ((int) (et - st));
 
 
-        //等待线程
+        //等待超时线程
         ScheduledFuture future = executorService.schedule(new Runnable() {
             @Override
             public void run() {
-                waitTask.setBack(new IBack() {
-                    @Override
-                    public Object doing(Object... objs) throws Throwable {
-                        return -2;
-                    }
-                });
-                waitTask.signalTask();
+                Task task = ConditionUtils.getInstance().getTask(taskId);
+                if(task.getState()==0) {
+                    task.setBack(new IBack() {
+                        @Override
+                        public Object doing(Object... objs) throws Throwable {
+                            return -2;
+                        }
+                    });
+                    task.signalTask();
+                }
             }
         },time,TimeUnit.MILLISECONDS);
 

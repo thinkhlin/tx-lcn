@@ -6,10 +6,7 @@ import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyDistributeService;
 import com.lorne.tx.mq.service.NettyService;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ConnectTimeoutException;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
@@ -77,20 +74,34 @@ public class NettyServiceImpl implements NettyService {
             });
             // Start the client.
             logger.info("连接manager-socket服务-> host:" + host + ",port:" + port);
-            b.connect(host, port); // (5)
+            ChannelFuture future =  b.connect(host, port); // (5)
+
+            future.addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture channelFuture) throws Exception {
+                    if(!channelFuture.isSuccess()){
+                        channelFuture.channel().eventLoop().schedule(new Runnable() {
+                            @Override
+                            public void run() {
+                                isStarting = false;
+                                start();
+                            }
+                        },5,TimeUnit.SECONDS);
+                    }
+                }
+            });
 
         } catch (Exception e) {
             e.printStackTrace();
 
-            isStarting = false;
-
-            //断开重新连接机制
-            close();
-
-            if (e instanceof ConnectTimeoutException) {
-                nettyDistributeService.loadTxServer();
-                start();
-            }
+//            isStarting = false;
+//
+//            //断开重新连接机制
+//            close();
+//
+//            if (e instanceof ConnectTimeoutException) {
+//                start();
+//            }
         }
     }
 
