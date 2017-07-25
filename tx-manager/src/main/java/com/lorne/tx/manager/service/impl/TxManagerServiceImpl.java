@@ -121,7 +121,7 @@ public class TxManagerServiceImpl implements TxManagerService {
 
         boolean isOver = true;
         for (TxInfo info : txGroup.getList()) {
-            if (info.getNotify() == 0) {
+            if (info.getIsGroup()==0&&info.getNotify() == 0) {
                 isOver = false;
                 break;
             }
