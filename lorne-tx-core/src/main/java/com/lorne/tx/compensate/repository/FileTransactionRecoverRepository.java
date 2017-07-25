@@ -64,9 +64,9 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
         String fullFileName = getFullFileName(id);
         File file = new File(fullFileName);
         if (file.exists()) {
-            file.delete();
+            return file.delete()?1:0;
         }
-        return 1;
+        return 0;
     }
 
     /**

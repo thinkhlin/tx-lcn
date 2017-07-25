@@ -156,7 +156,10 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
                                         if(msg.getType()==1){
                                             recoverRepository.create(msg.getRecover());
                                         }else{
-                                            recoverRepository.remove(msg.getId());
+                                            int rs = recoverRepository.remove(msg.getId());
+                                            if(rs==0){
+                                                delete(msg.getId());
+                                            }
                                         }
                                     }
                                 } catch (InterruptedException e) {

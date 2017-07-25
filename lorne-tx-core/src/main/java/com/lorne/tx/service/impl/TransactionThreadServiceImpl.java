@@ -78,12 +78,9 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
             @Override
             public Object doing(Object... objs) throws Throwable {
 
-                String kid = KidUtils.generateShortUuid();
-                String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, kid);
-                DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-                def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
-                TransactionStatus status = txManager.getTransaction(def);
 
+
+                String kid = KidUtils.generateShortUuid();
 
                 TxGroup txGroup = txManagerService.addTransactionGroup(groupId, kid,true);
 
@@ -92,9 +89,15 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                     if (!TransactionHandler.net_state) {
                         nettyService.restart();
                     }
-                    compensateService.deleteTransactionInfo(compensateId);
                     throw new ServiceException("添加事务组异常.");
                 }
+
+
+                String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, kid);
+                DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+                def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+                TransactionStatus status = txManager.getTransaction(def);
+
 
                 try {
                     Object obj = point.proceed();
@@ -103,28 +106,24 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                     if (notifyMsg == null||notifyMsg.getState()==0) {
                         //修改事务组状态异常
                         txManager.rollback(status);
-
                         compensateService.deleteTransactionInfo(compensateId);
                         throw new ServiceException("修改事务组状态异常.");
 
                     }
                     txManager.commit(status);
-                    compensateService.deleteTransactionInfo(compensateId);
                     return obj;
                 }catch (Throwable e){
                     NotifyMsg notifyMsg  = txManagerService.notifyTransactionInfo(groupId, kid, false);
-
                     if (notifyMsg == null||notifyMsg.getState()==0) {
                         //修改事务组状态异常
                         txManager.rollback(status);
                         compensateService.deleteTransactionInfo(compensateId);
                         throw new ServiceException("修改事务组状态异常.");
-
                     }
-
                     txManager.rollback(status);
-                    compensateService.deleteTransactionInfo(compensateId);
                     throw e;
+                }finally {
+                    compensateService.deleteTransactionInfo(compensateId);
                 }
             }
         });
@@ -159,12 +158,11 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         }
 
         //一直获取连接导致数据库连接到最大值️
-        String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroup.getGroupId(), kid);
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         TransactionStatus status = txManager.getTransaction(def);
         Task waitTask = ConditionUtils.getInstance().createTask(kid);
-
+        String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroup.getGroupId(), kid);
 
         //执行是否成功
         boolean executeOk = false;

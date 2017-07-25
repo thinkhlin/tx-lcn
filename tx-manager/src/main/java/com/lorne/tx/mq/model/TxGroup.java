@@ -113,12 +113,12 @@ public class TxGroup {
             int length = array.size();
             for (int i = 0; i < length; i++) {
                 JSONObject object = array.getJSONObject(i);
-
                 TxInfo info = new TxInfo();
                 info.setState(object.getInteger("s"));
                 info.setKid(object.getString("k"));
                 info.setModelName(object.getString("m"));
                 info.setNotify(object.getInteger("n"));
+                info.setIsGroup(object.getInteger("ig"));
                 txGroup.getList().add(info);
             }
             return txGroup;
@@ -145,6 +145,7 @@ public class TxGroup {
                 item.put("k", info.getKid());
                 item.put("m", info.getModelName());
                 item.put("n", info.getNotify());
+                item.put("ig", info.getIsGroup());
                 jsonArray.add(item);
             }
             jsonObject.put("l", jsonArray);
