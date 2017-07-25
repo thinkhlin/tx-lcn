@@ -164,11 +164,8 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
         Task waitTask = ConditionUtils.getInstance().createTask(kid);
         String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroup.getGroupId(), kid);
 
-        //执行是否成功
-        boolean executeOk = false;
 
         try {
-
 
             final Object res = point.proceed();
 
@@ -179,7 +176,6 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
             //通知TxManager调用成功
-            executeOk = true;
 
         } catch (final Throwable throwable) {
             task.setBack(new IBack() {
@@ -188,15 +184,22 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                     throw throwable;
                 }
             });
-            //通知TxManager调用失败
-            executeOk = false;
-        }
-        NotifyMsg notifyMsg  = txManagerService.notifyTransactionInfo(_groupId, kid, executeOk);
 
+            //修改事务组状态异常
+            txManager.rollback(status);
+            compensateService.deleteTransactionInfo(compensateId);
+            task.signalTask();
+
+            return null;
+
+        }
+
+        NotifyMsg notifyMsg = txManagerService.notifyTransactionInfo(_groupId, kid, true);
         if (notifyMsg == null||notifyMsg.getState()==0) {
             //修改事务组状态异常
             txManager.rollback(status);
             compensateService.deleteTransactionInfo(compensateId);
+
             task.setBack(new IBack() {
                 @Override
                 public Object doing(Object... objects) throws Throwable {
@@ -204,6 +207,7 @@ public class TransactionThreadServiceImpl implements TransactionThreadService {
                 }
             });
             task.signalTask();
+
             return null;
         }
 

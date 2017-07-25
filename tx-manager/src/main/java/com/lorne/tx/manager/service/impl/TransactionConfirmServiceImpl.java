@@ -131,7 +131,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     private boolean transaction(List<TxInfo> list, final int checkSate) {
         CountDownLatchHelper<Boolean> countDownLatchHelper = new CountDownLatchHelper<>();
         for (final TxInfo txInfo : list) {
-            if(txInfo.getIsGroup()==0) {
+            if(txInfo.getIsGroup()==0&&txInfo.getState()==1) {
                 countDownLatchHelper.addExecute(new IExecute<Boolean>() {
                     @Override
                     public Boolean execute() {
