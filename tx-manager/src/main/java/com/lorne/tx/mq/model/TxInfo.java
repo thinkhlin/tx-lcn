@@ -10,23 +10,18 @@ public class TxInfo extends JsonModel {
 
     private String kid;
 
-    private int state;
-
     private String modelName;
 
     private int notify;
 
+    /**
+     * 0 不组合
+     * 1 组合
+     */
     private int isGroup;
 
     private Channel channel;
 
-    public int getState() {
-        return state;
-    }
-
-    public void setState(int state) {
-        this.state = state;
-    }
 
     public String getKid() {
         return kid;

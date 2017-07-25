@@ -1,7 +1,6 @@
 package com.lorne.tx.mq.service.impl;
 
 import com.lorne.tx.manager.service.TxManagerService;
-import com.lorne.tx.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +18,8 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
 
     @Override
-    public TxGroup createTransactionGroup() {
-        return txManagerService.createTransactionGroup();
+    public TxGroup createTransactionGroup(String taskId,String modelName) {
+        return txManagerService.createTransactionGroup(taskId,modelName);
     }
 
     @Override
@@ -29,16 +28,16 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
     @Override
-    public boolean closeTransactionGroup(String groupId) {
-        return txManagerService.closeTransactionGroup(groupId);
+    public boolean closeTransactionGroup(String groupId,int state) {
+        return txManagerService.closeTransactionGroup(groupId,state);
     }
 
 
-    @Override
-    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
-        return txManagerService.notifyTransactionInfo(groupId, kid, state);
-    }
-
+//    @Override
+//    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
+//        return txManagerService.notifyTransactionInfo(groupId, kid, state);
+//    }
+//
 
     @Override
     public boolean checkTransactionGroup(String groupId, String taskId) {

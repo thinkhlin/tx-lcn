@@ -13,9 +13,17 @@ public class ServiceThreadModel {
     private Task waitTask;
     private TransactionStatus status;
     private TxGroup txGroup;
-    private NotifyMsg notifyMsg;
     private String compensateId;
+    private Object obj;
 
+
+    public Object getObj() {
+        return obj;
+    }
+
+    public void setObj(Object obj) {
+        this.obj = obj;
+    }
 
     public Task getWaitTask() {
         return waitTask;
@@ -41,13 +49,6 @@ public class ServiceThreadModel {
         this.txGroup = txGroup;
     }
 
-    public NotifyMsg getNotifyMsg() {
-        return notifyMsg;
-    }
-
-    public void setNotifyMsg(NotifyMsg notifyMsg) {
-        this.notifyMsg = notifyMsg;
-    }
 
     public String getCompensateId() {
         return compensateId;

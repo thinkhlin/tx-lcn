@@ -43,15 +43,15 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     @Override
     public void confirm(TxGroup txGroup) {
         logger.info("end:" + txGroup.toJsonString());
-        boolean checkState = true;
+    //    boolean checkState = true;
 
 
-        //检查事务是否正常
-        for (TxInfo info : txGroup.getList()) {
-            if (info.getState() == 0) {
-                checkState = false;
-            }
-        }
+//        //检查事务是否正常
+//        for (TxInfo info : txGroup.getList()) {
+//            if (info.getState() == 0) {
+//                checkState = false;
+//            }
+//        }
 
 
 
@@ -60,11 +60,11 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
 
         //事务不满足直接回滚事务
-        if (!checkState) {
+        if (txGroup.getState()==0) {
             transaction(txGroup.getList(), 0);
             return;
         }
-        txGroup.setState(1);
+//        txGroup.setState(1);
 
 
         boolean hasOvertime = txManagerService.getHasOvertime(txGroup);
@@ -131,7 +131,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     private boolean transaction(List<TxInfo> list, final int checkSate) {
         CountDownLatchHelper<Boolean> countDownLatchHelper = new CountDownLatchHelper<>();
         for (final TxInfo txInfo : list) {
-            if(txInfo.getIsGroup()==0&&txInfo.getState()==1) {
+            if(txInfo.getIsGroup()==0) {
                 countDownLatchHelper.addExecute(new IExecute<Boolean>() {
                     @Override
                     public Boolean execute() {

@@ -22,7 +22,11 @@ public class TxGroup {
 
     private long endTime;
 
+    private long nowTime;
+
     private int state;
+
+
 
 
     public boolean isHasOver() {
@@ -89,6 +93,13 @@ public class TxGroup {
         }
     }
 
+    public long getNowTime() {
+        return nowTime;
+    }
+
+    public void setNowTime(long nowTime) {
+        this.nowTime = nowTime;
+    }
 
     public int getWaitTime() {
         return waitTime;
@@ -107,14 +118,14 @@ public class TxGroup {
             txGroup.setHasOver(jsonObject.getInteger("ho") == 1);
             txGroup.setWaitTime(jsonObject.getInteger("w"));
             txGroup.setStartTime(jsonObject.getLong("st"));
-            txGroup.setEndTime(jsonObject.getInteger("et"));
+            txGroup.setEndTime(jsonObject.getLong("et"));
+            txGroup.setNowTime(jsonObject.getLong("nt"));
             txGroup.setState(jsonObject.getInteger("s"));
             JSONArray array = jsonObject.getJSONArray("l");
             int length = array.size();
             for (int i = 0; i < length; i++) {
                 JSONObject object = array.getJSONObject(i);
                 TxInfo info = new TxInfo();
-                info.setState(object.getInteger("s"));
                 info.setKid(object.getString("k"));
                 info.setModelName(object.getString("m"));
                 info.setNotify(object.getInteger("n"));
@@ -136,12 +147,12 @@ public class TxGroup {
         jsonObject.put("w", getWaitTime());
         jsonObject.put("st", getStartTime());
         jsonObject.put("et", getEndTime());
+        jsonObject.put("nt", getNowTime());
         jsonObject.put("s", getState());
         if(noList) {
             JSONArray jsonArray = new JSONArray();
             for (TxInfo info : getList()) {
                 JSONObject item = new JSONObject();
-                item.put("s", info.getState());
                 item.put("k", info.getKid());
                 item.put("m", info.getModelName());
                 item.put("n", info.getNotify());

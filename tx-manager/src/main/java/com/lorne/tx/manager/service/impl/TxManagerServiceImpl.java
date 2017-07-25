@@ -4,7 +4,6 @@ package com.lorne.tx.manager.service.impl;
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.tx.manager.service.TransactionConfirmService;
 import com.lorne.tx.manager.service.TxManagerService;
-import com.lorne.tx.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
 import org.apache.commons.lang.StringUtils;
@@ -16,7 +15,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -56,12 +54,19 @@ public class TxManagerServiceImpl implements TxManagerService {
 
 
     @Override
-    public TxGroup createTransactionGroup() {
+    public TxGroup createTransactionGroup(String taskId,String modelName) {
         String groupId = KidUtils.generateShortUuid();
         TxGroup txGroup = new TxGroup();
         txGroup.setStartTime(System.currentTimeMillis());
         txGroup.setGroupId(groupId);
         txGroup.setWaitTime(transaction_wait_max_time);
+
+        TxInfo txInfo = new TxInfo();
+        txInfo.setModelName(modelName);
+        txInfo.setKid(taskId);
+        txInfo.setIsGroup(0);
+        txGroup.addTransactionInfo(txInfo);
+
         String key = key_prefix + groupId;
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
@@ -145,7 +150,7 @@ public class TxManagerServiceImpl implements TxManagerService {
     }
 
     @Override
-    public boolean closeTransactionGroup(String groupId) {
+    public boolean closeTransactionGroup(String groupId,int state) {
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix + groupId;
         String json = value.get(key);
@@ -154,6 +159,7 @@ public class TxManagerServiceImpl implements TxManagerService {
         }
         final TxGroup txGroup = TxGroup.parser(json);
         txGroup.hasOvered();
+        txGroup.setState(state);
         txGroup.setEndTime(System.currentTimeMillis());
         threadPool.execute(new Runnable() {
             @Override
@@ -165,37 +171,37 @@ public class TxManagerServiceImpl implements TxManagerService {
     }
 
 
-    @Override
-    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
-        NotifyMsg notifyMsg = new NotifyMsg();
-        long t1 = System.currentTimeMillis();
-        ValueOperations<String, String> value = redisTemplate.opsForValue();
-        String key = key_prefix + groupId;
-        String json = value.get(key);
-        if (StringUtils.isEmpty(json)) {
-            return null;
-        }
-        TxGroup txGroup = TxGroup.parser(json);
-        List<TxInfo> list = txGroup.getList();
-        for (TxInfo info : list) {
-            if (info.getKid().equals(kid)) {
-                info.setState(state ? 1 : 0);
-            }
-        }
-        value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
-        long t2 = System.currentTimeMillis();
-        double time = (t2 - t1 - dt) / 1000;
-        notifyMsg.setState(1);
-        notifyMsg.setNowTime(System.currentTimeMillis());
-        if(time > transaction_wait_max_time){
-            //超时恢复数据
-            TxGroup oldGroup = TxGroup.parser(json);
-            value.set(key, oldGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
-            notifyMsg.setState(0);
-            return notifyMsg;
-        }
-        return notifyMsg;
-    }
+//    @Override
+//    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
+//        NotifyMsg notifyMsg = new NotifyMsg();
+//        long t1 = System.currentTimeMillis();
+//        ValueOperations<String, String> value = redisTemplate.opsForValue();
+//        String key = key_prefix + groupId;
+//        String json = value.get(key);
+//        if (StringUtils.isEmpty(json)) {
+//            return null;
+//        }
+//        TxGroup txGroup = TxGroup.parser(json);
+//        List<TxInfo> list = txGroup.getList();
+//        for (TxInfo info : list) {
+//            if (info.getKid().equals(kid)) {
+//                info.setState(state ? 1 : 0);
+//            }
+//        }
+//        value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
+//        long t2 = System.currentTimeMillis();
+//        double time = (t2 - t1 - dt) / 1000;
+//        notifyMsg.setState(1);
+//        notifyMsg.setNowTime(System.currentTimeMillis());
+//        if(time > transaction_wait_max_time){
+//            //超时恢复数据
+//            TxGroup oldGroup = TxGroup.parser(json);
+//            value.set(key, oldGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
+//            notifyMsg.setState(0);
+//            return notifyMsg;
+//        }
+//        return notifyMsg;
+//    }
 
 
     @Override

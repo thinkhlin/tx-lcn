@@ -47,8 +47,15 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
             switch (action) {
                 //创建事务组
                 case "cg": {
-                    TxGroup txGroup = txManagerService.createTransactionGroup();
-                    res = txGroup.toJsonString(false);
+                    String taskId = params.getString("t");
+                    String modelName = ctx.channel().remoteAddress().toString();
+                    TxGroup txGroup = txManagerService.createTransactionGroup(taskId,modelName);
+                    if(txGroup!=null) {
+                        txGroup.setNowTime(System.currentTimeMillis());
+                        res = txGroup.toJsonString(false);
+                    }else {
+                        res = "";
+                    }
                     break;
                 }
                 //添加事务组
@@ -60,6 +67,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                     if (StringUtils.isNotEmpty(modelName)) {
                         TxGroup txGroup = txManagerService.addTransactionGroup(groupId, taskId, isGroup,modelName);
                         if(txGroup!=null) {
+                            txGroup.setNowTime(System.currentTimeMillis());
                             res = txGroup.toJsonString(false);
                         }
                     } else {
@@ -67,24 +75,25 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                     }
                     break;
                 }
-                //修改模块信息
-                case "nti": {
-                    String groupId = params.getString("g");
-                    String kid = params.getString("k");
-                    int state = params.getInteger("s");
-                    NotifyMsg resMsg = txManagerService.notifyTransactionInfo(groupId, kid, state == 1);
-                    if(resMsg==null){
-                        res = "";
-                    }else {
-                        res = resMsg.toJsonString();
-                    }
-                    break;
-                }
+//                //修改模块信息
+//                case "nti": {
+//                    String groupId = params.getString("g");
+//                    String kid = params.getString("k");
+//                    int state = params.getInteger("s");
+//                    NotifyMsg resMsg = txManagerService.notifyTransactionInfo(groupId, kid, state == 1);
+//                    if(resMsg==null){
+//                        res = "";
+//                    }else {
+//                        res = resMsg.toJsonString();
+//                    }
+//                    break;
+//                }
 
                 //关闭事务组
                 case "ctg": {
                     String groupId = params.getString("g");
-                    boolean bs = txManagerService.closeTransactionGroup(groupId);
+                    int state = params.getInteger("s");
+                    boolean bs = txManagerService.closeTransactionGroup(groupId,state);
 
                     res = bs ? "1" : "0";
                     break;

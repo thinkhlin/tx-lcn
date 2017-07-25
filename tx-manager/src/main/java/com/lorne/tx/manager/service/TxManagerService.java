@@ -1,6 +1,5 @@
 package com.lorne.tx.manager.service;
 
-import com.lorne.tx.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 
 /**
@@ -12,8 +11,9 @@ public interface TxManagerService {
 
     /**
      * 创建事物组
+     * @param taskId
      */
-    TxGroup createTransactionGroup();
+    TxGroup createTransactionGroup(String taskId,String modelName);
 
 
     /**
@@ -30,18 +30,18 @@ public interface TxManagerService {
     boolean checkTransactionGroupState(String groupId);
 
 
-    boolean closeTransactionGroup(String groupId);
+    boolean closeTransactionGroup(String groupId,int state);
 
 
-    /**
-     * 通知事务组事务执行状态
-     *
-     * @param groupId
-     * @param kid
-     * @param state
-     * @return
-     */
-    NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state);
+//    /**
+//     * 通知事务组事务执行状态
+//     *
+//     * @param groupId
+//     * @param kid
+//     * @param state
+//     * @return
+//     */
+//    NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state);
 
 
     void dealTxGroup(TxGroup txGroup, boolean hasOk );

@@ -2,12 +2,10 @@ package com.lorne.tx.mq.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.utils.task.Task;
-import com.lorne.tx.mq.model.NotifyMsg;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +28,9 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     private Executor threadPool = Executors.newFixedThreadPool(100);
 
     @Override
-    public  TxGroup createTransactionGroup() {
+    public  TxGroup createTransactionGroup(String waitTaskKey) {
         JSONObject jsonObject = new JSONObject();
+        jsonObject.put("t", waitTaskKey);
         Request request = new Request("cg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
         return TxGroup.parser(json);
@@ -49,10 +48,11 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
 
-    private  void thread(String groupId, Task waitTask) {
+    private  void thread(String groupId,int state, Task waitTask) {
         if (waitTask.isAwait()) {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("g", groupId);
+            jsonObject.put("s", state);
             Request request = new Request("ctg", jsonObject.toString());
             String json = nettyService.sendMsg(request);
             logger.info("closeTransactionGroup->" + json);
@@ -62,30 +62,30 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            thread(groupId, waitTask);
+            thread(groupId,state, waitTask);
         }
     }
 
     @Override
-    public  void closeTransactionGroup(final String groupId, final Task waitTask) {
+    public  void closeTransactionGroup(final String groupId,final int state, final Task waitTask) {
         threadPool.execute(new Runnable() {
             @Override
             public void run() {
-                thread(groupId, waitTask);
+                thread(groupId,state, waitTask);
             }
         });
     }
 
-    @Override
-    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("g", groupId);
-        jsonObject.put("k", kid);
-        jsonObject.put("s", state ? 1 : 0);
-        Request request = new Request("nti", jsonObject.toString());
-        String json = nettyService.sendMsg(request);
-        return NotifyMsg.parser(json);
-    }
+//    @Override
+//    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
+//        JSONObject jsonObject = new JSONObject();
+//        jsonObject.put("g", groupId);
+//        jsonObject.put("k", kid);
+//        jsonObject.put("s", state ? 1 : 0);
+//        Request request = new Request("nti", jsonObject.toString());
+//        String json = nettyService.sendMsg(request);
+//        return NotifyMsg.parser(json);
+//    }
 
 
     @Override

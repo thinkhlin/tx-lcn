@@ -1,13 +1,9 @@
 package com.lorne.tx.mq.model;
 
 
-
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang.StringUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by lorne on 2017/6/7.
@@ -22,6 +18,8 @@ public class TxGroup {
 
     private long startTime;
 
+    private long nowTime;
+
     public boolean isHasOver() {
         return hasOver;
     }
@@ -30,11 +28,6 @@ public class TxGroup {
         this.hasOver = true;
     }
 
-    private List<TxInfo> list;
-
-    public TxGroup() {
-        list = new ArrayList<>();
-    }
 
     public String getGroupId() {
         return groupId;
@@ -44,17 +37,11 @@ public class TxGroup {
         this.groupId = groupId;
     }
 
-    public List<TxInfo> getList() {
-        return list;
-    }
 
     public void setHasOver(boolean hasOver) {
         this.hasOver = hasOver;
     }
 
-    public void setList(List<TxInfo> list) {
-        this.list = list;
-    }
 
     public long getStartTime() {
         return startTime;
@@ -64,12 +51,15 @@ public class TxGroup {
         this.startTime = startTime;
     }
 
-    public void addTransactionInfo(TxInfo info) {
-        if (!hasOver) {
-            list.add(info);
-        }
+
+
+    public long getNowTime() {
+        return nowTime;
     }
 
+    public void setNowTime(long nowTime) {
+        this.nowTime = nowTime;
+    }
 
     public int getWaitTime() {
         return waitTime;
@@ -91,19 +81,7 @@ public class TxGroup {
             txGroup.setHasOver(jsonObject.getInteger("ho") == 1);
             txGroup.setWaitTime(jsonObject.getInteger("w"));
             txGroup.setStartTime(jsonObject.getLong("st"));
-            if(jsonObject.containsKey("l")) {
-                JSONArray array = jsonObject.getJSONArray("l");
-                int length = array.size();
-                for (int i = 0; i < length; i++) {
-                    JSONObject object = array.getJSONObject(i);
-
-                    TxInfo info = new TxInfo();
-                    info.setState(object.getInteger("s"));
-                    info.setKid(object.getString("k"));
-                    info.setModelName(object.getString("m"));
-                    txGroup.getList().add(info);
-                }
-            }
+            txGroup.setNowTime(jsonObject.getLong("nt"));
             return txGroup;
 
         } catch (Exception e) {
@@ -118,14 +96,8 @@ public class TxGroup {
         jsonObject.put("ho", hasOver ? 1 : 0);
         jsonObject.put("w", getWaitTime());
         jsonObject.put("st",getStartTime());
+        jsonObject.put("nt",getNowTime());
         JSONArray jsonArray = new JSONArray();
-        for (TxInfo info : getList()) {
-            JSONObject item = new JSONObject();
-            item.put("s", info.getState());
-            item.put("k", info.getKid());
-            item.put("m", info.getModelName());
-            jsonArray.add(item);
-        }
         jsonObject.put("l", jsonArray);
         return jsonObject.toString();
     }

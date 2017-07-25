@@ -16,7 +16,7 @@ public interface MQTxManagerService {
      *
      * @return
      */
-    TxGroup createTransactionGroup();
+    TxGroup createTransactionGroup(String waitTaskKey);
 
 
     /**
@@ -33,18 +33,18 @@ public interface MQTxManagerService {
      * @param groupId
      * @return
      */
-    void closeTransactionGroup(String groupId, Task waitTask);
+    void closeTransactionGroup(String groupId,int state, Task waitTask);
 
 
-    /**
-     * 通知事务组事务执行状态
-     *
-     * @param groupId
-     * @param kid
-     * @param state
-     * @return
-     */
-    NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state);
+//    /**
+//     * 通知事务组事务执行状态
+//     *
+//     * @param groupId
+//     * @param kid
+//     * @param state
+//     * @return
+//     */
+//    NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state);
 
 
     int checkTransactionInfo(String groupId,String taskId);
