@@ -35,6 +35,8 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     private String tableName;
 
 
+    private static Connection connection = null;
+
     @Override
     public int create(TransactionRecover recover) {
         String sql = "insert into "+tableName+"(id,retried_count,create_time,last_time,group_id,task_id,invocation,state)" +
@@ -153,11 +155,13 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         executeUpdate(createTableSql);
     }
 
+
     private int executeUpdate(String sql, Object... params) {
-        Connection connection = null;
         PreparedStatement ps = null;
         try {
-            connection = dataSource.getConnection();
+            if(connection==null||connection.isClosed()) {
+                connection = dataSource.getConnection();
+            }
             ps = connection.prepareStatement(sql);
             if(params!=null){
                 for(int i=0;i<params.length;i++){
@@ -173,9 +177,6 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                 if (ps != null) {
                     ps.close();
                 }
-                if (connection != null) {
-                    connection.close();
-                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -184,12 +185,13 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     }
 
     private List<Map<String,Object>> executeQuery(String sql, Object... params) {
-        Connection connection = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         List<Map<String,Object>> list = null;
         try {
-            connection = dataSource.getConnection();
+            if(connection==null||connection.isClosed()) {
+                connection = dataSource.getConnection();
+            }
             ps = connection.prepareStatement(sql);
             if(params!=null){
                 for(int i=0;i<params.length;i++){
@@ -216,9 +218,6 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                 }
                 if (ps != null) {
                     ps.close();
-                }
-                if (connection != null) {
-                    connection.close();
                 }
             } catch (SQLException e) {
                 e.printStackTrace();

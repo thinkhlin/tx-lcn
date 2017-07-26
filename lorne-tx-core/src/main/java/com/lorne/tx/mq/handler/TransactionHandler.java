@@ -94,21 +94,28 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                                     });
                                     task.signalTask();
 
-                                    //确认事务通知方法已经执行完毕
-                                    int count = 0;
-                                    while (true) {
-
+                                    if(state!=1){
+                                        res = "1";
+                                    }else {
+                                        //确认事务通知方法已经执行完毕
                                         if (task.isRemove()) {
                                             res = "1";
-                                            break;
-                                        } else {
-                                            if (count > 800) {
-                                                res = "0";
-                                                break;
+                                        }else{
+                                            int count = 0;
+                                            while (true) {
+                                                if (task.isRemove()) {
+                                                    res = "1";
+                                                    break;
+                                                } else {
+                                                    if (count > 800) {
+                                                        res = "0";
+                                                        break;
+                                                    }
+                                                }
+                                                count++;
+                                                Thread.sleep(1);
                                             }
                                         }
-                                        count++;
-                                        Thread.sleep(1);
                                     }
                                 }else{
                                     //模块自动进入超时业务
