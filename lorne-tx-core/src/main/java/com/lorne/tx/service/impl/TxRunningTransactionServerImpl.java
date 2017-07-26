@@ -297,7 +297,15 @@ public class TxRunningTransactionServerImpl extends TxBaseTransactionServerImpl 
         long time = tmTime * 1000 - ((int) (et - st));
         if (time <= 500) {
             //直接返回超时数据
-            transactionConfirm(-2, waitTask, status, model, task);
+            task.setBack(new IBack() {
+                @Override
+                public Object doing(Object... objs) throws Throwable {
+                    throw new Throwable("事务模块超时异常.");
+                }
+            });
+
+            task.signalTask();
+
             return;
         }
 
@@ -326,31 +334,9 @@ public class TxRunningTransactionServerImpl extends TxBaseTransactionServerImpl 
     public void transactionConfirm(int state, Task waitTask, TransactionStatus status, ServiceThreadModel model, Task task) {
         transactionLock(state, status, model.getCompensateId(), waitTask);
 
-        if (state == -1) {
-            task.setBack(new IBack() {
-                @Override
-                public Object doing(Object... objs) throws Throwable {
-                    throw new Throwable("事务模块网络异常.");
-                }
-            });
-        }
-        if (state == -2) {
-            task.setBack(new IBack() {
-                @Override
-                public Object doing(Object... objs) throws Throwable {
-                    throw new Throwable("事务模块超时异常.");
-                }
-            });
-        }
-
         if (state == -100) {
             //定时请求TM资源确认状态
             compensateService.addTask(model.getCompensateId());
-        }
-
-        //主程序的业务数据返回
-        if (state != 1) {
-            task.signalTask();
         }
 
     }

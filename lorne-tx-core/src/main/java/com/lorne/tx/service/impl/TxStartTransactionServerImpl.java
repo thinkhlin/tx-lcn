@@ -193,6 +193,15 @@ public class TxStartTransactionServerImpl extends TxBaseTransactionServerImpl im
             }
         });
 
+        if (state == -1) {
+            task.setBack(new IBack() {
+                @Override
+                public Object doing(Object... objs) throws Throwable {
+                    throw new Throwable("事务模块网络异常.");
+                }
+            });
+        }
+
         if (state == -2) {
             task.setBack(new IBack() {
                 @Override
