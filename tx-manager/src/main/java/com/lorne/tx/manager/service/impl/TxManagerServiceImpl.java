@@ -130,13 +130,12 @@ public class TxManagerServiceImpl implements TxManagerService {
                 break;
             }
         }
-
-        if (isOver) {
-            if(key.startsWith(key_prefix_notify)) {
+        if(key.startsWith(key_prefix_notify)) {
+            if (isOver) {
                 redisTemplate.delete(key);
+            } else {
+                value.set(key, txGroup.toJsonString());
             }
-        } else {
-            value.set(key, txGroup.toJsonString());
         }
         logger.info("end-checkTransactionGroup->groupId:"+groupId+",taskId:"+taskId+",res:"+res);
         return res;

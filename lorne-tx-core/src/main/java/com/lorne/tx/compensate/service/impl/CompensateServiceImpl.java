@@ -27,7 +27,7 @@ public class CompensateServiceImpl implements CompensateService {
     public final static String COMPENSATE_KEY = "COMPENSATE";
 
 
-    public static volatile boolean hasCompensate = false;
+    public static volatile boolean hasCompensate = true;
 
 
     @Autowired
