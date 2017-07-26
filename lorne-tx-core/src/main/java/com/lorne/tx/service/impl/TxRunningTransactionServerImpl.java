@@ -230,24 +230,31 @@ public class TxRunningTransactionServerImpl extends TxBaseTransactionServerImpl 
 
 
     //等待线程
-    private ScheduledFuture schedule(final ServiceThreadModel model, final String taskId, long time) {
+    private ScheduledFuture schedule(final ServiceThreadModel model, final String waitTaskId, long time) {
         return executorService.schedule(new Runnable() {
             @Override
             public void run() {
-                Task task = ConditionUtils.getInstance().getTask(taskId);
+                Task task = ConditionUtils.getInstance().getTask(waitTaskId);
                 String groupId = model.getTxGroup().getGroupId();
                 if (task.getState() == 0) {
 
-                    int hasOk = txManagerService.checkTransactionInfo(groupId, taskId);
-                    logger.info("自动超时补偿(socket)->groupId:" + groupId + ",taskId:" + taskId + ",res:" + hasOk);
+                    int hasOk = txManagerService.checkTransactionInfo(groupId, waitTaskId);
+                    logger.info("自动超时补偿(socket)->groupId:" + groupId + ",taskId:" + waitTaskId + ",res:" + hasOk);
                     if (hasOk == 1) {
-                        task.setState(1);
+                        task.setBack(new IBack() {
+                            @Override
+                            public Object doing(Object... objs) throws Throwable {
+                                return 1;
+                            }
+                        });
                         task.signalTask();
+
+                        return;
                     } else {
                         if (hasOk == -1) {
                             // 发起http请求查询状态
-                            String json = HttpUtils.get(url + "Group?groupId=" + groupId + "&taskId=" + taskId);
-                            logger.info("自动超时补偿(http)->groupId:" + groupId + ",taskId:" + taskId + ",res:" + json);
+                            String json = HttpUtils.get(url + "Group?groupId=" + groupId + "&taskId=" + waitTaskId);
+                            logger.info("自动超时补偿(http)->groupId:" + groupId + ",taskId:" + waitTaskId + ",res:" + json);
                             if (json == null) {
                                 //请求tm访问失败
                                 task.setBack(new IBack() {
@@ -263,7 +270,12 @@ public class TxRunningTransactionServerImpl extends TxBaseTransactionServerImpl 
                             }
                             if (json.contains("true")) {
 
-                                task.setState(1);
+                                task.setBack(new IBack() {
+                                    @Override
+                                    public Object doing(Object... objs) throws Throwable {
+                                        return 1;
+                                    }
+                                });
                                 task.signalTask();
 
                                 return;
@@ -286,7 +298,7 @@ public class TxRunningTransactionServerImpl extends TxBaseTransactionServerImpl 
 
     public void serviceWait(final Task task, final ServiceThreadModel model) {
         final Task waitTask = model.getWaitTask();
-        final String taskId = waitTask.getKey();
+        final String waitTaskId = waitTask.getKey();
         TransactionStatus status = model.getStatus();
 
         long st = model.getTxGroup().getStartTime();
@@ -314,7 +326,7 @@ public class TxRunningTransactionServerImpl extends TxBaseTransactionServerImpl 
         logger.info("返回业务数据");
 
         //等待线程
-        ScheduledFuture future = schedule(model, taskId, time);
+        ScheduledFuture future = schedule(model, waitTaskId, time);
 
 
         logger.info("进入回滚等待.");
