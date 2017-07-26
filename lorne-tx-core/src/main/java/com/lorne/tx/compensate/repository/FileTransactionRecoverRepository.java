@@ -99,18 +99,18 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
     @Override
     public List<TransactionRecover> findAll(int state) {
         List<TransactionRecover> transactionRecoverList = Lists.newArrayList();
-        File path = new File(filePath);
-        File[] files = path.listFiles();
-        if (files != null && files.length > 0) {
-            for (File file : files) {
-                TransactionRecover transaction = readTransaction(file);
-                if(transaction.getState()==state) {
-                    transactionRecoverList.add(transaction);
-                    transaction.setState(1);
-                    writeFile(transaction);
-                }
-            }
-        }
+//        File path = new File(filePath);
+//        File[] files = path.listFiles();
+//        if (files != null && files.length > 0) {
+//            for (File file : files) {
+//                TransactionRecover transaction = readTransaction(file);
+//                if(transaction.getState()==state) {
+//                    transactionRecoverList.add(transaction);
+//                    transaction.setState(1);
+//                    writeFile(transaction);
+//                }
+//            }
+//        }
         return transactionRecoverList;
     }
 

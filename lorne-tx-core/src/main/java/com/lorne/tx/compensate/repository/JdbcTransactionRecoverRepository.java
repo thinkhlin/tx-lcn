@@ -59,8 +59,8 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         String selectSql = "select * from "+tableName +" where state = ? ";
         List<Map<String,Object>>  list =  executeQuery(selectSql,state);
 
-        String updateSql = "update "+tableName +" set state = 1 ";
-        executeUpdate(updateSql);
+//        String updateSql = "update "+tableName +" set state = 1 ";
+//        executeUpdate(updateSql);
 
         List<TransactionRecover> recovers = new ArrayList<>();
         for(Map<String,Object> map:list){
