@@ -6,7 +6,6 @@ import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.model.TransactionInvocation;
-import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.service.AspectBeforeService;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.TransactionServerFactoryService;
@@ -28,11 +27,6 @@ public class AspectBeforeServiceImpl implements AspectBeforeService {
 
 
     public Object around(String groupId, ProceedingJoinPoint point) throws Throwable {
-
-        if(CompensateServiceImpl.hasCompensate) {
-            //事务补偿未执行完毕
-            throw new Exception("事务补偿运行中,请稍后再访问.");
-        }
 
         MethodSignature signature = (MethodSignature) point.getSignature();
         Method method = signature.getMethod();

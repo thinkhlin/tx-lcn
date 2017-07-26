@@ -66,6 +66,12 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
 
 
 
+        if(CompensateServiceImpl.hasCompensate) {
+            //事务补偿未执行完毕
+            throw new Exception("事务补偿运行中,请稍后再访问.");
+        }
+
+
 
         /*********本地事务处理逻辑*开始***********/
 
