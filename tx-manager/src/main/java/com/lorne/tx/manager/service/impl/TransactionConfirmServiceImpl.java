@@ -62,7 +62,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
         //事务不满足直接回滚事务
         if (txGroup.getState()==0) {
-            transaction(txGroup.getList(), 0);
+            transaction(txGroup, 0);
             return;
         }
 //        txGroup.setState(1);
@@ -72,17 +72,17 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
         if (isOk) {
             if(hasOvertime){
-                transaction(txGroup.getList(), -1);
+                transaction(txGroup, -1);
             }else{
                 //提交事务
-               boolean hasOk =  transaction(txGroup.getList(), 1);
+               boolean hasOk =  transaction(txGroup, 1);
                txManagerService.dealTxGroup(txGroup,hasOk);
             }
         } else {
             if(hasOvertime){
-                transaction(txGroup.getList(), -1);
+                transaction(txGroup, -1);
             }else{
-                transaction(txGroup.getList(), 0);
+                transaction(txGroup, 0);
             }
         }
 
@@ -126,12 +126,11 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     /**
      * 事务提交或回归
      *
-     * @param list
      * @param checkSate
      */
-    private boolean transaction(List<TxInfo> list, final int checkSate) {
+    private boolean transaction(TxGroup txGroup, final int checkSate) {
         CountDownLatchHelper<Boolean> countDownLatchHelper = new CountDownLatchHelper<>();
-        for (final TxInfo txInfo : list) {
+        for (final TxInfo txInfo : txGroup.getList()) {
             if(txInfo.getIsGroup()==0) {
                 countDownLatchHelper.addExecute(new IExecute<Boolean>() {
                     @Override
@@ -200,7 +199,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                 break;
             }
         }
-        logger.info("--->"+hasOk+",list:" +list.toString());
+        logger.info("--->"+hasOk+",group:"+txGroup.getGroupId()+",state:"+checkSate+",list:" +txGroup.toJsonString());
         return hasOk;
     }
 
