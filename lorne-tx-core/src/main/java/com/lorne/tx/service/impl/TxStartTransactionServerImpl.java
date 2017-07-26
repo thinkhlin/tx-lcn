@@ -7,49 +7,30 @@ import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.mq.model.TxGroup;
-import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.model.ServiceThreadModel;
-import com.lorne.tx.utils.ThreadPoolSizeHelper;
-import org.apache.commons.lang.StringUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 分布式事务启动开始时的业务处理
  * Created by lorne on 2017/6/8.
  */
 @Service(value = "txStartTransactionServer")
-public class TxStartTransactionServerImpl implements TransactionServer {
+public class TxStartTransactionServerImpl extends TxBaseTransactionServerImpl implements TransactionServer {
 
 
     private Logger logger = LoggerFactory.getLogger(TxStartTransactionServerImpl.class);
 
-    @Autowired
-    private MQTxManagerService txManagerService;
-
-
-    @Autowired
-    private PlatformTransactionManager txManager;
-
-
-    @Autowired
-    private CompensateService compensateService;
-
-
-    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
-    private Executor threadPool  = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getStartSize());
 
 
     public ServiceThreadModel serviceInThread(String waitTaskKey,TxTransactionInfo info, String groupId,TxGroup txGroup,ProceedingJoinPoint point) {
@@ -59,17 +40,14 @@ public class TxStartTransactionServerImpl implements TransactionServer {
         TransactionStatus status = txManager.getTransaction(def);
         Task waitTask = ConditionUtils.getInstance().createTask(waitTaskKey);
         ServiceThreadModel model = new ServiceThreadModel();
+        String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, waitTaskKey);
         Object res;
         try {
-            String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, waitTaskKey);
-
             res = point.proceed();
-
-            model.setCompensateId(compensateId);
         } catch ( Throwable throwable) {
             res = throwable;
         }
-
+        model.setCompensateId(compensateId);
         model.setStatus(status);
         model.setWaitTask(waitTask);
         model.setTxGroup(txGroup);
@@ -196,20 +174,13 @@ public class TxStartTransactionServerImpl implements TransactionServer {
             future.cancel(false);
         }
 
-        try {
-            int state = (Integer) waitTask.getBack().doing();
-            logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state);
-            //事务确认操作
-            transactionConfirm(state, waitTask, status, model, task);
-        } catch (Throwable throwable) {
-            txManager.rollback(status);
-        }
+        transaction(waitTask,status,model,task);
     }
 
 
 
     //事务确认状态
-    private void transactionConfirm(int state, Task waitTask, TransactionStatus status, final ServiceThreadModel model, Task task) {
+    public void transactionConfirm(int state, Task waitTask, TransactionStatus status, final ServiceThreadModel model, Task task) {
         transactionLock(state, status, model.getCompensateId(), waitTask);
 
         task.setBack(new IBack() {
@@ -236,21 +207,6 @@ public class TxStartTransactionServerImpl implements TransactionServer {
 
     }
 
-    //以下代码必须确保原子性
-    private void transactionLock(int state, TransactionStatus status, String compensateId, Task waitTask) {
-        try {
-            if (state == 1) {
-                txManager.commit(status);
-            } else {
-                txManager.rollback(status);
-            }
-        }finally {
-            if(StringUtils.isNotEmpty((compensateId))){
-                compensateService.deleteTransactionInfo(compensateId);
-            }
-            if (waitTask != null)
-                waitTask.remove();
-        }
-    }
+
 
 }
