@@ -41,13 +41,11 @@ public class TxRunningCompensateTransactionServerImpl implements TransactionServ
             @Override
             public void run() {
 
-                TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
-                if(txTransactionLocal==null){
-                    txTransactionLocal = new TxTransactionLocal();
-                    txTransactionLocal.setHasCompensate(true);
-                    txTransactionLocal.setGroupId(CompensateServiceImpl.COMPENSATE_KEY);
-                    TxTransactionLocal.setCurrent(txTransactionLocal);
-                }
+                TxTransactionLocal txTransactionLocal  = new TxTransactionLocal();
+                txTransactionLocal.setHasCompensate(true);
+                txTransactionLocal.setGroupId(CompensateServiceImpl.COMPENSATE_KEY);
+                TxTransactionLocal.setCurrent(txTransactionLocal);
+
 
                 DefaultTransactionDefinition def = new DefaultTransactionDefinition();
                 def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
@@ -70,6 +68,9 @@ public class TxRunningCompensateTransactionServerImpl implements TransactionServ
                 }
                 task.signalTask();
                 txManager.rollback(status);
+
+
+                TxTransactionLocal.setCurrent(null);
 
             }
         });

@@ -212,6 +212,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                 jsonObject.put("k", key);
                 SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
             }
+            txManagerService.deleteTxGroup(txGroup);
             return true;
         }
 

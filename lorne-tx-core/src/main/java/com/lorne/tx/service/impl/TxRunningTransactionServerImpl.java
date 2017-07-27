@@ -166,6 +166,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 serviceWait(task, model);
 
                 groupTask.remove();
+
+                TxTransactionLocal.setCurrent(null);
             }
         });
 

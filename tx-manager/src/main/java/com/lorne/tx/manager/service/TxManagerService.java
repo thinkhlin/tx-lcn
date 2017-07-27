@@ -46,6 +46,8 @@ public interface TxManagerService {
 
     void dealTxGroup(TxGroup txGroup, boolean hasOk );
 
+    void deleteTxGroup(TxGroup txGroup);
+
 
     boolean getHasOvertime(TxGroup txGroup);
 

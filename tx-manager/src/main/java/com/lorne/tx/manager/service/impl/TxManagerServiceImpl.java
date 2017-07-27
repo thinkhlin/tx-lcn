@@ -231,6 +231,12 @@ public class TxManagerServiceImpl implements TxManagerService {
 
 
     @Override
+    public void deleteTxGroup(TxGroup txGroup) {
+        String key = key_prefix + txGroup.getGroupId();
+        redisTemplate.delete(key);
+    }
+
+    @Override
     public boolean getHasOvertime(TxGroup txGroup) {
 
         double time = (txGroup.getEndTime() - txGroup.getStartTime() - dt) / 1000;

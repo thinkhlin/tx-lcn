@@ -18,9 +18,6 @@ import org.springframework.stereotype.Service;
 public class TransactionServerFactoryServiceImpl implements TransactionServerFactoryService {
 
 
-    @Autowired
-    private TransactionServer txDefaultTransactionServer;
-
 
     @Autowired
     private TransactionServer txStartTransactionServer;
@@ -29,7 +26,7 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
     private TransactionServer txRunningTransactionServer;
 
     @Autowired
-    private TransactionServer txInServiceTransactionServer;
+    private TransactionServer txDefaultTransactionServer;
 
     @Autowired
     private TransactionServer txRunningCompensateTransactionServer;
@@ -50,7 +47,7 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
             //控制返回业务数据，但让其事务回滚。第一次执行时，需要启用线程控制事务，后面的事务与开始启动的事务事务嵌套即可。然后通过开始事务统一回滚。
             //因此执行业务过程中时的事务与txInServiceTransactionServer处理一致
             if(TxTransactionLocal.current()!=null){
-                return txInServiceTransactionServer;
+                return txDefaultTransactionServer;
             }else{
                 return txRunningCompensateTransactionServer;
             }
@@ -72,26 +69,6 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
         }
 
 
-
-        /*********本地事务处理逻辑*开始***********/
-
-        /** 当都是空的时候表示是一般的业务处理。这里不做操作 **/
-        if (StringUtils.isEmpty(info.getTxGroupId())
-            && info.getTransaction() == null
-            && info.getTxTransactionLocal() == null
-            && info.getTransactionLocal() == null) {
-            return txDefaultTransactionServer;
-        }
-
-        /** 本地事务嵌套 **/
-        if (info.getTransactionLocal() != null) {
-            return txDefaultTransactionServer;
-        }
-
-        /*********本地事务处理逻辑*结束***********/
-
-
-
         /*********分布式事务处理逻辑*开始***********/
 
         /** 尽当Transaction注解不为空，其他都为空时。表示分布式事务开始启动 **/
@@ -109,14 +86,13 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
             //检查socket通讯是否正常 （第一次执行时启动txRunningTransactionServer的业务处理控制，然后嵌套调用其他事务的业务方法时都并到txInServiceTransactionServer业务处理下）
             if (nettyService.checkState()) {
                 if(info.getTxTransactionLocal() != null){
-                    return txInServiceTransactionServer;
+                    return txDefaultTransactionServer;
                 }else{
                     return txRunningTransactionServer;
                 }
             } else {
                 throw new Exception("tx-manager尚未链接成功,请检测tx-manager服务");
             }
-
         }
         /*********分布式事务处理逻辑*结束***********/
 

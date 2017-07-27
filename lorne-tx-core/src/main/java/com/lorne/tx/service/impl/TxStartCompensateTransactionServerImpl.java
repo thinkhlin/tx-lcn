@@ -26,25 +26,25 @@ public class TxStartCompensateTransactionServerImpl implements TransactionServer
 
     @Override
     public Object execute(ProceedingJoinPoint point, TxTransactionInfo info) throws Throwable {
-        TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
-        if(txTransactionLocal==null){
-            txTransactionLocal = new TxTransactionLocal();
-            txTransactionLocal.setHasCompensate(true);
-            txTransactionLocal.setGroupId(CompensateServiceImpl.COMPENSATE_KEY);
-            TxTransactionLocal.setCurrent(txTransactionLocal);
-        }
+        TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
+        txTransactionLocal.setHasCompensate(true);
+        txTransactionLocal.setGroupId(CompensateServiceImpl.COMPENSATE_KEY);
+        TxTransactionLocal.setCurrent(txTransactionLocal);
 
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = txManager.getTransaction(def);
-        Object obj = null;
         try {
-            obj =  point.proceed();
+            Object obj =  point.proceed();
             txManager.commit(status);
+            return obj;
         }catch (Throwable e) {
             txManager.rollback(status);
             throw e;
+        }finally {
+            if(txTransactionLocal!=null){
+                TxTransactionLocal.setCurrent(null);
+            }
         }
-        return obj;
     }
 }
