@@ -61,11 +61,11 @@ public class TxManagerServiceImpl implements TxManagerService {
         txGroup.setGroupId(groupId);
         txGroup.setWaitTime(transaction_wait_max_time);
 
-        TxInfo txInfo = new TxInfo();
-        txInfo.setModelName(modelName);
-        txInfo.setKid(taskId);
-        txInfo.setIsGroup(0);
-        txGroup.addTransactionInfo(txInfo);
+//        TxInfo txInfo = new TxInfo();
+//        txInfo.setModelName(modelName);
+//        txInfo.setKid(taskId);
+//        txInfo.setIsGroup(0);
+//        txGroup.addTransactionInfo(txInfo);
 
         String key = key_prefix + groupId;
         ValueOperations<String, String> value = redisTemplate.opsForValue();

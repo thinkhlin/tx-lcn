@@ -28,9 +28,8 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     private Executor threadPool = Executors.newFixedThreadPool(100);
 
     @Override
-    public  TxGroup createTransactionGroup(String waitTaskKey) {
+    public  TxGroup createTransactionGroup() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("t", waitTaskKey);
         Request request = new Request("cg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
         return TxGroup.parser(json);
@@ -48,32 +47,15 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
 
-    private  void thread(String groupId,int state, Task waitTask) {
-        if (waitTask.isAwait()) {
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put("g", groupId);
-            jsonObject.put("s", state);
-            Request request = new Request("ctg", jsonObject.toString());
-            String json = nettyService.sendMsg(request);
-            logger.info("closeTransactionGroup->" + json);
-        } else {
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            thread(groupId,state, waitTask);
-        }
-    }
 
     @Override
-    public  void closeTransactionGroup(final String groupId,final int state, final Task waitTask) {
-        threadPool.execute(new Runnable() {
-            @Override
-            public void run() {
-                thread(groupId,state, waitTask);
-            }
-        });
+    public  void closeTransactionGroup(final String groupId,final int state) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("g", groupId);
+        jsonObject.put("s", state);
+        Request request = new Request("ctg", jsonObject.toString());
+        String json = nettyService.sendMsg(request);
+        logger.info("closeTransactionGroup->" + json);
     }
 
 //    @Override

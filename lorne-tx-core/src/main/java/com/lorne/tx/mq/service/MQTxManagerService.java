@@ -1,7 +1,6 @@
 package com.lorne.tx.mq.service;
 
 import com.lorne.core.framework.utils.task.Task;
-import com.lorne.tx.mq.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 
 
@@ -16,7 +15,7 @@ public interface MQTxManagerService {
      *
      * @return
      */
-    TxGroup createTransactionGroup(String waitTaskKey);
+    TxGroup createTransactionGroup();
 
 
     /**
@@ -33,7 +32,7 @@ public interface MQTxManagerService {
      * @param groupId
      * @return
      */
-    void closeTransactionGroup(String groupId,int state, Task waitTask);
+    void closeTransactionGroup(String groupId,int state);
 
 
 //    /**

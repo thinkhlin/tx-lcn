@@ -9,29 +9,50 @@ import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
+import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.mq.model.TxGroup;
+import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.model.ServiceThreadModel;
+import com.lorne.tx.utils.ThreadPoolSizeHelper;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * 分布式事务启动开始时的业务处理
  * Created by lorne on 2017/6/8.
  */
 @Service(value = "txRunningTransactionServer")
-public class TxRunningTransactionServerImpl extends TxBaseTransactionServerImpl implements TransactionServer {
+public class TxRunningTransactionServerImpl implements TransactionServer {
 
 
     private Logger logger = LoggerFactory.getLogger(TxRunningTransactionServerImpl.class);
+
+
+    @Autowired
+    private PlatformTransactionManager txManager;
+
+    @Autowired
+    private MQTxManagerService txManagerService;
+
+    @Autowired
+    private CompensateService compensateService;
+
+
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
+
+
+    private Executor threadPool  = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getStartSize());
+
 
 
     private String url;
@@ -352,5 +373,35 @@ public class TxRunningTransactionServerImpl extends TxBaseTransactionServerImpl 
         }
 
     }
+
+
+    //以下代码必须确保原子性
+    public void transactionLock(int state, TransactionStatus status, String compensateId, Task waitTask) {
+        try {
+            if (state == 1) {
+                txManager.commit(status);
+            } else {
+                txManager.rollback(status);
+            }
+        }finally {
+            if(compensateId!=null) {
+                compensateService.deleteTransactionInfo(compensateId);
+            }
+            if (waitTask != null)
+                waitTask.remove();
+        }
+    }
+
+    public void transaction(Task waitTask, TransactionStatus status, ServiceThreadModel model,Task task){
+        try {
+            int state = (Integer) waitTask.getBack().doing();
+            logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state);
+            //事务确认操作
+            transactionConfirm(state, waitTask, status, model, task);
+        } catch (Throwable throwable) {
+            txManager.rollback(status);
+        }
+    }
+
 
 }
