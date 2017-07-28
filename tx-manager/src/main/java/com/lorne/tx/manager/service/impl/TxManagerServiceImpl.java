@@ -130,8 +130,8 @@ public class TxManagerServiceImpl implements TxManagerService {
                 break;
             }
         }
-        if(key.startsWith(key_prefix_notify)) {
-            if (isOver) {
+        if (isOver) {
+            if(key.startsWith(key_prefix_notify)) {
                 redisTemplate.delete(key);
             } else {
                 value.set(key, txGroup.toJsonString());
