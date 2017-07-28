@@ -110,16 +110,14 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
 
     private void awaitSend(Task task, TxInfo txInfo,JSONObject jsonObject){
-        if(task.isAwait()){
-            SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
-        }else{
+        while (!task.isAwait()&&!Thread.currentThread().isInterrupted()){
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            awaitSend(task, txInfo, jsonObject);
         }
+        SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
     }
 
     /**

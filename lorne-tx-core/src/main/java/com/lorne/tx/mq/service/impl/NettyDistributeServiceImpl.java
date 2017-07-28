@@ -34,18 +34,20 @@ public class NettyDistributeServiceImpl implements NettyDistributeService {
 
     private  void getTxServer() {
         //获取负载均衡服务地址
-        String url = ConfigUtils.getString("tx.properties", "url");
-        //获取服务器ip
-        String json = HttpUtils.get(url);
-        logger.info("获取manager服务信息->" + json);
-        if (StringUtils.isEmpty(json)) {
-            logger.info("TxManager服务器无法访问.");
-            try {
-                Thread.sleep(1000 * 2);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        String json = null;
+        while(StringUtils.isEmpty(json)) {
+            String url = ConfigUtils.getString("tx.properties", "url");
+            //获取服务器ip
+            json = HttpUtils.get(url);
+            logger.info("获取manager服务信息->" + json);
+            if (StringUtils.isEmpty(json)) {
+                logger.info("TxManager服务器无法访问.");
+                try {
+                    Thread.sleep(1000 * 2);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-            getTxServer();
         }
 
         TxServer txServer = TxServer.parser(json);

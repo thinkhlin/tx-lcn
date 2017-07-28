@@ -215,16 +215,14 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sleepSend(Task task, Request request){
-        if(task.isAwait()){
-            SocketUtils.sendMsg(ctx,request.toMsg());
-        }else{
+        while (!task.isAwait()&&!Thread.currentThread().isInterrupted()){
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            sleepSend(task, request);
         }
+        SocketUtils.sendMsg(ctx,request.toMsg());
     }
 
     public String sendMsg(final Request request) {
