@@ -76,38 +76,27 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         Object obj = waitTask.execute(new IBack() {
             @Override
             public Object doing(Object... objs) throws Throwable {
-
-
                 String kid = KidUtils.generateShortUuid();
-
-                DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-                def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
-                TransactionStatus status = txManager.getTransaction(def);
-
-
                 try {
-
-
                     String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, kid);
-
-                    Object obj = point.proceed();
-
-                    TxGroup txGroup = txManagerService.addTransactionGroup(groupId, kid, true);
-
-                    //获取不到模块信息重新连接，本次事务异常返回数据.
-                    if (txGroup == null) {
-                        txManager.rollback(status);
-                        throw new ServiceException("添加事务组异常.");
-                    } else {
-                        txManager.commit(status);
+                    Object obj = null;
+                    try {
+                         obj = point.proceed();
+                    }catch (Throwable throwable){
+                        obj = throwable;
+                        compensateService.deleteTransactionInfo(compensateId);
+                        return obj;
                     }
 
+                    TxGroup txGroup = txManagerService.addTransactionGroup(groupId, kid, true);
+                    //获取不到模块信息重新连接，本次事务异常返回数据.
+                    if (txGroup == null) {
+                        throw new Throwable("添加事务组异常.");
+                    }
                     compensateService.deleteTransactionInfo(compensateId);
-
                     return obj;
                 } catch (Throwable e) {
                     //失败会通知到tx
-                    txManager.rollback(status);
                     logger.info("tx-second-running-end");
                     throw e;
                 }
@@ -124,8 +113,6 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
     @Override
     public Object execute(final ProceedingJoinPoint point, final TxTransactionInfo info) throws Throwable {
-
-
         final String txGroupId = info.getTxGroupId();
         Task groupTask = ConditionUtils.getInstance().getTask(txGroupId);
 
@@ -257,20 +244,20 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         return executorService.schedule(new Runnable() {
             @Override
             public void run() {
-                Task task = ConditionUtils.getInstance().getTask(waitTaskId);
+                Task waitTask = ConditionUtils.getInstance().getTask(waitTaskId);
                 String groupId = model.getTxGroup().getGroupId();
-                if (task.getState() == 0) {
+                if (waitTask.getState() == 0) {
 
                     int hasOk = txManagerService.checkTransactionInfo(groupId, waitTaskId);
                     logger.info("自动超时补偿(socket)->groupId:" + groupId + ",taskId:" + waitTaskId + ",res:" + hasOk);
                     if (hasOk == 1) {
-                        task.setBack(new IBack() {
+                        waitTask.setBack(new IBack() {
                             @Override
                             public Object doing(Object... objs) throws Throwable {
                                 return 1;
                             }
                         });
-                        task.signalTask();
+                        waitTask.signalTask();
 
                         return;
                     } else {
@@ -280,38 +267,38 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                             logger.info("自动超时补偿(http)->groupId:" + groupId + ",taskId:" + waitTaskId + ",res:" + json);
                             if (json == null) {
                                 //请求tm访问失败
-                                task.setBack(new IBack() {
+                                waitTask.setBack(new IBack() {
                                     @Override
                                     public Object doing(Object... objects) throws Throwable {
                                         return -100;//自动回滚补偿时也没有访问到tm
                                     }
                                 });
 
-                                task.signalTask();
+                                waitTask.signalTask();
                                 return;
 
                             }
                             if (json.contains("true")) {
 
-                                task.setBack(new IBack() {
+                                waitTask.setBack(new IBack() {
                                     @Override
                                     public Object doing(Object... objs) throws Throwable {
                                         return 1;
                                     }
                                 });
-                                task.signalTask();
+                                waitTask.signalTask();
 
                                 return;
                             }
                         }
-                        task.setBack(new IBack() {
+                        waitTask.setBack(new IBack() {
                             @Override
                             public Object doing(Object... objects) throws Throwable {
                                 return -2;
                             }
                         });
                         logger.info("自定回滚执行");
-                        task.signalTask();
+                        waitTask.signalTask();
                     }
                 }
             }
@@ -360,50 +347,36 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             future.cancel(false);
         }
 
-        transaction(waitTask,status,model,task);
-
-    }
-
-
-    //事务确认状态
-    public void transactionConfirm(int state, Task waitTask, TransactionStatus status, ServiceThreadModel model, Task task) {
-        transactionLock(state, status, model.getCompensateId(), waitTask);
-
-        if (state == -100) {
-            //定时请求TM资源确认状态
-            compensateService.addTask(model.getCompensateId());
-        }
-
-    }
-
-
-    //以下代码必须确保原子性
-    public void transactionLock(int state, TransactionStatus status, String compensateId, Task waitTask) {
-        try {
-            if (state == 1) {
-                txManager.commit(status);
-            } else {
-                txManager.rollback(status);
-            }
-        }finally {
-            if(compensateId!=null) {
-                compensateService.deleteTransactionInfo(compensateId);
-            }
-            if (waitTask != null)
-                waitTask.remove();
-        }
-    }
-
-    public void transaction(Task waitTask, TransactionStatus status, ServiceThreadModel model,Task task){
         try {
             int state = (Integer) waitTask.getBack().doing();
             logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state);
             //事务确认操作
-            transactionConfirm(state, waitTask, status, model, task);
+            try {
+                if (state == 1) {
+                    txManager.commit(status);
+                } else {
+                    txManager.rollback(status);
+                }
+            }finally {
+                compensateService.deleteTransactionInfo(model.getCompensateId());
+                if (waitTask != null)
+                    waitTask.remove();
+            }
+
+            if (state == -100) {
+                //定时请求TM资源确认状态
+                compensateService.addTask(model.getCompensateId());
+            }
+
         } catch (Throwable throwable) {
             txManager.rollback(status);
         }
+
     }
+
+
+
+
 
 
 }
