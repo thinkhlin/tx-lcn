@@ -1,7 +1,6 @@
 package com.lorne.tx.service.model;
 
 import com.lorne.core.framework.utils.task.Task;
-import com.lorne.tx.mq.model.NotifyMsg;
 import com.lorne.tx.mq.model.TxGroup;
 import org.springframework.transaction.TransactionStatus;
 
