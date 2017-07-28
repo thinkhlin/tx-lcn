@@ -123,7 +123,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         Task groupTask = ConditionUtils.getInstance().getTask(txGroupId);
 
         //当同一个事务下的业务进入切面时，合并业务执行。
-        if (groupTask != null && !groupTask.isNotify()) {
+        if (groupTask != null && !groupTask.isRemove()) {
             return secondExecute(info, groupTask, point);
         }
 
@@ -143,6 +143,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
                 ServiceThreadModel model = serviceInThread(info, txGroupId, task, point);
                 if (model == null) {
+                    TxTransactionLocal.setCurrent(null);
                     return;
                 }
 
@@ -176,7 +177,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
     }
 
 
-    public ServiceThreadModel serviceInThread(TxTransactionInfo info, String _groupId, Task task, ProceedingJoinPoint point) {
+    public ServiceThreadModel serviceInThread(TxTransactionInfo info, String groupId, Task task, ProceedingJoinPoint point) {
 
         String kid = KidUtils.generateShortUuid();
 
@@ -187,9 +188,9 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         Task waitTask = ConditionUtils.getInstance().createTask(kid);
 
 
-        try {
+        String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, kid);
 
-            String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), _groupId, kid);
+        try {
 
             final Object res = point.proceed();
 
@@ -201,7 +202,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             });
             //通知TxManager调用成功
 
-            TxGroup txGroup = txManagerService.addTransactionGroup(_groupId, kid, false);
+            TxGroup txGroup = txManagerService.addTransactionGroup(groupId, kid, false);
             //NotifyMsg notifyMsg = txManagerService.notifyTransactionInfo(_groupId, kid, true);
             if (txGroup == null) {
                 //修改事务组状态异常
@@ -238,8 +239,9 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
             //修改事务组状态异常
             txManager.rollback(status);
-            task.signalTask();
+            compensateService.deleteTransactionInfo(compensateId);
 
+            task.signalTask();
             return null;
         }
     }
