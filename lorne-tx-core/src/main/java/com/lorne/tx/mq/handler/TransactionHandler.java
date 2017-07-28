@@ -215,7 +215,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sleepSend(Task task, Request request){
-        while (!task.isAwait()&&!Thread.currentThread().isInterrupted()){
+        while (!task.isAwait()&&!Thread.currentThread().interrupted()){
             try {
                 Thread.sleep(1);
             } catch (InterruptedException e) {
