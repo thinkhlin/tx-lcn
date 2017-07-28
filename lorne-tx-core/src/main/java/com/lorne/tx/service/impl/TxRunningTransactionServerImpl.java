@@ -266,6 +266,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                             }
                         });
                         waitTask.signalTask();
+                        logger.info("自定回滚执行->1");
 
                         return;
                     } else {
@@ -283,6 +284,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                                 });
 
                                 waitTask.signalTask();
+                                logger.info("自定回滚执行->-100");
                                 return;
 
                             }
@@ -295,7 +297,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                                     }
                                 });
                                 waitTask.signalTask();
-
+                                logger.info("自定回滚执行->1");
                                 return;
                             }
                         }
@@ -305,8 +307,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                                 return -2;
                             }
                         });
-                        logger.info("自定回滚执行");
                         waitTask.signalTask();
+                        logger.info("自定回滚执行->-2");
                     }
                 }
             }
@@ -366,14 +368,13 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                     txManager.rollback(status);
                 }
             }finally {
-                compensateService.deleteTransactionInfo(model.getCompensateId());
+                if(state!=-100) {
+                    compensateService.deleteTransactionInfo(model.getCompensateId());
+                }else {
+                    compensateService.addTask(model.getCompensateId());
+                }
                 if (waitTask != null)
                     waitTask.remove();
-            }
-
-            if (state == -100) {
-                //定时请求TM资源确认状态
-                compensateService.addTask(model.getCompensateId());
             }
 
         } catch (Throwable throwable) {
