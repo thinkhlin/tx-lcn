@@ -41,7 +41,7 @@ public class TxStartTransactionServerImpl  implements TransactionServer {
 
 
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         TransactionStatus status = txManager.getTransaction(def);
 
 

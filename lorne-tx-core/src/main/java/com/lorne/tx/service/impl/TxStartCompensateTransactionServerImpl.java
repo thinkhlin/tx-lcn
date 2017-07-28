@@ -32,7 +32,7 @@ public class TxStartCompensateTransactionServerImpl implements TransactionServer
         TxTransactionLocal.setCurrent(txTransactionLocal);
 
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         TransactionStatus status = txManager.getTransaction(def);
         try {
             Object obj =  point.proceed();
