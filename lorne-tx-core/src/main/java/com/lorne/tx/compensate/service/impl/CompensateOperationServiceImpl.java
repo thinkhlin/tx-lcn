@@ -25,6 +25,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by lorne on 2017/7/12.
@@ -40,6 +42,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     private TransactionRecoverRepository recoverRepository;
 
     private String url;
+    private String prefix;
 
     /**
      * 保存数据消息队列
@@ -51,6 +54,8 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
      */
     private boolean hasGracefulClose = false;
 
+
+
     @Autowired
     private NettyService nettyService;
 
@@ -60,6 +65,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     public CompensateOperationServiceImpl() {
         url =  ConfigUtils.getString("tx.properties","url");
+        prefix = ConfigUtils.getString("tx.properties", "compensate.prefix");
         int state = 0;
         try {
             state = ConfigUtils.getInt("tx.properties","graceful.close");
@@ -161,9 +167,19 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
         }
     }
 
+    private String getTableName(String modelName){
+        Pattern pattern=Pattern.compile("[^a-z0-9A-Z]");
+        Matcher matcher =  pattern.matcher(modelName);
+        return matcher.replaceAll("_");
+    }
+
+
     @Override
     public void init(String modelName) {
-        recoverRepository.init(modelName);
+
+        String tableName = "lcn_tx_"+prefix+"_"+getTableName(modelName);
+
+        recoverRepository.init(tableName);
 
         if(hasGracefulClose) {
             Runnable runnable = new Runnable() {

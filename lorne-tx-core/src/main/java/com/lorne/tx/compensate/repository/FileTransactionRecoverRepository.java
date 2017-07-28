@@ -32,8 +32,6 @@ import java.util.List;
 public class FileTransactionRecoverRepository implements TransactionRecoverRepository {
 
 
-    private String tableName;
-
     private String filePath;
 
     private volatile static boolean initialized;
@@ -99,32 +97,18 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
     @Override
     public List<TransactionRecover> findAll(int state) {
         List<TransactionRecover> transactionRecoverList = Lists.newArrayList();
-//        File path = new File(filePath);
-//        File[] files = path.listFiles();
-//        if (files != null && files.length > 0) {
-//            for (File file : files) {
-//                TransactionRecover transaction = readTransaction(file);
-//                if(transaction.getState()==state) {
-//                    transactionRecoverList.add(transaction);
-//                    transaction.setState(1);
-//                    writeFile(transaction);
-//                }
-//            }
-//        }
         return transactionRecoverList;
     }
 
     /**
      * 创建表等操作
      *
-     * @param modelName
+     * @param
      */
     @Override
-    public void init(String modelName) {
+    public void init(String tableName) {
         serializer = new KryoSerializer();
         String configPath = ConfigUtils.getString("tx.properties", "compensate.file.path");
-        String prefix = ConfigUtils.getString("tx.properties", "compensate.prefix");
-        this.tableName = "lcn_tx_"+prefix+"_"+modelName.replaceAll("-","_");
         filePath =configPath+"/"+tableName;
         File file = new File(filePath);
         if(!file.exists()){

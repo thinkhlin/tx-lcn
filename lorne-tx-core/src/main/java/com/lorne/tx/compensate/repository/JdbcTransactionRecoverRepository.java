@@ -61,9 +61,6 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         String selectSql = "select * from "+tableName +" where state = ? ";
         List<Map<String,Object>>  list =  executeQuery(selectSql,state);
 
-//        String updateSql = "update "+tableName +" set state = 1 ";
-//        executeUpdate(updateSql);
-
         List<TransactionRecover> recovers = new ArrayList<>();
         for(Map<String,Object> map:list){
             TransactionRecover recover = new TransactionRecover();
@@ -83,7 +80,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     }
 
     @Override
-    public void init(String modelName) {
+    public void init(String tableName) {
         dataSource = new DruidDataSource();
         dataSource.setUrl(ConfigUtils.getString("tx.properties", "compensate.db.url"));
         dataSource.setUsername(ConfigUtils.getString("tx.properties", "compensate.db.username"));
@@ -98,9 +95,8 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         dataSource.setPoolPreparedStatements(false);
 
         dbType = ConfigUtils.getString("tx.properties","compensate.db.dbType");
-        String prefix = ConfigUtils.getString("tx.properties", "compensate.prefix");
 
-        this.tableName = "lcn_tx_"+prefix+"_"+modelName.replaceAll("-","_");
+        this.tableName =tableName;
 
         // TODO: 2017/7/13 扩展多中数据库的创建表语句
         String createTableSql ="";

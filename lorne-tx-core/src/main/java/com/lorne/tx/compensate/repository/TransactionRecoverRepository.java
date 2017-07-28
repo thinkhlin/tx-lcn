@@ -49,5 +49,5 @@ public interface TransactionRecoverRepository {
     /**
      * 创建表等操作
      */
-    void init(String modelName);
+    void init(String tableName);
 }
