@@ -81,11 +81,6 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                     String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, kid);
                     Object obj = null;
 
-                    TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
-                    txTransactionLocal.setGroupId(groupId);
-                    TxTransactionLocal.setCurrent(txTransactionLocal);
-
-
                     try {
                          obj = point.proceed();
                     }catch (Throwable throwable){
@@ -336,8 +331,10 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 }
             });
 
-            task.signalTask();
+            txManager.rollback(status);
+            compensateService.deleteTransactionInfo(model.getCompensateId());
 
+            task.signalTask();
             return;
         }
 
