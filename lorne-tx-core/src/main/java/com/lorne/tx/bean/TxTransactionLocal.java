@@ -8,9 +8,39 @@ public class TxTransactionLocal {
 
     private final static ThreadLocal<TxTransactionLocal> currentLocal = new ThreadLocal<TxTransactionLocal>();
 
-    private boolean hasCompensate;
+    private boolean hasCompensate = false;
 
     private String groupId;
+
+    private boolean hasIsGroup = false;
+
+    private boolean hasStart = false;
+
+    private String kid;
+
+    public boolean isHasIsGroup() {
+        return hasIsGroup;
+    }
+
+    public void setHasIsGroup(boolean hasIsGroup) {
+        this.hasIsGroup = hasIsGroup;
+    }
+
+    public String getKid() {
+        return kid;
+    }
+
+    public void setKid(String kid) {
+        this.kid = kid;
+    }
+
+    public boolean isHasStart() {
+        return hasStart;
+    }
+
+    public void setHasStart(boolean hasStart) {
+        this.hasStart = hasStart;
+    }
 
     public String getGroupId() {
         return groupId;
