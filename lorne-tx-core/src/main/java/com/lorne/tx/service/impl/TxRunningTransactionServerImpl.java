@@ -122,8 +122,10 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             return secondExecute(info, groupTask, point);
         }
 
+        long t1 = System.currentTimeMillis();
         //分布式事务开始执行
-        logger.info("tx-running-start");
+        logger.info("tx-running-start-"+txGroupId);
+
         final String taskId = KidUtils.generateShortUuid();
         final Task task = ConditionUtils.getInstance().createTask(taskId);
 
@@ -131,16 +133,24 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             @Override
             public void run() {
 
+                long t1 = System.currentTimeMillis();
+
                 TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
                 txTransactionLocal.setGroupId(txGroupId);
                 TxTransactionLocal.setCurrent(txTransactionLocal);
 
 
                 ServiceThreadModel model = serviceInThread(info, txGroupId, task, point);
+
+                long t2 = System.currentTimeMillis();
+
+                logger.info("execute-serviceInThread-time-"+txGroupId+":"+(t2-t1));
+
                 if (model == null) {
                     TxTransactionLocal.setCurrent(null);
                     return;
                 }
+
 
                 Task groupTask = ConditionUtils.getInstance().createTask(txGroupId);
                 final String waitTaskKey = model.getWaitTask().getKey();
@@ -152,17 +162,26 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 });
 
                 logger.info("taskId-id-tx-running:" + waitTaskKey);
+
+                long t3 = System.currentTimeMillis();
+                logger.info("execute-groupTask-time-"+txGroupId+":"+(t3-t2));
+
                 serviceWait(task, model);
 
                 groupTask.remove();
 
                 TxTransactionLocal.setCurrent(null);
+
+                long t4 = System.currentTimeMillis();
+                logger.info("execute-serviceWait-time-"+txGroupId+":"+(t4-t3));
             }
         });
 
         task.awaitTask();
 
-        logger.info("tx-running-end");
+        long t2 = System.currentTimeMillis();
+
+        logger.info("tx-running-end-"+txGroupId+"-(running-time:"+(t2-t1)+")");
         //分布式事务执行完毕
         try {
             return task.getBack().doing();
@@ -176,18 +195,29 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
         String kid = KidUtils.generateShortUuid();
 
+        long t1 = System.currentTimeMillis();
+
         //一直获取连接导致数据库连接到最大值️
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         TransactionStatus status = txManager.getTransaction(def);
         Task waitTask = ConditionUtils.getInstance().createTask(kid);
 
+        long t2 = System.currentTimeMillis();
+
+        logger.info("serviceInThread-get-connection-time:"+(t2-t1));//豪事
 
         String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), groupId, kid);
+        long t3 = System.currentTimeMillis();
 
+        logger.info("serviceInThread-saveTransactionInfo-time:"+(t3-t2));
         try {
 
             final Object res = point.proceed();
+
+            long t4 = System.currentTimeMillis();
+            logger.info("serviceInThread-proceed-time:"+(t4-t3));
+
 
             task.setBack(new IBack() {
                 @Override
@@ -198,6 +228,10 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             //通知TxManager调用成功
 
             TxGroup txGroup = txManagerService.addTransactionGroup(groupId, kid, false);
+            long t5 = System.currentTimeMillis();
+
+            logger.info("serviceInThread-addTransactionGroup-time:"+(t5-t4));//豪事
+
             //NotifyMsg notifyMsg = txManagerService.notifyTransactionInfo(_groupId, kid, true);
             if (txGroup == null) {
                 //修改事务组状态异常
@@ -312,6 +346,9 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
 
     public void serviceWait(final Task task, final ServiceThreadModel model) {
+
+        long t1 = System.currentTimeMillis();
+
         final Task waitTask = model.getWaitTask();
         final String waitTaskId = waitTask.getKey();
         TransactionStatus status = model.getStatus();
@@ -335,6 +372,9 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             compensateService.deleteTransactionInfo(model.getCompensateId());
 
             task.signalTask();
+
+            long t2 = System.currentTimeMillis();
+            logger.info("serviceWait-time-out-"+model.getTxGroup().getGroupId()+"->"+(t2-t1));
             return;
         }
 
@@ -345,6 +385,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         //等待线程
         ScheduledFuture future = schedule(model, waitTaskId, time);
 
+        long t2 = System.currentTimeMillis();
+        logger.info("serviceWait-awaitTask-"+model.getTxGroup().getGroupId()+"->"+(t2-t1));
 
         logger.info("进入回滚等待.");
         waitTask.awaitTask();
@@ -356,7 +398,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
         try {
             int state = (Integer) waitTask.getBack().doing();
-            logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state);
+            logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state +" ,groupId:"+model.getTxGroup().getGroupId());
             //事务确认操作
             try {
                 if (state == 1) {
@@ -372,6 +414,9 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 }
                 if (waitTask != null)
                     waitTask.remove();
+
+                long t3 = System.currentTimeMillis();
+                logger.info("serviceWait-txManager-"+model.getTxGroup().getGroupId()+"->"+(t3-t2));
             }
 
         } catch (Throwable throwable) {

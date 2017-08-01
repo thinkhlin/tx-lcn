@@ -44,8 +44,8 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     private String heartJson;
 
-    private Executor  threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getHandlerSize());
-    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(ThreadPoolSizeHelper.getInstance().getHandlerSize());
+
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(100);
 
 
     public TransactionHandler(NettyService nettyService,int delay) {
@@ -214,18 +214,8 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void sleepSend(Task task, Request request){
-        while (!task.isAwait()&&!Thread.currentThread().interrupted()){
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        SocketUtils.sendMsg(ctx,request.toMsg());
-    }
-
     public String sendMsg(final Request request) {
+        long t1 = System.currentTimeMillis();
         final String key = request.getKey();
         if (ctx != null && ctx.channel() != null && ctx.channel().isActive()) {
             final Task task = ConditionUtils.getInstance().createTask(key);
@@ -245,14 +235,11 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                 }
             }, delay, TimeUnit.SECONDS);
 
+            long t2 = System.currentTimeMillis();
 
-            threadPool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    sleepSend(task,request);
-                }
-            });
+            logger.info("send-send-msg->"+(t2-t1)+","+request.getKey());
 
+            SocketUtils.sendMsg(ctx,request.toMsg());
             task.awaitTask();
 
             if(!future.isDone()){
@@ -266,6 +253,10 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                 throwable.printStackTrace();
             }
             task.remove();
+
+            long t3 = System.currentTimeMillis();
+            logger.info("send-over->"+(t3-t2)+","+request.getKey());
+
             return (String) msg;
         }
         return null;

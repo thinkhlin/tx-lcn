@@ -45,6 +45,8 @@ public class TxStartTransactionServerImpl  implements TransactionServer {
         TransactionStatus status = txManager.getTransaction(def);
 
 
+        long t1 = System.currentTimeMillis();
+
         //创建事务组
         TxGroup txGroup = txManagerService.createTransactionGroup();
 
@@ -67,6 +69,10 @@ public class TxStartTransactionServerImpl  implements TransactionServer {
             res = throwable;
             state = 0;
         }
+
+        long t2 = System.currentTimeMillis();
+
+        logger.info("time groupId:"+groupId+",state:"+state+" ->"+(t2-t1));
         //关闭事务组
         txManagerService.closeTransactionGroup(groupId,state);
 

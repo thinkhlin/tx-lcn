@@ -75,19 +75,25 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     @Override
     public TxGroup addTransactionGroup(String groupId, String taskId,int isGroup, String modelName) {
+        long t1 = System.currentTimeMillis();
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix + groupId;
         String json = value.get(key);
         if (StringUtils.isEmpty(json)) {
+            long t2 = System.currentTimeMillis();
+            logger.info("addTransactionGroup-->json is null "+groupId);
+            logger.info("addTransactionGroup-time-1->"+groupId+":"+(t2-t1));
             return null;
         }
         TxGroup txGroup = TxGroup.parser(json);
-        long now = System.currentTimeMillis();
-        double time = (now - txGroup.getStartTime() - dt) / 1000;
-        if(time > transaction_wait_max_time){
-            //事务超时，返回失败
-            return null;
-        }
+//        long now = System.currentTimeMillis();
+//        double time = (now - txGroup.getStartTime() - dt) / 1000;
+//        logger.info("addTransactionGroup-->time is "+time);
+//        if(time > transaction_wait_max_time){
+//            //事务超时，返回失败
+//            logger.info("addTransactionGroup-->time is out-time");
+//            return null;
+//        }
 
         if (txGroup != null) {
             TxInfo txInfo = new TxInfo();
@@ -96,8 +102,11 @@ public class TxManagerServiceImpl implements TxManagerService {
             txInfo.setIsGroup(isGroup);
             txGroup.addTransactionInfo(txInfo);
             value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
+            long t2 = System.currentTimeMillis();
+            logger.info("addTransactionGroup-time-2->"+groupId+":"+(t2-t1));
             return txGroup;
         }
+//        logger.info("addTransactionGroup-->txGroup is null");
         return null;
     }
 

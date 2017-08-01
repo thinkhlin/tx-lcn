@@ -53,7 +53,7 @@ public class NettyServerServiceImpl implements NettyServerService {
     public void start() {
         int heartTime = transaction_netty_heart_time+10;
         txCoreServerHandler = new TxCoreServerHandler(mqTxManagerService);
-        bossGroup = new NioEventLoopGroup(10); // (1)
+        bossGroup = new NioEventLoopGroup(50); // (1)
         workerGroup = new NioEventLoopGroup();
         try {
             ServerBootstrap b = new ServerBootstrap();

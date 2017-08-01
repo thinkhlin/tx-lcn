@@ -5,6 +5,7 @@ package com.lorne.tx.mq.handler;
  */
 
 import com.alibaba.fastjson.JSONObject;
+import com.lorne.core.framework.utils.DateUtil;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
@@ -20,6 +21,12 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Date;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Handles a server-side channel.
@@ -30,6 +37,10 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
 
     private MQTxManagerService txManagerService;
 
+
+    private Logger logger = LoggerFactory.getLogger(TxCoreServerHandler.class);
+
+
     public TxCoreServerHandler(MQTxManagerService txManagerService) {
         this.txManagerService = txManagerService;
     }
@@ -37,6 +48,9 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         String json = SocketUtils.getJson(msg);
+        String time  =DateUtil.formatDate(new Date(),DateUtil.FULL_DATE_TIME_FORMAT);
+        long t1 = System.currentTimeMillis();
+
         if (StringUtils.isNotEmpty(json)) {
             JSONObject jsonObject = JSONObject.parseObject(json);
             String action = jsonObject.getString("a");
@@ -138,6 +152,9 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
             resObj.put("d", res);
 
             SocketUtils.sendMsg(ctx,resObj.toString());
+            long t2 = System.currentTimeMillis();
+
+            logger.info("接受-start-time->"+time+",time->"+(t2-t1)+","+json);
         }
 
     }
