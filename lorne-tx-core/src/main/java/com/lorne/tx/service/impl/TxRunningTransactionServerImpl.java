@@ -246,6 +246,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 });
                 task.signalTask();
 
+                waitTask.remove();
+
                 return null;
             }
 
@@ -375,6 +377,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
             long t2 = System.currentTimeMillis();
             logger.info("serviceWait-time-out-"+model.getTxGroup().getGroupId()+"->"+(t2-t1));
+
+            waitTask.remove();
             return;
         }
 
@@ -395,11 +399,15 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         if (!future.isDone()) {
             future.cancel(false);
         }
+            int state =0;
+            try {
+                 state = (Integer) waitTask.getBack().doing();
+                logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state +" ,groupId:"+model.getTxGroup().getGroupId());
+                //事务确认操作
+            } catch (Throwable throwable) {
+                txManager.rollback(status);
+            }
 
-        try {
-            int state = (Integer) waitTask.getBack().doing();
-            logger.info("单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + state +" ,groupId:"+model.getTxGroup().getGroupId());
-            //事务确认操作
             try {
                 if (state == 1) {
                     txManager.commit(status);
@@ -419,9 +427,6 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
                 logger.info("serviceWait-txManager-"+model.getTxGroup().getGroupId()+"->"+(t3-t2));
             }
 
-        } catch (Throwable throwable) {
-            txManager.rollback(status);
-        }
 
     }
 
