@@ -18,6 +18,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by lorne on 2017/7/1.
@@ -100,7 +102,11 @@ public class TxServiceImpl implements TxService {
     @Override
     public TxState getState() {
         TxState state = new TxState();
-        state.setIp(EurekaServerContextHolder.getInstance().getServerContext().getApplicationInfoManager().getEurekaInstanceConfig().getIpAddress());
+        String ipAddress = EurekaServerContextHolder.getInstance().getServerContext().getApplicationInfoManager().getEurekaInstanceConfig().getIpAddress();
+        if(!isIp(ipAddress)){
+            ipAddress = "127.0.0.1";
+        }
+        state.setIp(ipAddress);
         state.setPort(Constants.socketPort);
         state.setMaxConnection(SocketManager.getInstance().getMaxConnection());
         state.setNowConnection(SocketManager.getInstance().getNowConnection());
@@ -112,16 +118,33 @@ public class TxServiceImpl implements TxService {
         return state;
     }
 
+    public static boolean isIp(String ipAddress) {
+        String ip = "([1-9]|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])(\\.(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])){3}";
+        Pattern pattern = Pattern.compile(ip);
+        Matcher matcher = pattern.matcher(ipAddress);
+        return matcher.matches();
+    }
+
+
+
 
     private List<String> getServices(){
         List<String> urls = new ArrayList<>();
         List<InstanceInfo> instanceInfos =discoveryService.getConfigServiceInstances();
         for (InstanceInfo instanceInfo : instanceInfos) {
             String url = instanceInfo.getHomePageUrl();
-            urls.add(url);
+            String address = instanceInfo.getIPAddr();
+            if (isIp(address)) {
+                urls.add(url);
+            }else{
+                url = url.replace(address,"127.0.0.1");
+                urls.add(url);
+            }
         }
         return urls;
     }
+
+
 
     @Override
     public boolean getServerGroup(String groupId,String taskId) {
