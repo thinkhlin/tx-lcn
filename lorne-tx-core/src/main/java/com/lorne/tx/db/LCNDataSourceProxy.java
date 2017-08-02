@@ -1,11 +1,13 @@
 package com.lorne.tx.db;
 
+import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.db.service.DataSourceService;
 import com.lorne.tx.utils.ThreadPoolSizeHelper;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -41,6 +43,7 @@ public class LCNDataSourceProxy implements DataSource {
 
     private Executor threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
 
+    @Autowired
     private DataSourceService dataSourceService;
 
 
@@ -59,7 +62,15 @@ public class LCNDataSourceProxy implements DataSource {
 
         @Override
         public void close(AbstractConnection connection) {
+            Task waitTask = connection.getWaitTask();
+            if(waitTask!=null){
+                if(!waitTask.isRemove()){
+                    waitTask.remove();
+                }
+            }
+
             pools.remove(connection.getGroupId());
+            System.out.println("pools-size->"+pools.size());
             nowCount--;
         }
     };
@@ -68,6 +79,7 @@ public class LCNDataSourceProxy implements DataSource {
     private Connection loadConnection( TxTransactionLocal txTransactionLocal,Connection connection) throws SQLException{
         AbstractConnection old =  pools.get(txTransactionLocal.getGroupId());
         if(old!=null){
+            old.setHasIsGroup(true);
             txTransactionLocal.setHasIsGroup(true);
             TxTransactionLocal.setCurrent(txTransactionLocal);
             logger.info("get old connection ->"+txTransactionLocal.getGroupId());
@@ -108,7 +120,7 @@ public class LCNDataSourceProxy implements DataSource {
         if(txTransactionLocal!=null
             &&StringUtils.isNotEmpty(txTransactionLocal.getGroupId())) {
 
-            logger.info("initLCNConnection - lcn ->"+connection);
+            //logger.info("initLCNConnection - lcn ->"+connection);
 
             if(CompensateServiceImpl.COMPENSATE_KEY.equals(txTransactionLocal.getGroupId())){
                 lcnConnection = loadConnection(txTransactionLocal,connection);
@@ -117,7 +129,7 @@ public class LCNDataSourceProxy implements DataSource {
             }
 
         }
-        logger.info("initLCNConnection - end ->"+connection);
+        //logger.info("initLCNConnection - end ->"+connection);
         return lcnConnection;
     }
 
@@ -134,10 +146,6 @@ public class LCNDataSourceProxy implements DataSource {
         this.dataSource = dataSource;
     }
 
-
-    public void setDataSourceService(DataSourceService dataSourceService) {
-        this.dataSourceService = dataSourceService;
-    }
 
     @Override
     public Connection getConnection() throws SQLException {

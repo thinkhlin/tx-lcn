@@ -61,6 +61,32 @@ public class TransactionHandler2 extends ChannelInboundHandlerAdapter {
 
     }
 
+    private String notifyWaitTask(Task task,int state){
+        String res = "0";
+        task.setState(state);
+        task.signalTask();
+        int count = 0;
+        while (true) {
+            if (task.isRemove()) {
+                res = "1";
+                break;
+            }
+            if (count > 800) {
+                res = "0";
+                break;
+            }
+
+            count++;
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return res;
+    }
+
 
     private void service(String json){
         if (StringUtils.isNotEmpty(json)) {
@@ -81,30 +107,15 @@ public class TransactionHandler2 extends ChannelInboundHandlerAdapter {
                         if (task != null) {
                             int index = 0;
                             if(task.isAwait()) {   //已经等待
-                                task.setState(state);
-                                task.signalTask();
-                                int count = 0;
-                                while (true) {
-                                    if (task.isRemove()) {
-                                        res = "1";
-                                        break;
-                                    }
-                                    if (count > 800) {
-                                        res = "0";
-                                        break;
-                                    }
-
-                                    count++;
-                                    try {
-                                        Thread.sleep(1);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
+                                res = notifyWaitTask(task,state);
                             }else{
                                 while (true) {
                                     if (index > 800) {
                                         res = "0";
+                                        break;
+                                    }
+                                    if(task.isAwait()) {   //已经等待
+                                        res = notifyWaitTask(task,state);
                                         break;
                                     }
                                     index++;

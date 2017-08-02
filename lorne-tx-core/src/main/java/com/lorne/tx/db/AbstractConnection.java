@@ -1,5 +1,7 @@
 package com.lorne.tx.db;
 
+import com.lorne.core.framework.utils.task.ConditionUtils;
+import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.db.service.DataSourceService;
@@ -36,6 +38,7 @@ public abstract class AbstractConnection implements Connection {
 
     private String groupId;
 
+    protected Task waitTask;
 
     public AbstractConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable, Executor threadPool) {
         this.connection = connection;
@@ -44,9 +47,18 @@ public abstract class AbstractConnection implements Connection {
         this.dataSourceService = dataSourceService;
         this.threadPool = threadPool;
         groupId = transactionLocal.getGroupId();
+        if(!CompensateServiceImpl.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
+            waitTask = ConditionUtils.getInstance().createTask(transactionLocal.getKid());
+            logger.info("task-create-> "+waitTask.getKey());
+        }
     }
 
 
+    public void setHasIsGroup(boolean isGroup){
+        if(transactionLocal!=null){
+            transactionLocal.setHasIsGroup(isGroup);
+        }
+    }
 
 
     @Override
@@ -65,7 +77,6 @@ public abstract class AbstractConnection implements Connection {
     public void closeConnection()throws SQLException{
         runnable.close(this);
         connection.close();
-
         logger.info("close-connection->" +groupId);
     }
 
@@ -86,6 +97,11 @@ public abstract class AbstractConnection implements Connection {
 
             }else{
                 //分布式事务
+
+                if(transactionLocal.isHasIsGroup()){
+                    //加入队列的连接，仅操作连接对象，不处理事务
+                    return;
+                }
 
                 threadPool.execute(new Runnable() {
                     @Override
@@ -115,6 +131,10 @@ public abstract class AbstractConnection implements Connection {
 
     public String getGroupId() {
         return groupId;
+    }
+
+    public Task getWaitTask() {
+        return waitTask;
     }
 
     @Override

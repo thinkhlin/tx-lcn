@@ -1,11 +1,7 @@
 package com.lorne.tx.db;
 
-import com.lorne.core.framework.utils.task.ConditionUtils;
-import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.db.service.DataSourceService;
-import com.lorne.tx.mq.handler.TransactionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,14 +20,9 @@ public class LCNConnection extends AbstractConnection {
 
     private Logger logger = LoggerFactory.getLogger(LCNConnection.class);
 
-    private Task waitTask;
 
     public LCNConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable, Executor threadPool) {
         super(connection, dataSourceService, transactionLocal, runnable, threadPool);
-        if(!CompensateServiceImpl.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
-            waitTask = ConditionUtils.getInstance().createTask(transactionLocal.getKid());
-            logger.info("task-create-> "+waitTask.getKey());
-        }
     }
 
     @Override
