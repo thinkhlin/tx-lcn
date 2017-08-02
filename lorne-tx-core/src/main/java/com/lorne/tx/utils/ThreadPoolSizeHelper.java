@@ -9,23 +9,23 @@ public class ThreadPoolSizeHelper {
 
 
     //分布式事务可进入的线程最大值
-    private  int startSize;
+    private int startSize;
 
     //分布式事务业务线程处理最大值
-    private  int inThreadSize;
+    private int inThreadSize;
 
     //补偿事务线程处理最大值
-    private  int compensateSize;
+    private int compensateSize;
 
     //补偿事务业务处理最大值
-    private  int inCompensateSize;
+    private int inCompensateSize;
 
     //handler消息发送最大值
-    private  int handlerSize;
+    private int handlerSize;
 
 
     //消息队列处理线程
-    private  int mqSize;
+    private int mqSize;
 
 
     private static ThreadPoolSizeHelper instance;
@@ -42,26 +42,26 @@ public class ThreadPoolSizeHelper {
     }
 
     private ThreadPoolSizeHelper() {
-        try{
-             startSize = ConfigUtils.getInt("tx.properties","max.connection.size");
-        }catch (Exception e){
-             startSize = 10;
+        try {
+            startSize = ConfigUtils.getInt("tx.properties", "max.connection.size");
+        } catch (Exception e) {
+            startSize = 10;
         }
 
         //分布式事务业务线程处理最大值
-        inThreadSize=startSize;
+        inThreadSize = startSize;
 
         //补偿事务线程处理最大值
-        compensateSize=10;
+        compensateSize = 10;
 
         //补偿事务业务处理最大值
-        inCompensateSize=10;
+        inCompensateSize = 10;
 
         //handler消息发送最大值
-        handlerSize=inThreadSize*5;
+        handlerSize = inThreadSize * 5;
 
         //消息队列处理线程
-        mqSize=inThreadSize;
+        mqSize = inThreadSize;
     }
 
     public int getStartSize() {

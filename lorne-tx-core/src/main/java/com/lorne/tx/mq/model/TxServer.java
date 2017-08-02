@@ -48,7 +48,7 @@ public class TxServer {
 
     @Override
     public String toString() {
-        return "host:" + host + ",port:" + port+",heart:"+heart+",delay:"+delay;
+        return "host:" + host + ",port:" + port + ",heart:" + heart + ",delay:" + delay;
     }
 
     public static TxServer parser(String json) {

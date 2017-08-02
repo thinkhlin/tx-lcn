@@ -42,9 +42,9 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
         String txGroupId = info.getTxGroupId();
 
-        logger.info("tx-running-start->"+txGroupId);
+        logger.info("tx-running-start->" + txGroupId);
 
-        String compensateId = compensateService.saveTransactionInfo(info.getInvocation(),txGroupId,kid);
+        String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
 
 
         TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
@@ -58,29 +58,28 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         try {
             Object res = point.proceed();
 
-            System.out.println("res->"+res);
+            System.out.println("res->" + res);
 
             final TxGroup resTxGroup = txManagerService.addTransactionGroup(txGroupId, kid, TxTransactionLocal.current().isHasIsGroup());
-
 
 
             if (resTxGroup == null) {
 
                 Task waitTask = ConditionUtils.getInstance().getTask(kid);
-                if(waitTask!=null) {
+                if (waitTask != null) {
                     //修改事务组状态异常
                     waitTask.setState(-1);
                     waitTask.signalTask();
                 }
 
-                throw new ServiceException("修改事务组状态异常."+txGroupId);
+                throw new ServiceException("修改事务组状态异常." + txGroupId);
             }
 
             return res;
-        }catch (Throwable e){
+        } catch (Throwable e) {
             throw e;
-        }finally {
-            logger.info("tx-running-end->"+txGroupId);
+        } finally {
+            logger.info("tx-running-end->" + txGroupId);
         }
     }
 

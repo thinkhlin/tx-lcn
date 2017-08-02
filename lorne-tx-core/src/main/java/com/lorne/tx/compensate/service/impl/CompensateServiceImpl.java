@@ -57,35 +57,35 @@ public class CompensateServiceImpl implements CompensateService {
         compensateOperationService.init(modelNameService.getModelName());
 
         // TODO: 2017/7/11  查找补偿数据
-        final List<TransactionRecover> list =  compensateOperationService.findAll(0);
+        final List<TransactionRecover> list = compensateOperationService.findAll(0);
 
-        if(list==null||list.size()==0){
+        if (list == null || list.size() == 0) {
             hasCompensate = false;
             return;
         }
 
         try {
-            for(final TransactionRecover data:list){
+            for (final TransactionRecover data : list) {
                 compensateOperationService.execute(data);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 
         // add Task
-        new Thread(){
+        new Thread() {
             @Override
             public void run() {
-                while (true){
+                while (true) {
                     final List<TransactionRecover> list = compensateOperationService.findAll(2);
-                    if(list==null||list.size()==0){
+                    if (list == null || list.size() == 0) {
                         return;
                     }
-                    for(TransactionRecover data:list){
+                    for (TransactionRecover data : list) {
                         compensateOperationService.execute(data);
                     }
                     try {
-                        Thread.sleep(1000*60);
+                        Thread.sleep(1000 * 60);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -97,12 +97,12 @@ public class CompensateServiceImpl implements CompensateService {
     }
 
     private TransactionRecoverRepository loadTransactionRecoverRepository() {
-        String type = ConfigUtils.getString("tx.properties","compensate.type");
-        switch (type){
-            case "db":{
+        String type = ConfigUtils.getString("tx.properties", "compensate.type");
+        switch (type) {
+            case "db": {
                 return jdbcTransactionRecoverRepository;
             }
-            case "file":{
+            case "file": {
                 return fileTransactionRecoverRepository;
             }
         }
@@ -113,7 +113,7 @@ public class CompensateServiceImpl implements CompensateService {
     @Override
     public String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId) {
         // TODO: 2017/7/11  记录补偿数据
-        return compensateOperationService.save(invocation,groupId,taskId);
+        return compensateOperationService.save(invocation, groupId, taskId);
 
 
     }
@@ -126,6 +126,6 @@ public class CompensateServiceImpl implements CompensateService {
 
     @Override
     public void addTask(String compensateId) {
-        recoverRepository.update(compensateId,new Date(),2,1);
+        recoverRepository.update(compensateId, new Date(), 2, 1);
     }
 }

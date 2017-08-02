@@ -39,38 +39,38 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     @Override
     public int create(TransactionRecover recover) {
-        String sql = "insert into "+tableName+"(id,retried_count,create_time,last_time,group_id,task_id,invocation,state)" +
+        String sql = "insert into " + tableName + "(id,retried_count,create_time,last_time,group_id,task_id,invocation,state)" +
             " values(?,?,?,?,?,?,?,?)";
-        return executeUpdate(sql,recover.getId(),recover.getRetriedCount(),recover.getCreateTime(),recover.getLastTime(),recover.getGroupId(),recover.getTaskId(),recover.getInvocation().toSerializable(),recover.getState());
+        return executeUpdate(sql, recover.getId(), recover.getRetriedCount(), recover.getCreateTime(), recover.getLastTime(), recover.getGroupId(), recover.getTaskId(), recover.getInvocation().toSerializable(), recover.getState());
     }
 
     @Override
     public int remove(String id) {
-        String sql = "delete from "+tableName +" where id = ? ";
-        return executeUpdate(sql,id);
+        String sql = "delete from " + tableName + " where id = ? ";
+        return executeUpdate(sql, id);
     }
 
     @Override
-    public int update(String id, Date lastTime,int state, int retriedCount) {
-        String sql = "update "+tableName +" set last_time = ?,set state = ?,set retried_count = ? where id = ? ";
-        return executeUpdate(sql,lastTime,state,retriedCount,id);
+    public int update(String id, Date lastTime, int state, int retriedCount) {
+        String sql = "update " + tableName + " set last_time = ?,set state = ?,set retried_count = ? where id = ? ";
+        return executeUpdate(sql, lastTime, state, retriedCount, id);
     }
 
     @Override
     public List<TransactionRecover> findAll(int state) {
-        String selectSql = "select * from "+tableName +" where state = ? ";
-        List<Map<String,Object>>  list =  executeQuery(selectSql,state);
+        String selectSql = "select * from " + tableName + " where state = ? ";
+        List<Map<String, Object>> list = executeQuery(selectSql, state);
 
         List<TransactionRecover> recovers = new ArrayList<>();
-        for(Map<String,Object> map:list){
+        for (Map<String, Object> map : list) {
             TransactionRecover recover = new TransactionRecover();
 
-            recover.setId((String)map.get("id"));
+            recover.setId((String) map.get("id"));
             recover.setRetriedCount((Integer) map.get("retried_count"));
             recover.setCreateTime((Date) map.get("create_time"));
-            recover.setLastTime((Date)map.get("last_time"));
-            recover.setTaskId((String)map.get("task_id"));
-            recover.setGroupId((String)map.get("group_id"));
+            recover.setLastTime((Date) map.get("last_time"));
+            recover.setTaskId((String) map.get("task_id"));
+            recover.setGroupId((String) map.get("group_id"));
             recover.setState((Integer) map.get("state"));
             byte[] bytes = (byte[]) map.get("invocation");
             recover.setInvocation(TransactionInvocation.parser(bytes));
@@ -94,16 +94,16 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         dataSource.setTestWhileIdle(true);
         dataSource.setPoolPreparedStatements(false);
 
-        dbType = ConfigUtils.getString("tx.properties","compensate.db.dbType");
+        dbType = ConfigUtils.getString("tx.properties", "compensate.db.dbType");
 
-        this.tableName =tableName;
+        this.tableName = tableName;
 
         // TODO: 2017/7/13 扩展多中数据库的创建表语句
-        String createTableSql ="";
+        String createTableSql = "";
 
-        switch (dbType){
-            case "mysql":{
-                createTableSql =  "CREATE TABLE `" + tableName + "` (\n" +
+        switch (dbType) {
+            case "mysql": {
+                createTableSql = "CREATE TABLE `" + tableName + "` (\n" +
                     "  `id` varchar(10) NOT NULL,\n" +
                     "  `retried_count` int(3) NOT NULL,\n" +
                     "  `create_time` datetime NOT NULL,\n" +
@@ -116,8 +116,8 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                     ")";
                 break;
             }
-            case "oracle":{
-                createTableSql =  "CREATE TABLE `" + tableName + "` (\n" +
+            case "oracle": {
+                createTableSql = "CREATE TABLE `" + tableName + "` (\n" +
                     "  `id` varchar(10) NOT NULL,\n" +
                     "  `retried_count` number(3,0) NOT NULL,\n" +
                     "  `create_time` datetime  NOT NULL,\n" +
@@ -130,8 +130,8 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                     ")";
                 break;
             }
-            case "sqlserver":{
-                createTableSql =  "CREATE TABLE `" + tableName + "` (\n" +
+            case "sqlserver": {
+                createTableSql = "CREATE TABLE `" + tableName + "` (\n" +
                     "  `id` varchar(10) NOT NULL,\n" +
                     "  `retried_count` int(3) NOT NULL,\n" +
                     "  `create_time` datetime NOT NULL,\n" +
@@ -144,7 +144,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                     ")";
                 break;
             }
-            default:{
+            default: {
                 throw new RuntimeException("dbType类型不支持,目前仅支持mysql oracle sqlserver.");
             }
         }
@@ -155,19 +155,19 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     private int executeUpdate(String sql, Object... params) {
         PreparedStatement ps = null;
         try {
-            if(connection==null||connection.isClosed()) {
+            if (connection == null || connection.isClosed()) {
                 connection = dataSource.getConnection();
             }
             ps = connection.prepareStatement(sql);
-            if(params!=null){
-                for(int i=0;i<params.length;i++){
-                    ps.setObject((i+1),params[i]);
+            if (params != null) {
+                for (int i = 0; i < params.length; i++) {
+                    ps.setObject((i + 1), params[i]);
                 }
             }
             int rs = ps.executeUpdate();
             return rs;
         } catch (SQLException e) {
-            logger.error("executeUpdate->"+e.getMessage());
+            logger.error("executeUpdate->" + e.getMessage());
         } finally {
             try {
                 if (ps != null) {
@@ -180,33 +180,33 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         return 0;
     }
 
-    private List<Map<String,Object>> executeQuery(String sql, Object... params) {
+    private List<Map<String, Object>> executeQuery(String sql, Object... params) {
         PreparedStatement ps = null;
         ResultSet rs = null;
-        List<Map<String,Object>> list = null;
+        List<Map<String, Object>> list = null;
         try {
-            if(connection==null||connection.isClosed()) {
+            if (connection == null || connection.isClosed()) {
                 connection = dataSource.getConnection();
             }
             ps = connection.prepareStatement(sql);
-            if(params!=null){
-                for(int i=0;i<params.length;i++){
-                    ps.setObject((i+1),params[i]);
+            if (params != null) {
+                for (int i = 0; i < params.length; i++) {
+                    ps.setObject((i + 1), params[i]);
                 }
             }
             rs = ps.executeQuery();
             ResultSetMetaData md = rs.getMetaData();
             int columnCount = md.getColumnCount();
-            list =  new ArrayList<>();
-            while(rs.next()){
-                Map<String,Object> rowData = new HashMap<>();
+            list = new ArrayList<>();
+            while (rs.next()) {
+                Map<String, Object> rowData = new HashMap<>();
                 for (int i = 1; i <= columnCount; i++) {
                     rowData.put(md.getColumnName(i), rs.getObject(i));
                 }
                 list.add(rowData);
             }
         } catch (SQLException e) {
-            logger.error("executeQuery->"+e.getMessage());
+            logger.error("executeQuery->" + e.getMessage());
         } finally {
             try {
                 if (rs != null) {

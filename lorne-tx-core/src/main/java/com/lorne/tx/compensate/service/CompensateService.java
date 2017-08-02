@@ -9,12 +9,13 @@ public interface CompensateService {
 
     void start();
 
-    String  saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId);
+    String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId);
 
     boolean deleteTransactionInfo(String id);
 
     /**
      * 执行任务确认事务是否正常
+     *
      * @param compensateId
      */
     void addTask(String compensateId);

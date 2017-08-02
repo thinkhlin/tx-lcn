@@ -32,10 +32,10 @@ public class NettyDistributeServiceImpl implements NettyDistributeService {
         }
     }
 
-    private  void getTxServer() {
+    private void getTxServer() {
         //获取负载均衡服务地址
         String json = null;
-        while(StringUtils.isEmpty(json)) {
+        while (StringUtils.isEmpty(json)) {
             String url = ConfigUtils.getString("tx.properties", "url");
             //获取服务器ip
             json = HttpUtils.get(url);

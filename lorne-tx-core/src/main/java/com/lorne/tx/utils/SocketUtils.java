@@ -25,12 +25,12 @@ public class SocketUtils {
 
     }
 
-    public static void sendMsg(ChannelHandlerContext ctx, String msg){
+    public static void sendMsg(ChannelHandlerContext ctx, String msg) {
         ctx.writeAndFlush(Unpooled.buffer().writeBytes(msg.getBytes()));
     }
 
 
-    public static void sendMsg(Channel ctx,String msg){
+    public static void sendMsg(Channel ctx, String msg) {
         ctx.writeAndFlush(Unpooled.buffer().writeBytes(msg.getBytes()));
     }
 }

@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 public class TransactionSocketListener implements ApplicationContextAware {
 
 
-
     @Autowired
     private InitService initService;
 

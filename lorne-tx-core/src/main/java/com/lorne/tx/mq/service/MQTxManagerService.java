@@ -23,7 +23,7 @@ public interface MQTxManagerService {
      *
      * @return
      */
-    TxGroup  addTransactionGroup(String groupId, String taskId,boolean isGroup);
+    TxGroup addTransactionGroup(String groupId, String taskId, boolean isGroup);
 
 
     /**
@@ -32,7 +32,7 @@ public interface MQTxManagerService {
      * @param groupId
      * @return
      */
-    void closeTransactionGroup(String groupId,int state);
+    void closeTransactionGroup(String groupId, int state);
 
 
 //    /**
@@ -46,7 +46,7 @@ public interface MQTxManagerService {
 //    NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state);
 
 
-    int checkTransactionInfo(String groupId,String taskId);
+    int checkTransactionInfo(String groupId, String taskId);
 
 
 }

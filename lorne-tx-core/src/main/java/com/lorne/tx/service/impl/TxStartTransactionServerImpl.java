@@ -46,12 +46,12 @@ public class TxStartTransactionServerImpl implements TransactionServer {
             txTransactionLocal.setGroupId(groupId);
             txTransactionLocal.setHasStart(true);
             TxTransactionLocal.setCurrent(txTransactionLocal);
-            Object obj =  point.proceed();
+            Object obj = point.proceed();
             state = 1;
             return obj;
-        }catch (Throwable e){
+        } catch (Throwable e) {
             throw e;
-        }finally {
+        } finally {
             txManagerService.closeTransactionGroup(groupId, state);
             TxTransactionLocal.setCurrent(null);
             logger.info("tx-end");

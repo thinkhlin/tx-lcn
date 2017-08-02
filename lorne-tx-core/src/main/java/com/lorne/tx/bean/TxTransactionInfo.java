@@ -6,7 +6,6 @@ import com.lorne.tx.compensate.model.TransactionInvocation;
 import java.lang.reflect.Method;
 
 /**
- *
  * 切面控制对象
  * Created by lorne on 2017/6/8.
  */
@@ -28,13 +27,13 @@ public class TxTransactionInfo {
     private TransactionInvocation invocation;
 
 
-    public TxTransactionInfo(TxTransaction transaction, TxTransactionLocal txTransactionLocal, String txGroupId, TransactionLocal transactionLocal,TransactionInvocation invocation,TxTransactionCompensate compensate) {
+    public TxTransactionInfo(TxTransaction transaction, TxTransactionLocal txTransactionLocal, String txGroupId, TransactionLocal transactionLocal, TransactionInvocation invocation, TxTransactionCompensate compensate) {
         this.transaction = transaction;
         this.txTransactionLocal = txTransactionLocal;
         this.txGroupId = txGroupId;
         this.transactionLocal = transactionLocal;
         this.invocation = invocation;
-        this.compensate =compensate;
+        this.compensate = compensate;
     }
 
     public TransactionLocal getTransactionLocal() {

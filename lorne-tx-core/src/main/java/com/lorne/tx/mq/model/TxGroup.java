@@ -52,7 +52,6 @@ public class TxGroup {
     }
 
 
-
     public long getNowTime() {
         return nowTime;
     }
@@ -72,7 +71,7 @@ public class TxGroup {
 
     public static TxGroup parser(String json) {
         try {
-            if(StringUtils.isEmpty(json)){
+            if (StringUtils.isEmpty(json)) {
                 return null;
             }
             JSONObject jsonObject = JSONObject.parseObject(json);
@@ -95,8 +94,8 @@ public class TxGroup {
         jsonObject.put("g", getGroupId());
         jsonObject.put("ho", hasOver ? 1 : 0);
         jsonObject.put("w", getWaitTime());
-        jsonObject.put("st",getStartTime());
-        jsonObject.put("nt",getNowTime());
+        jsonObject.put("st", getStartTime());
+        jsonObject.put("nt", getNowTime());
         JSONArray jsonArray = new JSONArray();
         jsonObject.put("l", jsonArray);
         return jsonObject.toString();

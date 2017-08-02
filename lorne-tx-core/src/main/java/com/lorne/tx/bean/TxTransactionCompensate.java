@@ -1,7 +1,6 @@
 package com.lorne.tx.bean;
 
 /**
- *
  * 切面控制对象
  * Created by lorne on 2017/6/8.
  */

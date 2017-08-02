@@ -1,8 +1,6 @@
 package com.lorne.tx.serializer;
 
 
-
-
 import com.lorne.tx.exception.TransactionException;
 
 import java.io.ByteArrayInputStream;
@@ -17,6 +15,7 @@ import java.io.ObjectOutputStream;
  * <p>Description: .</p>
  * <p>Copyright: 2015-2017 happylifeplat.com All Rights Reserved</p>
  * jdk序列化
+ *
  * @author yu.xiao@happylifeplat.com
  * @version 1.0
  * @since JDK 1.8

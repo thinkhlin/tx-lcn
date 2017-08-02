@@ -62,7 +62,7 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
         String fullFileName = getFullFileName(id);
         File file = new File(fullFileName);
         if (file.exists()) {
-            return file.delete()?1:0;
+            return file.delete() ? 1 : 0;
         }
         return 0;
     }
@@ -75,7 +75,7 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
      * @param retriedCount 执行次数  @return rows
      */
     @Override
-    public int update(String id, Date lastTime,int state, int retriedCount) {
+    public int update(String id, Date lastTime, int state, int retriedCount) {
 
         String fullFileName = getFullFileName(id);
         File file = new File(fullFileName);
@@ -109,9 +109,9 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
     public void init(String tableName) {
         serializer = new KryoSerializer();
         String configPath = ConfigUtils.getString("tx.properties", "compensate.file.path");
-        filePath =configPath+"/"+tableName;
+        filePath = configPath + "/" + tableName;
         File file = new File(filePath);
-        if(!file.exists()){
+        if (!file.exists()) {
             file.getParentFile().mkdirs();
             file.mkdirs();
         }

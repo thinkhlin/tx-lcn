@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
  * create by lorne on 2017/7/29
  */
 @Service
-public class DataSourceServiceImpl  implements DataSourceService{
+public class DataSourceServiceImpl implements DataSourceService {
 
     private String url;
 
@@ -33,11 +33,11 @@ public class DataSourceServiceImpl  implements DataSourceService{
 
 
     private int httpCheckTransactionInfo(String groupId, String waitTaskId) {
-        String json =  HttpUtils.get(url + "Group?groupId=" + groupId + "&taskId=" + waitTaskId);
+        String json = HttpUtils.get(url + "Group?groupId=" + groupId + "&taskId=" + waitTaskId);
         if (json == null) {
             return -1;
         }
-        return json.contains("true")?1:0;
+        return json.contains("true") ? 1 : 0;
     }
 
 
@@ -45,23 +45,23 @@ public class DataSourceServiceImpl  implements DataSourceService{
     public void schedule(String groupId, Task waitTask) {
         String waitTaskId = waitTask.getKey();
         int rs = txManagerService.checkTransactionInfo(groupId, waitTaskId);
-        logger.info("schedule-checkTransactionInfo-res->"+rs);
-        if(rs==1 || rs == 0){
+        logger.info("schedule-checkTransactionInfo-res->" + rs);
+        if (rs == 1 || rs == 0) {
             waitTask.setState(rs);
             waitTask.signalTask();
-            logger.info("schedule-checkTransactionInfo-server->"+rs);
+            logger.info("schedule-checkTransactionInfo-server->" + rs);
             return;
         }
-        rs = httpCheckTransactionInfo(groupId,waitTaskId);
-        logger.info("schedule-httpCheckTransactionInfo-res->"+rs);
-        if(rs==1 || rs == 0){
+        rs = httpCheckTransactionInfo(groupId, waitTaskId);
+        logger.info("schedule-httpCheckTransactionInfo-res->" + rs);
+        if (rs == 1 || rs == 0) {
             waitTask.setState(rs);
             waitTask.signalTask();
-            logger.info("schedule-httpCheckTransactionInfo-server->"+rs);
+            logger.info("schedule-httpCheckTransactionInfo-server->" + rs);
             return;
         }
         //添加到补偿队列
-        logger.info("schedule-no->"+rs);
+        logger.info("schedule-no->" + rs);
     }
 
     @Override

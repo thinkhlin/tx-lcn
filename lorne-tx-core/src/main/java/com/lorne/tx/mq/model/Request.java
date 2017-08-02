@@ -56,7 +56,7 @@ public class Request {
 //        jsonObject.put("a", getAction());
 //        jsonObject.put("k", getKey());
 //        jsonObject.put("p", getParams());
-        String json = "{\"a\":\""+getAction()+"\",\"k\":\""+getKey()+"\",\"p\":"+getParams()+"}";
+        String json = "{\"a\":\"" + getAction() + "\",\"k\":\"" + getKey() + "\",\"p\":" + getParams() + "}";
         return json;
     }
 }

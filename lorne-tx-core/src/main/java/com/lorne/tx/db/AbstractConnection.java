@@ -32,7 +32,7 @@ public abstract class AbstractConnection implements Connection {
 
     private LCNDataSourceProxy.ISubNowConnection runnable;
 
-    protected  TxTransactionLocal transactionLocal;
+    protected TxTransactionLocal transactionLocal;
 
     protected Executor threadPool;
 
@@ -40,22 +40,23 @@ public abstract class AbstractConnection implements Connection {
 
     protected Task waitTask;
 
+
     public AbstractConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable, Executor threadPool) {
         this.connection = connection;
-        this.runnable =runnable;
+        this.runnable = runnable;
         this.transactionLocal = transactionLocal;
         this.dataSourceService = dataSourceService;
         this.threadPool = threadPool;
         groupId = transactionLocal.getGroupId();
-        if(!CompensateServiceImpl.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
+        if (!CompensateServiceImpl.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
             waitTask = ConditionUtils.getInstance().createTask(transactionLocal.getKid());
-            logger.info("task-create-> "+waitTask.getKey());
+            logger.info("task-create-> " + waitTask.getKey());
         }
     }
 
 
-    public void setHasIsGroup(boolean isGroup){
-        if(transactionLocal!=null){
+    public void setHasIsGroup(boolean isGroup) {
+        if (transactionLocal != null) {
             transactionLocal.setHasIsGroup(isGroup);
         }
     }
@@ -74,31 +75,31 @@ public abstract class AbstractConnection implements Connection {
         connection.rollback();
     }
 
-    public void closeConnection()throws SQLException{
+    public void closeConnection() throws SQLException {
         runnable.close(this);
         connection.close();
-        logger.info("close-connection->" +groupId);
+        logger.info("close-connection->" + groupId);
     }
 
     @Override
     public void close() throws SQLException {
-        logger.info("close-state->" +state+","+groupId);
-        if(state==0){
+        logger.info("close-state->" + state + "," + groupId);
+        if (state == 0) {
             closeConnection();
         }
-        if(state==1){
+        if (state == 1) {
 
-            if(CompensateServiceImpl.COMPENSATE_KEY.equals(transactionLocal.getGroupId())){
+            if (CompensateServiceImpl.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
                 //补偿事务 一概回滚
                 connection.rollback();
                 closeConnection();
 
                 logger.info("compensate - over");
 
-            }else{
+            } else {
                 //分布式事务
 
-                if(transactionLocal.isHasIsGroup()){
+                if (transactionLocal.isHasIsGroup()) {
                     //加入队列的连接，仅操作连接对象，不处理事务
                     return;
                 }
@@ -109,13 +110,13 @@ public abstract class AbstractConnection implements Connection {
                         try {
                             transaction();
                             state = 0;
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             try {
                                 connection.rollback();
                             } catch (SQLException e1) {
                                 e1.printStackTrace();
                             }
-                        }finally {
+                        } finally {
                             dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
                             try {
                                 closeConnection();
@@ -145,7 +146,6 @@ public abstract class AbstractConnection implements Connection {
 
 
     public abstract void transaction() throws SQLException;
-
 
 
     /*****default*******/

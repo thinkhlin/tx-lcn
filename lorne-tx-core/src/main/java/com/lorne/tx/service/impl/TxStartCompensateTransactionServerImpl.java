@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 public class TxStartCompensateTransactionServerImpl implements TransactionServer {
 
 
-
     @Override
     public Object execute(ProceedingJoinPoint point, TxTransactionInfo info) throws Throwable {
 
@@ -24,11 +23,11 @@ public class TxStartCompensateTransactionServerImpl implements TransactionServer
         TxTransactionLocal.setCurrent(txTransactionLocal);
 
         try {
-            return  point.proceed();
-        }catch (Throwable e) {
+            return point.proceed();
+        } catch (Throwable e) {
             throw e;
-        }finally {
-            if(txTransactionLocal!=null){
+        } finally {
+            if (txTransactionLocal != null) {
                 TxTransactionLocal.setCurrent(null);
             }
         }

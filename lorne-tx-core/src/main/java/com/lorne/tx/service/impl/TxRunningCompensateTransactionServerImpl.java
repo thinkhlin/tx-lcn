@@ -16,16 +16,16 @@ public class TxRunningCompensateTransactionServerImpl implements TransactionServ
     @Override
     public Object execute(final ProceedingJoinPoint point, TxTransactionInfo info) throws Throwable {
 
-        TxTransactionLocal txTransactionLocal  = new TxTransactionLocal();
+        TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
         txTransactionLocal.setHasCompensate(true);
         txTransactionLocal.setGroupId(CompensateServiceImpl.COMPENSATE_KEY);
         TxTransactionLocal.setCurrent(txTransactionLocal);
 
         try {
-           return  point.proceed();
-        }catch ( Throwable e){
+            return point.proceed();
+        } catch (Throwable e) {
             throw e;
-        }finally {
+        } finally {
             TxTransactionLocal.setCurrent(null);
         }
 

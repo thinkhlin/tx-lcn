@@ -7,6 +7,7 @@ import com.lorne.tx.exception.TransactionException;
 /**
  * <p>Description: .</p>
  * 序列化接口
+ *
  * @author yu.xiao@happylifeplat.com
  * @version 1.0
  * @since JDK 1.8

@@ -27,7 +27,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * <p>Description: .</p>
  * <p>Copyright: 2015-2017 happylifeplat.com All Rights Reserved</p>
- *  SchemaCache 缓存
+ * SchemaCache 缓存
+ *
  * @author yu.xiao@happylifeplat.com
  * @version 1.0
  * @since JDK 1.8
@@ -42,15 +43,15 @@ public class SchemaCache {
     }
 
     private Cache<Class<?>, Schema<?>> cache = CacheBuilder.newBuilder()
-            .maximumSize(1024).expireAfterWrite(1, TimeUnit.HOURS)
-            .build();
+        .maximumSize(1024).expireAfterWrite(1, TimeUnit.HOURS)
+        .build();
 
     private Schema<?> get(final Class<?> cls, Cache<Class<?>, Schema<?>> cache) {
         try {
             return cache.get(cls, new Callable() {
                 @Override
                 public Object call() throws Exception {
-                   return RuntimeSchema.createFrom(cls);
+                    return RuntimeSchema.createFrom(cls);
                 }
             });
         } catch (ExecutionException e) {

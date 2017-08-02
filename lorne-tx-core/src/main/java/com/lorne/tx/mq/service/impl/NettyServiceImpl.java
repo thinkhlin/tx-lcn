@@ -1,8 +1,7 @@
 package com.lorne.tx.mq.service.impl;
 
 import com.lorne.tx.Constants;
-//import com.lorne.tx.mq.handler.TransactionHandler;
-import com.lorne.tx.mq.handler.TransactionHandler2;
+import com.lorne.tx.mq.handler.TransactionHandler;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyDistributeService;
 import com.lorne.tx.mq.service.NettyService;
@@ -31,22 +30,22 @@ public class NettyServiceImpl implements NettyService {
     @Autowired
     private NettyDistributeService nettyDistributeService;
 
-    private TransactionHandler2 transactionHandler;
+    private TransactionHandler transactionHandler;
 
     private EventLoopGroup workerGroup;
 
 
-    private static volatile  boolean isStarting = false;
+    private static volatile boolean isStarting = false;
 
 
     private Logger logger = LoggerFactory.getLogger(NettyServiceImpl.class);
 
     @Override
     public synchronized void start() {
-        if(isStarting){
+        if (isStarting) {
             return;
         }
-        isStarting= true;
+        isStarting = true;
         nettyDistributeService.loadTxServer();
 
         String host = Constants.txServer.getHost();
@@ -54,7 +53,7 @@ public class NettyServiceImpl implements NettyService {
         final int heart = Constants.txServer.getHeart();
         int delay = Constants.txServer.getDelay();
 
-        transactionHandler = new TransactionHandler2(this,delay);
+        transactionHandler = new TransactionHandler(this, delay);
         workerGroup = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap(); // (1)
@@ -75,19 +74,19 @@ public class NettyServiceImpl implements NettyService {
             });
             // Start the client.
             logger.info("连接manager-socket服务-> host:" + host + ",port:" + port);
-            ChannelFuture future =  b.connect(host, port); // (5)
+            ChannelFuture future = b.connect(host, port); // (5)
 
             future.addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                    if(!channelFuture.isSuccess()){
+                    if (!channelFuture.isSuccess()) {
                         channelFuture.channel().eventLoop().schedule(new Runnable() {
                             @Override
                             public void run() {
                                 isStarting = false;
                                 start();
                             }
-                        },5,TimeUnit.SECONDS);
+                        }, 5, TimeUnit.SECONDS);
                     }
                 }
             });
@@ -111,7 +110,7 @@ public class NettyServiceImpl implements NettyService {
         if (workerGroup != null) {
             workerGroup.shutdownGracefully();
             workerGroup = null;
-            TransactionHandler2.net_state = false;
+            TransactionHandler.net_state = false;
             isStarting = false;
         }
     }
@@ -129,14 +128,14 @@ public class NettyServiceImpl implements NettyService {
 
     @Override
     public boolean checkState() {
-        if (!TransactionHandler2.net_state) {
+        if (!TransactionHandler.net_state) {
             logger.error("socket服务尚未建立连接成功,将在此等待2秒.");
             try {
                 Thread.sleep(1000 * 2);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (!TransactionHandler2.net_state) {
+            if (!TransactionHandler.net_state) {
                 logger.error("socket还未连接成功,请检查TxManager服务后再试.");
                 return false;
             }

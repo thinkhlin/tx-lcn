@@ -22,7 +22,7 @@ public class TransactionInvocation implements Serializable {
 
     private static final long serialVersionUID = 7722060715819141844L;
 
-    private transient static  ObjectSerializer serializer = new KryoSerializer();
+    private transient static ObjectSerializer serializer = new KryoSerializer();
     /**
      * 事务执行器
      */

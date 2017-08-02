@@ -55,27 +55,26 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     private boolean hasGracefulClose = false;
 
 
-
     @Autowired
     private NettyService nettyService;
 
 
-    private  final Executor threadPools = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getMqSize());
+    private final Executor threadPools = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getMqSize());
 
 
     public CompensateOperationServiceImpl() {
-        url =  ConfigUtils.getString("tx.properties","url");
+        url = ConfigUtils.getString("tx.properties", "url");
         prefix = ConfigUtils.getString("tx.properties", "compensate.prefix");
         int state = 0;
         try {
-            state = ConfigUtils.getInt("tx.properties","graceful.close");
-        }catch (Exception e){
+            state = ConfigUtils.getInt("tx.properties", "graceful.close");
+        } catch (Exception e) {
             state = 0;
         }
-        if(state==1){
+        if (state == 1) {
             hasGracefulClose = true;
         }
-        queueList = new  LinkedBlockingDeque<>();
+        queueList = new LinkedBlockingDeque<>();
     }
 
     @Override
@@ -90,31 +89,31 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     @Override
     public void execute(TransactionRecover data) {
-        if(data!=null){
-            TransactionInvocation invocation =  data.getInvocation();
-            if(invocation!=null){
+        if (data != null) {
+            TransactionInvocation invocation = data.getInvocation();
+            if (invocation != null) {
                 //通知TM
-                String murl = url+"GroupState?groupId="+data.getGroupId();
-                logger.info("获取补偿事务状态url->"+murl);
+                String murl = url + "GroupState?groupId=" + data.getGroupId();
+                logger.info("获取补偿事务状态url->" + murl);
                 String groupState = HttpUtils.get(murl);
-                logger.info("获取补偿事务状态TM->"+groupState);
+                logger.info("获取补偿事务状态TM->" + groupState);
 
-                if(null==groupState){
+                if (null == groupState) {
                     return;
                 }
 
-                if(groupState.contains("true")){
+                if (groupState.contains("true")) {
                     TxTransactionCompensate compensate = new TxTransactionCompensate();
                     TxTransactionCompensate.setCurrent(compensate);
-                    boolean isOk =  MethodUtils.invoke(applicationContext,invocation);
-                    if(isOk){
-                        String notifyGroup = HttpUtils.get(url+"Group?groupId="+data.getGroupId()+"&taskId="+data.getTaskId());
-                        logger.info("补偿事务通知TM->"+notifyGroup);
+                    boolean isOk = MethodUtils.invoke(applicationContext, invocation);
+                    if (isOk) {
+                        String notifyGroup = HttpUtils.get(url + "Group?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId());
+                        logger.info("补偿事务通知TM->" + notifyGroup);
                         delete(data.getId());
-                    }else{
-                        updateRetriedCount(data.getId(),data.getRetriedCount()+1);
+                    } else {
+                        updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
                     }
-                }else{
+                } else {
                     //回滚操作直接清理事务补偿日志
                     delete(data.getId());
                 }
@@ -123,7 +122,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     }
 
     @Override
-    public String save(TransactionInvocation transactionInvocation,String groupId,String taskId) {
+    public String save(TransactionInvocation transactionInvocation, String groupId, String taskId) {
         TransactionRecover recover = new TransactionRecover();
         recover.setGroupId(groupId);
         recover.setTaskId(taskId);
@@ -133,9 +132,9 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             QueueMsg msg = new QueueMsg();
             msg.setRecover(recover);
             msg.setType(1);
-            if(hasGracefulClose) {
+            if (hasGracefulClose) {
                 queueList.put(msg);
-            }else {
+            } else {
                 recoverRepository.create(recover);
             }
             return recover.getId();
@@ -146,7 +145,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     @Override
     public boolean updateRetriedCount(String id, int retriedCount) {
-        return recoverRepository.update(id,new Date(),0,retriedCount)>0;
+        return recoverRepository.update(id, new Date(), 0, retriedCount) > 0;
     }
 
     @Override
@@ -156,9 +155,9 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             msg.setId(id);
             msg.setType(0);
 
-            if(hasGracefulClose) {
+            if (hasGracefulClose) {
                 queueList.put(msg);
-            }else {
+            } else {
                 recoverRepository.remove(id);
             }
             return true;
@@ -167,9 +166,9 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
         }
     }
 
-    private String getTableName(String modelName){
-        Pattern pattern=Pattern.compile("[^a-z0-9A-Z]");
-        Matcher matcher =  pattern.matcher(modelName);
+    private String getTableName(String modelName) {
+        Pattern pattern = Pattern.compile("[^a-z0-9A-Z]");
+        Matcher matcher = pattern.matcher(modelName);
         return matcher.replaceAll("_");
     }
 
@@ -177,11 +176,11 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     @Override
     public void init(String modelName) {
 
-        String tableName = "lcn_tx_"+prefix+"_"+getTableName(modelName);
+        String tableName = "lcn_tx_" + prefix + "_" + getTableName(modelName);
 
         recoverRepository.init(tableName);
 
-        if(hasGracefulClose) {
+        if (hasGracefulClose) {
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {

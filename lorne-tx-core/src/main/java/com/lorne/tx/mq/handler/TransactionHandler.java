@@ -36,7 +36,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     /**
      * 自动返回数据时间，必须要小于事务模块最大相应时间.(通过心跳获取)
      */
-    private volatile int delay = 1;
+    public static volatile int delay = 1;
 
     private ChannelHandlerContext ctx;
 
@@ -44,11 +44,11 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     private String heartJson;
 
+    private Executor threadPool = Executors.newFixedThreadPool(100);
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(ThreadPoolSizeHelper.getInstance().getHandlerSize());
 
-    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(100);
 
-
-    public TransactionHandler(NettyService nettyService,int delay) {
+    public TransactionHandler(NettyService nettyService, int delay) {
         this.nettyService = nettyService;
         this.delay = delay;
 
@@ -61,12 +61,34 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     }
 
+    private String notifyWaitTask(Task task, int state) {
+        String res = "0";
+        task.setState(state);
+        task.signalTask();
+        int count = 0;
+        while (true) {
+            if (task.isRemove()) {
+                res = "1";
+                break;
+            }
+            if (count > 800) {
+                res = "0";
+                break;
+            }
 
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, final Object msg) throws Exception {
-        net_state = true;
-        String json = SocketUtils.getJson(msg);
-        logger.info("接受->" + json);
+            count++;
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return res;
+    }
+
+
+    private void service(String json) {
         if (StringUtils.isNotEmpty(json)) {
             JSONObject resObj = JSONObject.parseObject(json);
             if (resObj.containsKey("a")) {
@@ -83,52 +105,28 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         logger.info("接受通知数据->" + json);
                         String res = "";
                         if (task != null) {
-                            if(!task.isNotify()){   //还没有通知
-
-                                if(task.isAwait()) {   //已经等待
-                                    task.setBack(new IBack() {
-                                        @Override
-                                        public Object doing(Object... objects) throws Throwable {
-                                            return state;
-                                        }
-                                    });
-                                    task.signalTask();
-
-                                    if(state!=1){
-                                        res = "1";
-                                    }else {
-                                        //确认事务通知方法已经执行完毕
-                                        if (task.isRemove()) {
-                                            res = "1";
-                                        }else{
-                                            int count = 0;
-                                            while (true) {
-                                                if (task.isRemove()) {
-                                                    res = "1";
-                                                    break;
-                                                } else {
-                                                    if (count > 800) {
-                                                        res = "0";
-                                                        break;
-                                                    }
-                                                }
-                                                count++;
-                                                Thread.sleep(1);
-                                            }
-                                        }
+                            int index = 0;
+                            if (task.isAwait()) {   //已经等待
+                                res = notifyWaitTask(task, state);
+                            } else {
+                                while (true) {
+                                    if (index > 800) {
+                                        res = "0";
+                                        break;
                                     }
-                                }else{
-                                    //模块自动进入超时业务
-                                    res = "0";
+                                    if (task.isAwait()) {   //已经等待
+                                        res = notifyWaitTask(task, state);
+                                        break;
+                                    }
+                                    index++;
+                                    try {
+                                        Thread.sleep(1);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
-
-                            }else{
-                                res = "0";
                             }
-                        }else {
-                            res = "-1";
                         }
-
                         JSONObject data = new JSONObject();
                         data.put("k", key);
                         data.put("a", action);
@@ -137,7 +135,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         params.put("d", res);
                         data.put("p", params);
 
-                        SocketUtils.sendMsg(ctx,data.toString());
+                        SocketUtils.sendMsg(ctx, data.toString());
                         logger.info("返回通知状态->" + data.toString());
                         break;
                     }
@@ -149,26 +147,43 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                     final String data = resObj.getString("d");
                     Task task = ConditionUtils.getInstance().getTask(key);
                     if (task != null) {
-                        task.setBack(new IBack() {
-                            @Override
-                            public Object doing(Object... objs) throws Throwable {
-                                return data;
-                            }
-                        });
-                        task.signalTask();
+                        if (task.isAwait()) {
+                            task.setBack(new IBack() {
+                                @Override
+                                public Object doing(Object... objs) throws Throwable {
+                                    return data;
+                                }
+                            });
+                            task.signalTask();
+                        }
                     }
-                }else{
+                } else {
                     final String data = resObj.getString("d");
-                    if(StringUtils.isNotEmpty(data)){
+                    if (StringUtils.isNotEmpty(data)) {
                         try {
                             delay = Integer.parseInt(data);
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             delay = 1;
                         }
                     }
                 }
             }
         }
+    }
+
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, final Object msg) throws Exception {
+        net_state = true;
+        final String json = SocketUtils.getJson(msg);
+        logger.info("接受->" + json);
+
+        threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                service(json);
+            }
+        });
     }
 
     @Override
@@ -205,7 +220,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                 //ctx.close();
             } else if (event.state() == IdleState.WRITER_IDLE) {
                 //表示已经多久没有发送数据了
-                SocketUtils.sendMsg(ctx,heartJson);
+                SocketUtils.sendMsg(ctx, heartJson);
                 logger.info("心跳数据---" + heartJson);
             } else if (event.state() == IdleState.ALL_IDLE) {
                 //表示已经多久既没有收到也没有发送数据了
@@ -214,15 +229,28 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
+    private void sleepSend(Task task, Request request) {
+        while (!task.isAwait() && !Thread.currentThread().interrupted()) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        SocketUtils.sendMsg(ctx, request.toMsg());
+        logger.info("send-msg->" + request.toMsg());
+    }
+
     public String sendMsg(final Request request) {
-        long t1 = System.currentTimeMillis();
         final String key = request.getKey();
         if (ctx != null && ctx.channel() != null && ctx.channel().isActive()) {
+
             final Task task = ConditionUtils.getInstance().createTask(key);
-            ScheduledFuture future =  executorService.schedule(new Runnable() {
+            ScheduledFuture future = executorService.schedule(new Runnable() {
                 @Override
                 public void run() {
                     Task task = ConditionUtils.getInstance().getTask(key);
+                    logger.info("sendMsg-schedule->" + request.getKey());
                     if (task != null && !task.isNotify()) {
                         task.setBack(new IBack() {
                             @Override
@@ -231,33 +259,35 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                             }
                         });
                         task.signalTask();
+                        logger.info("sendMsg-schedule-signalTask->" + request.getKey());
                     }
                 }
             }, delay, TimeUnit.SECONDS);
 
-            long t2 = System.currentTimeMillis();
 
-            logger.info("send-send-msg->"+(t2-t1)+","+request.getKey());
+            threadPool.execute(new Runnable() {
+                @Override
+                public void run() {
+                    sleepSend(task, request);
+                }
+            });
 
-            SocketUtils.sendMsg(ctx,request.toMsg());
+
             task.awaitTask();
 
-            if(!future.isDone()){
+            if (!future.isDone()) {
                 future.cancel(false);
             }
 
-            Object msg = null;
             try {
-                msg = task.getBack().doing();
-            } catch (Throwable throwable) {
-                throwable.printStackTrace();
+                Object msg = task.getBack().doing();
+                return (String) msg;
+            } catch (Throwable e) {
+            } finally {
+                task.remove();
             }
-            task.remove();
 
-            long t3 = System.currentTimeMillis();
-            logger.info("send-over->"+(t3-t2)+","+request.getKey());
 
-            return (String) msg;
         }
         return null;
 

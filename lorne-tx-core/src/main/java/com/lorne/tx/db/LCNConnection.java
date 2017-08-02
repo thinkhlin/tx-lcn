@@ -27,8 +27,8 @@ public class LCNConnection extends AbstractConnection {
 
     @Override
     public void transaction() throws SQLException {
-        logger.info("transaction-running->"+transactionLocal.getGroupId());
-        if(waitTask==null){
+        logger.info("transaction-running->" + transactionLocal.getGroupId());
+        if (waitTask == null) {
             connection.rollback();
             closeConnection();
             logger.info("waitTask is null");
@@ -40,12 +40,12 @@ public class LCNConnection extends AbstractConnection {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                logger.info("自动回滚->"+transactionLocal.getGroupId());
-                dataSourceService.schedule(transactionLocal.getGroupId(),waitTask);
+                logger.info("自动回滚->" + transactionLocal.getGroupId());
+                dataSourceService.schedule(transactionLocal.getGroupId(), waitTask);
             }
-        }, 30*1000);
+        }, 30 * 1000);
 
-        logger.info("transaction-awaitTask->"+transactionLocal.getGroupId());
+        logger.info("transaction-awaitTask->" + transactionLocal.getGroupId());
 
         waitTask.awaitTask();
 
@@ -53,19 +53,18 @@ public class LCNConnection extends AbstractConnection {
 
         try {
             int rs = waitTask.getState();
-            logger.info("("+transactionLocal.getGroupId()+")->单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + rs);
-            if(rs==1){
+            logger.info("(" + transactionLocal.getGroupId() + ")->单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + rs);
+            if (rs == 1) {
                 connection.commit();
-            }else{
+            } else {
                 connection.rollback();
             }
         } catch (Throwable throwable) {
             connection.rollback();
-        }finally {
+        } finally {
             waitTask.remove();
         }
     }
-
 
 
 }

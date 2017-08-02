@@ -8,7 +8,8 @@ import java.util.List;
 /**
  * <p>Description: .</p>
  * <p>Copyright: 2015-2017 happylifeplat.com All Rights Reserved</p>
- *  定义事务恢复资源接口
+ * 定义事务恢复资源接口
+ *
  * @author yu.xiao@happylifeplat.com
  * @version 1.0
  * @since JDK 1.8
@@ -17,6 +18,7 @@ public interface TransactionRecoverRepository {
 
     /**
      * 创建本地事务对象
+     *
      * @param transactionRecover 事务对象
      * @return rows
      */
@@ -24,6 +26,7 @@ public interface TransactionRecoverRepository {
 
     /**
      * 删除对象
+     *
      * @param id 事务对象id
      * @return rows
      */
@@ -32,17 +35,19 @@ public interface TransactionRecoverRepository {
 
     /**
      * 更改事务对象
-     * @param id 事务对象id
+     *
+     * @param id           事务对象id
      * @param retriedCount 执行次数
-     * @param state 数据库状态
+     * @param state        数据库状态
      * @return rows
      */
-    int update(String id, Date lastTime,int state, int retriedCount);
+    int update(String id, Date lastTime, int state, int retriedCount);
 
 
     /**
      * 获取需要提交的事务
-     * @return  List<TransactionRecover>
+     *
+     * @return List<TransactionRecover>
      */
     List<TransactionRecover> findAll(int state);
 

@@ -28,7 +28,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     private Executor threadPool = Executors.newFixedThreadPool(100);
 
     @Override
-    public  TxGroup createTransactionGroup() {
+    public TxGroup createTransactionGroup() {
         JSONObject jsonObject = new JSONObject();
         Request request = new Request("cg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
@@ -36,20 +36,19 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
     @Override
-    public  TxGroup addTransactionGroup(String groupId, String taskId,boolean isGroup) {
+    public TxGroup addTransactionGroup(String groupId, String taskId, boolean isGroup) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("t", taskId);
-        jsonObject.put("s", isGroup?1:0);
+        jsonObject.put("s", isGroup ? 1 : 0);
         Request request = new Request("atg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
         return TxGroup.parser(json);
     }
 
 
-
     @Override
-    public  void closeTransactionGroup(final String groupId,final int state) {
+    public void closeTransactionGroup(final String groupId, final int state) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("s", state);
@@ -71,7 +70,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
 
     @Override
-    public  int checkTransactionInfo(String groupId, String taskId) {
+    public int checkTransactionInfo(String groupId, String taskId) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("t", taskId);

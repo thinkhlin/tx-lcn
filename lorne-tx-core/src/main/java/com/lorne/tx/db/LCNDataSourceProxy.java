@@ -14,10 +14,8 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
@@ -30,7 +28,7 @@ import java.util.logging.Logger;
 public class LCNDataSourceProxy implements DataSource {
 
 
-    protected interface ISubNowConnection{
+    protected interface ISubNowConnection {
 
         void close(AbstractConnection connection);
 
@@ -39,7 +37,7 @@ public class LCNDataSourceProxy implements DataSource {
     private org.slf4j.Logger logger = LoggerFactory.getLogger(LCNDataSourceProxy.class);
 
 
-    private Map<String,AbstractConnection> pools = new ConcurrentHashMap<>();
+    private Map<String, AbstractConnection> pools = new ConcurrentHashMap<>();
 
     private Executor threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
 
@@ -63,69 +61,69 @@ public class LCNDataSourceProxy implements DataSource {
         @Override
         public void close(AbstractConnection connection) {
             Task waitTask = connection.getWaitTask();
-            if(waitTask!=null){
-                if(!waitTask.isRemove()){
+            if (waitTask != null) {
+                if (!waitTask.isRemove()) {
                     waitTask.remove();
                 }
             }
 
             pools.remove(connection.getGroupId());
-            System.out.println("pools-size->"+pools.size());
+            System.out.println("pools-size->" + pools.size());
             nowCount--;
         }
     };
 
 
-    private Connection loadConnection( TxTransactionLocal txTransactionLocal,Connection connection) throws SQLException{
-        AbstractConnection old =  pools.get(txTransactionLocal.getGroupId());
-        if(old!=null){
+    private Connection loadConnection(TxTransactionLocal txTransactionLocal, Connection connection) throws SQLException {
+        AbstractConnection old = pools.get(txTransactionLocal.getGroupId());
+        if (old != null) {
             old.setHasIsGroup(true);
             txTransactionLocal.setHasIsGroup(true);
             TxTransactionLocal.setCurrent(txTransactionLocal);
-            logger.info("get old connection ->"+txTransactionLocal.getGroupId());
+            logger.info("get old connection ->" + txTransactionLocal.getGroupId());
             return old;
         }
-        if(nowCount==maxCount){
+        if (nowCount == maxCount) {
             logger.info("initLCNConnection max count ...");
-            for(int i=0;i<maxWaitTime;i++){
+            for (int i = 0; i < maxWaitTime; i++) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if(nowCount<maxCount){
-                    return createLcnConnection(connection,txTransactionLocal);
+                if (nowCount < maxCount) {
+                    return createLcnConnection(connection, txTransactionLocal);
                 }
             }
-        }else if(nowCount<maxCount){
-           return createLcnConnection(connection,txTransactionLocal);
-        }else{
+        } else if (nowCount < maxCount) {
+            return createLcnConnection(connection, txTransactionLocal);
+        } else {
             throw new SQLException("connection was overload");
         }
         return connection;
     }
 
-    private Connection createLcnConnection(Connection connection,TxTransactionLocal txTransactionLocal){
+    private Connection createLcnConnection(Connection connection, TxTransactionLocal txTransactionLocal) {
         nowCount++;
-        LCNConnection lcn =  new LCNConnection(connection,dataSourceService,txTransactionLocal,subNowCount,threadPool);
-        pools.put(txTransactionLocal.getGroupId(),lcn);
-        logger.info("get new connection ->"+txTransactionLocal.getGroupId());
+        LCNConnection lcn = new LCNConnection(connection, dataSourceService, txTransactionLocal, subNowCount, threadPool);
+        pools.put(txTransactionLocal.getGroupId(), lcn);
+        logger.info("get new connection ->" + txTransactionLocal.getGroupId());
         return lcn;
     }
 
     private Connection initLCNConnection(Connection connection) throws SQLException {
         Connection lcnConnection = connection;
-        TxTransactionLocal txTransactionLocal =  TxTransactionLocal.current();
+        TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
 
-        if(txTransactionLocal!=null
-            &&StringUtils.isNotEmpty(txTransactionLocal.getGroupId())) {
+        if (txTransactionLocal != null
+            && StringUtils.isNotEmpty(txTransactionLocal.getGroupId())) {
 
             //logger.info("initLCNConnection - lcn ->"+connection);
 
-            if(CompensateServiceImpl.COMPENSATE_KEY.equals(txTransactionLocal.getGroupId())){
-                lcnConnection = loadConnection(txTransactionLocal,connection);
-            }else if(!txTransactionLocal.isHasStart()){
-                lcnConnection = loadConnection(txTransactionLocal,connection);
+            if (CompensateServiceImpl.COMPENSATE_KEY.equals(txTransactionLocal.getGroupId())) {
+                lcnConnection = loadConnection(txTransactionLocal, connection);
+            } else if (!txTransactionLocal.isHasStart()) {
+                lcnConnection = loadConnection(txTransactionLocal, connection);
             }
 
         }

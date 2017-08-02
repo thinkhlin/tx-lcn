@@ -19,11 +19,11 @@ public interface CompensateOperationService {
 
     void execute(TransactionRecover data);
 
-    String save(TransactionInvocation transactionInvocation,String groupId,String taskId);
+    String save(TransactionInvocation transactionInvocation, String groupId, String taskId);
 
     boolean delete(String id);
 
-    boolean updateRetriedCount(String id,int retriedCount);
+    boolean updateRetriedCount(String id, int retriedCount);
 
     void init(String modelName);
 
