@@ -44,7 +44,7 @@ public class TransactionHandler2 extends ChannelInboundHandlerAdapter {
 
     private String heartJson;
 
-    private Executor  threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getHandlerSize());
+    private Executor  threadPool = Executors.newFixedThreadPool(100);
     private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(ThreadPoolSizeHelper.getInstance().getHandlerSize());
 
 
@@ -62,11 +62,7 @@ public class TransactionHandler2 extends ChannelInboundHandlerAdapter {
     }
 
 
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, final Object msg) throws Exception {
-        net_state = true;
-        String json = SocketUtils.getJson(msg);
-        logger.info("接受->" + json);
+    private void service(String json){
         if (StringUtils.isNotEmpty(json)) {
             JSONObject resObj = JSONObject.parseObject(json);
             if (resObj.containsKey("a")) {
@@ -83,46 +79,43 @@ public class TransactionHandler2 extends ChannelInboundHandlerAdapter {
                         logger.info("接受通知数据->" + json);
                         String res = "";
                         if (task != null) {
-                            if(!task.isNotify()){   //还没有通知
-
-                                if(task.isAwait()) {   //已经等待
-                                    task.setState(state);
-                                    task.signalTask();
-
-                                    if(state!=1){
+                            int index = 0;
+                            if(task.isAwait()) {   //已经等待
+                                task.setState(state);
+                                task.signalTask();
+                                int count = 0;
+                                while (true) {
+                                    if (task.isRemove()) {
                                         res = "1";
-                                    }else {
-                                        //确认事务通知方法已经执行完毕
-                                        if (task.isRemove()) {
-                                            res = "1";
-                                        }else{
-                                            int count = 0;
-                                            while (true) {
-                                                if (task.isRemove()) {
-                                                    res = "1";
-                                                    break;
-                                                } else {
-                                                    if (count > 800) {
-                                                        res = "0";
-                                                        break;
-                                                    }
-                                                }
-                                                count++;
-                                                Thread.sleep(1);
-                                            }
-                                        }
+                                        break;
                                     }
-                                }else{
-                                    res = "0";
+                                    if (count > 800) {
+                                        res = "0";
+                                        break;
+                                    }
+
+                                    count++;
+                                    try {
+                                        Thread.sleep(1);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
-
                             }else{
-                                res = "0";
+                                while (true) {
+                                    if (index > 800) {
+                                        res = "0";
+                                        break;
+                                    }
+                                    index++;
+                                    try {
+                                        Thread.sleep(1);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
                             }
-                        }else {
-                            res = "-1";
                         }
-
                         JSONObject data = new JSONObject();
                         data.put("k", key);
                         data.put("a", action);
@@ -143,13 +136,15 @@ public class TransactionHandler2 extends ChannelInboundHandlerAdapter {
                     final String data = resObj.getString("d");
                     Task task = ConditionUtils.getInstance().getTask(key);
                     if (task != null) {
-                        task.setBack(new IBack() {
-                            @Override
-                            public Object doing(Object... objs) throws Throwable {
-                                return data;
-                            }
-                        });
-                        task.signalTask();
+                        if(task.isAwait()){
+                            task.setBack(new IBack() {
+                                @Override
+                                public Object doing(Object... objs) throws Throwable {
+                                    return data;
+                                }
+                            });
+                            task.signalTask();
+                        }
                     }
                 }else{
                     final String data = resObj.getString("d");
@@ -163,6 +158,21 @@ public class TransactionHandler2 extends ChannelInboundHandlerAdapter {
                 }
             }
         }
+    }
+
+
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, final Object msg) throws Exception {
+        net_state = true;
+        final String json = SocketUtils.getJson(msg);
+        logger.info("接受->" + json);
+
+        threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                service(json);
+            }
+        });
     }
 
     @Override
@@ -217,16 +227,19 @@ public class TransactionHandler2 extends ChannelInboundHandlerAdapter {
             }
         }
         SocketUtils.sendMsg(ctx,request.toMsg());
+        logger.info("send-msg->"+request.toMsg());
     }
 
     public String sendMsg(final Request request) {
         final String key = request.getKey();
         if (ctx != null && ctx.channel() != null && ctx.channel().isActive()) {
+
             final Task task = ConditionUtils.getInstance().createTask(key);
             ScheduledFuture future =  executorService.schedule(new Runnable() {
                 @Override
                 public void run() {
                     Task task = ConditionUtils.getInstance().getTask(key);
+                    logger.info("sendMsg-schedule->"+request.getKey());
                     if (task != null && !task.isNotify()) {
                         task.setBack(new IBack() {
                             @Override
@@ -235,6 +248,7 @@ public class TransactionHandler2 extends ChannelInboundHandlerAdapter {
                             }
                         });
                         task.signalTask();
+                        logger.info("sendMsg-schedule-signalTask->"+request.getKey());
                     }
                 }
             }, delay, TimeUnit.SECONDS);
@@ -247,20 +261,22 @@ public class TransactionHandler2 extends ChannelInboundHandlerAdapter {
                 }
             });
 
+
             task.awaitTask();
 
             if(!future.isDone()){
                 future.cancel(false);
             }
 
-            Object msg = null;
             try {
-                msg = task.getBack().doing();
-            } catch (Throwable throwable) {
-                throwable.printStackTrace();
+                Object msg =  task.getBack().doing();
+                return (String) msg;
+            } catch (Throwable e) {
+            }finally {
+                task.remove();
             }
-            task.remove();
-            return (String) msg;
+
+
         }
         return null;
 

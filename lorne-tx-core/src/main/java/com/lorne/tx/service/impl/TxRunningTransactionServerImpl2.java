@@ -42,6 +42,8 @@ public class TxRunningTransactionServerImpl2 implements TransactionServer {
 
             Object res = point.proceed();
 
+            System.out.println("res->"+res);
+
             final TxGroup resTxGroup = txManagerService.addTransactionGroup(txGroupId, kid, TxTransactionLocal.current().isHasIsGroup());
 
             Task waitTask = ConditionUtils.getInstance().getTask(kid);
@@ -51,7 +53,7 @@ public class TxRunningTransactionServerImpl2 implements TransactionServer {
                 waitTask.setState(-1);
                 waitTask.signalTask();
 
-                throw new ServiceException("修改事务组状态异常.");
+                throw new ServiceException("修改事务组状态异常."+txGroupId);
             }
 
             return res;

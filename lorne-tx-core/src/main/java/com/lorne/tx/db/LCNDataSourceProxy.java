@@ -70,6 +70,7 @@ public class LCNDataSourceProxy implements DataSource {
         if(old!=null){
             txTransactionLocal.setHasIsGroup(true);
             TxTransactionLocal.setCurrent(txTransactionLocal);
+            logger.info("get old connection ->"+txTransactionLocal.getGroupId());
             return old;
         }
         if(nowCount==maxCount){
@@ -80,25 +81,24 @@ public class LCNDataSourceProxy implements DataSource {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                logger.info("initLCNConnection check connection ...");
-
                 if(nowCount<maxCount){
-                    nowCount++;
-                    LCNConnection lcn =  new LCNConnection(connection,dataSourceService,txTransactionLocal,subNowCount,threadPool);
-                    pools.put(txTransactionLocal.getGroupId(),lcn);
-                    return lcn;
+                    return createLcnConnection(connection,txTransactionLocal);
                 }
             }
         }else if(nowCount<maxCount){
-            nowCount++;
-            LCNConnection lcn =  new LCNConnection(connection,dataSourceService,txTransactionLocal,subNowCount,threadPool);
-            pools.put(txTransactionLocal.getGroupId(),lcn);
-            return lcn;
+           return createLcnConnection(connection,txTransactionLocal);
         }else{
             throw new SQLException("connection was overload");
         }
-
         return connection;
+    }
+
+    private Connection createLcnConnection(Connection connection,TxTransactionLocal txTransactionLocal){
+        nowCount++;
+        LCNConnection lcn =  new LCNConnection(connection,dataSourceService,txTransactionLocal,subNowCount,threadPool);
+        pools.put(txTransactionLocal.getGroupId(),lcn);
+        logger.info("get new connection ->"+txTransactionLocal.getGroupId());
+        return lcn;
     }
 
     private Connection initLCNConnection(Connection connection) throws SQLException {

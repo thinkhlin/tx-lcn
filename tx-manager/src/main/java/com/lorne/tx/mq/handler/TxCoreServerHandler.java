@@ -41,16 +41,26 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
     private Logger logger = LoggerFactory.getLogger(TxCoreServerHandler.class);
 
 
+    private Executor  threadPool = Executors.newFixedThreadPool(100);
+
+
     public TxCoreServerHandler(MQTxManagerService txManagerService) {
         this.txManagerService = txManagerService;
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        String json = SocketUtils.getJson(msg);
-        String time  =DateUtil.formatDate(new Date(),DateUtil.FULL_DATE_TIME_FORMAT);
-        long t1 = System.currentTimeMillis();
+    public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
+        final String json = SocketUtils.getJson(msg);
+        logger.info("接受-json->"+json);
+        threadPool.execute(new Runnable() {
+            @Override
+            public void run() {
+                service(json,ctx);
+            }
+        });
+    }
 
+    private void service(String json,ChannelHandlerContext ctx){
         if (StringUtils.isNotEmpty(json)) {
             JSONObject jsonObject = JSONObject.parseObject(json);
             String action = jsonObject.getString("a");
@@ -152,11 +162,8 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
             resObj.put("d", res);
 
             SocketUtils.sendMsg(ctx,resObj.toString());
-            long t2 = System.currentTimeMillis();
 
-            logger.info("接受-start-time->"+time+",time->"+(t2-t1)+","+json);
         }
-
     }
 
     @Override

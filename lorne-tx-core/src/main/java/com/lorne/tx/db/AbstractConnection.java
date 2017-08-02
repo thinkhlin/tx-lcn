@@ -65,11 +65,13 @@ public abstract class AbstractConnection implements Connection {
     public void closeConnection()throws SQLException{
         runnable.close(this);
         connection.close();
+
+        logger.info("close-connection->" +groupId);
     }
 
     @Override
     public void close() throws SQLException {
-        logger.info("close - >" +state);
+        logger.info("close-state->" +state+","+groupId);
         if(state==0){
             closeConnection();
         }
