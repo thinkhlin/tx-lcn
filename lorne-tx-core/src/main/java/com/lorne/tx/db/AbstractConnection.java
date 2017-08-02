@@ -116,6 +116,7 @@ public abstract class AbstractConnection implements Connection {
                                 e1.printStackTrace();
                             }
                         }finally {
+                            dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
                             try {
                                 closeConnection();
                             } catch (SQLException e) {

@@ -3,6 +3,7 @@ package com.lorne.tx.db.service.impl;
 import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.core.framework.utils.http.HttpUtils;
 import com.lorne.core.framework.utils.task.Task;
+import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.db.service.DataSourceService;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import org.slf4j.Logger;
@@ -26,6 +27,9 @@ public class DataSourceServiceImpl  implements DataSourceService{
 
     @Autowired
     private MQTxManagerService txManagerService;
+
+    @Autowired
+    private CompensateService compensateService;
 
 
     private int httpCheckTransactionInfo(String groupId, String waitTaskId) {
@@ -58,5 +62,10 @@ public class DataSourceServiceImpl  implements DataSourceService{
         }
         //添加到补偿队列
         logger.info("schedule-no->"+rs);
+    }
+
+    @Override
+    public void deleteCompensateId(String compensateId) {
+        compensateService.deleteTransactionInfo(compensateId);
     }
 }

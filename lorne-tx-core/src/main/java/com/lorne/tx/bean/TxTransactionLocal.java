@@ -18,6 +18,8 @@ public class TxTransactionLocal {
 
     private String kid;
 
+    private String compensateId;
+
     public boolean isHasIsGroup() {
         return hasIsGroup;
     }
@@ -63,6 +65,14 @@ public class TxTransactionLocal {
 
     }
 
+
+    public String getCompensateId() {
+        return compensateId;
+    }
+
+    public void setCompensateId(String compensateId) {
+        this.compensateId = compensateId;
+    }
 
     public static TxTransactionLocal current() {
         return currentLocal.get();

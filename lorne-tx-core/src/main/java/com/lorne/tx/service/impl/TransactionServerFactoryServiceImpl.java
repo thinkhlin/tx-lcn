@@ -20,19 +20,19 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
 
 
     @Autowired
-    private TransactionServer txStartTransactionServer2;
+    private TransactionServer txStartTransactionServer;
 
     @Autowired
-    private TransactionServer txRunningTransactionServer2;
+    private TransactionServer txRunningTransactionServer;
 
     @Autowired
     private TransactionServer txDefaultTransactionServer;
 
     @Autowired
-    private TransactionServer txRunningCompensateTransactionServer2;
+    private TransactionServer txRunningCompensateTransactionServer;
 
     @Autowired
-    private TransactionServer txStartCompensateTransactionServer2;
+    private TransactionServer txStartCompensateTransactionServer;
 
     @Autowired
     private NettyService nettyService;
@@ -49,14 +49,14 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
             if(TxTransactionLocal.current()!=null){
                 return txDefaultTransactionServer;
             }else{
-                return txRunningCompensateTransactionServer2;
+                return txRunningCompensateTransactionServer;
             }
         }
 
         /** 事务补偿业务开始标示**/
         if(info.getCompensate()!=null){
             //正常处理，同模下将依旧执行方法。
-            return txStartCompensateTransactionServer2;
+            return txStartCompensateTransactionServer;
         }
 
         /*********补偿事务处理逻辑*结束***********/
@@ -75,7 +75,7 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
         if (info.getTransaction() != null && info.getTxTransactionLocal() == null && StringUtils.isEmpty(info.getTxGroupId())) {
             //检查socket通讯是否正常 （当启动事务的主业务方法执行完以后，再执行其他业务方法时将进入txInServiceTransactionServer业务处理）
             if (nettyService.checkState()) {
-                return txStartTransactionServer2;
+                return txStartTransactionServer;
             } else {
                 throw new Exception("tx-manager尚未链接成功,请检测tx-manager服务");
             }
@@ -88,7 +88,7 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
                 if(info.getTxTransactionLocal() != null){
                     return txDefaultTransactionServer;
                 }else{
-                    return txRunningTransactionServer2;
+                    return txRunningTransactionServer;
                 }
             } else {
                 throw new Exception("tx-manager尚未链接成功,请检测tx-manager服务");
