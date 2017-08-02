@@ -80,6 +80,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             throw e;
         } finally {
             logger.info("tx-running-end->" + txGroupId);
+            compensateService.deleteTransactionInfo(compensateId);
+            TxTransactionLocal.setCurrent(null);
         }
     }
 
