@@ -34,19 +34,16 @@ public abstract class AbstractConnection implements Connection {
 
     protected TxTransactionLocal transactionLocal;
 
-    protected Executor threadPool;
-
     private String groupId;
 
     protected Task waitTask;
 
 
-    public AbstractConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable, Executor threadPool) {
+    public AbstractConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable) {
         this.connection = connection;
         this.runnable = runnable;
         this.transactionLocal = transactionLocal;
         this.dataSourceService = dataSourceService;
-        this.threadPool = threadPool;
         groupId = transactionLocal.getGroupId();
         if (!CompensateServiceImpl.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
             waitTask = ConditionUtils.getInstance().createTask(transactionLocal.getKid());
@@ -104,7 +101,7 @@ public abstract class AbstractConnection implements Connection {
                     return;
                 }
 
-                threadPool.execute(new Runnable() {
+                Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
                         try {
@@ -125,7 +122,9 @@ public abstract class AbstractConnection implements Connection {
                             }
                         }
                     }
-                });
+                };
+                Thread thread = new Thread(runnable);
+                thread.start();
             }
 
         }

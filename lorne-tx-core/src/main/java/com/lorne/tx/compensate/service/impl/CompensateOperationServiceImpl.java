@@ -12,7 +12,6 @@ import com.lorne.tx.compensate.service.CompensateOperationService;
 import com.lorne.tx.exception.TransactionRuntimeException;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.utils.MethodUtils;
-import com.lorne.tx.utils.ThreadPoolSizeHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +58,8 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     private NettyService nettyService;
 
 
-    private final Executor threadPools = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getMqSize());
+    private static final int max_size = 20;
+    private final Executor threadPools = Executors.newFixedThreadPool(max_size);
 
 
     public CompensateOperationServiceImpl() {
@@ -184,7 +184,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
-                    for (int i = 0; i < ThreadPoolSizeHelper.getInstance().getMqSize(); i++) {
+                    for (int i = 0; i < max_size; i++) {
                         threadPools.execute(new Runnable() {
                             @Override
                             public void run() {

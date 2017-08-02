@@ -21,8 +21,8 @@ public class LCNConnection extends AbstractConnection {
     private Logger logger = LoggerFactory.getLogger(LCNConnection.class);
 
 
-    public LCNConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable, Executor threadPool) {
-        super(connection, dataSourceService, transactionLocal, runnable, threadPool);
+    public LCNConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable) {
+        super(connection, dataSourceService, transactionLocal, runnable);
     }
 
     @Override

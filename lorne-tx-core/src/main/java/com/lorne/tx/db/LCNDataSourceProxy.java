@@ -39,7 +39,7 @@ public class LCNDataSourceProxy implements DataSource {
 
     private Map<String, AbstractConnection> pools = new ConcurrentHashMap<>();
 
-    private Executor threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
+    //private Executor threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
 
     @Autowired
     private DataSourceService dataSourceService;
@@ -105,7 +105,7 @@ public class LCNDataSourceProxy implements DataSource {
 
     private Connection createLcnConnection(Connection connection, TxTransactionLocal txTransactionLocal) {
         nowCount++;
-        LCNConnection lcn = new LCNConnection(connection, dataSourceService, txTransactionLocal, subNowCount, threadPool);
+        LCNConnection lcn = new LCNConnection(connection, dataSourceService, txTransactionLocal, subNowCount);
         pools.put(txTransactionLocal.getGroupId(), lcn);
         logger.info("get new connection ->" + txTransactionLocal.getGroupId());
         return lcn;

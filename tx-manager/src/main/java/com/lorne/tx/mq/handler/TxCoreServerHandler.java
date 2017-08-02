@@ -41,7 +41,9 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
     private Logger logger = LoggerFactory.getLogger(TxCoreServerHandler.class);
 
 
-    private Executor  threadPool = Executors.newFixedThreadPool(100);
+    private final static int max_size = 100;
+
+    private Executor  threadPool = Executors.newFixedThreadPool(max_size);
 
 
     public TxCoreServerHandler(MQTxManagerService txManagerService) {
