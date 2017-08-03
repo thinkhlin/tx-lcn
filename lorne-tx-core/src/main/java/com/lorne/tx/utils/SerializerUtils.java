@@ -3,8 +3,8 @@ package com.lorne.tx.utils;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.exception.TransactionException;
-import com.lorne.tx.serializer.JavaSerializer;
 import com.lorne.tx.serializer.ObjectSerializer;
+import com.lorne.tx.serializer.ProtostuffSerializer;
 
 /**
  * create by lorne on 2017/8/3
@@ -12,7 +12,7 @@ import com.lorne.tx.serializer.ObjectSerializer;
 public class SerializerUtils {
 
 
-    private static ObjectSerializer serializer = new JavaSerializer();
+    private static ObjectSerializer serializer = new ProtostuffSerializer();
 
 
     public static byte[] serializeTransactionRecover(TransactionRecover transaction)  {
