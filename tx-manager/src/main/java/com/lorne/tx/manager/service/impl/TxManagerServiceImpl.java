@@ -26,9 +26,6 @@ public class TxManagerServiceImpl implements TxManagerService {
     @Value("${redis_save_max_time}")
     private int redis_save_max_time;
 
-    @Value("${transaction_wait_max_time}")
-    private int transaction_wait_max_time;
-
     @Value("${transaction_netty_delay_time}")
     private int transaction_netty_delay_time;
 
@@ -37,8 +34,6 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     private final static String key_prefix_notify = "tx_manager_notify_";
 
-    //网络消耗
-    private final  static  long dt = 500;
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -56,8 +51,6 @@ public class TxManagerServiceImpl implements TxManagerService {
         TxGroup txGroup = new TxGroup();
         txGroup.setStartTime(System.currentTimeMillis());
         txGroup.setGroupId(groupId);
-        txGroup.setWaitTime(transaction_wait_max_time);
-
         String key = key_prefix + groupId;
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);

@@ -26,11 +26,6 @@ public class TxState {
      */
     private int nowConnection;
 
-    /**
-     * transaction_wait_max_time
-     */
-    private int transactionWaitMaxTime;
-
 
     /**
      *  transaction_netty_heart_time
@@ -86,13 +81,6 @@ public class TxState {
         this.nowConnection = nowConnection;
     }
 
-    public int getTransactionWaitMaxTime() {
-        return transactionWaitMaxTime;
-    }
-
-    public void setTransactionWaitMaxTime(int transactionWaitMaxTime) {
-        this.transactionWaitMaxTime = transactionWaitMaxTime;
-    }
 
     public int getRedisSaveMaxTime() {
         return redisSaveMaxTime;

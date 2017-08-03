@@ -16,8 +16,6 @@ public class TxGroup {
 
     private boolean hasOver = false;
 
-    private int waitTime;
-
     private long startTime;
 
     private long endTime;
@@ -101,13 +99,6 @@ public class TxGroup {
         this.nowTime = nowTime;
     }
 
-    public int getWaitTime() {
-        return waitTime;
-    }
-
-    public void setWaitTime(int waitTime) {
-        this.waitTime = waitTime;
-    }
 
 
     public static TxGroup parser(String json) {
@@ -116,7 +107,6 @@ public class TxGroup {
             TxGroup txGroup = new TxGroup();
             txGroup.setGroupId(jsonObject.getString("g"));
             txGroup.setHasOver(jsonObject.getInteger("ho") == 1);
-            txGroup.setWaitTime(jsonObject.getInteger("w"));
             txGroup.setStartTime(jsonObject.getLong("st"));
             txGroup.setEndTime(jsonObject.getLong("et"));
             txGroup.setNowTime(jsonObject.getLong("nt"));
@@ -144,7 +134,6 @@ public class TxGroup {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", getGroupId());
         jsonObject.put("ho", hasOver ? 1 : 0);
-        jsonObject.put("w", getWaitTime());
         jsonObject.put("st", getStartTime());
         jsonObject.put("et", getEndTime());
         jsonObject.put("nt", getNowTime());
