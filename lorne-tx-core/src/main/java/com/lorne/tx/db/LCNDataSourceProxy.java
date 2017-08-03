@@ -15,8 +15,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 
@@ -38,7 +36,6 @@ public class LCNDataSourceProxy implements DataSource {
 
     private Map<String, AbstractConnection> pools = new ConcurrentHashMap<>();
 
-    //private Executor threadPool = Executors.newFixedThreadPool(ThreadPoolSizeHelper.getInstance().getInThreadSize());
 
     @Autowired
     private DataSourceService dataSourceService;
@@ -118,8 +115,6 @@ public class LCNDataSourceProxy implements DataSource {
         if (txTransactionLocal != null
             && StringUtils.isNotEmpty(txTransactionLocal.getGroupId())) {
 
-            //logger.info("initLCNConnection - lcn ->"+connection);
-
             if (CompensateServiceImpl.COMPENSATE_KEY.equals(txTransactionLocal.getGroupId())) {
                 lcnConnection = loadConnection(txTransactionLocal, connection);
             } else if (!txTransactionLocal.isHasStart()) {
@@ -127,7 +122,6 @@ public class LCNDataSourceProxy implements DataSource {
             }
 
         }
-        //logger.info("initLCNConnection - end ->"+connection);
         return lcnConnection;
     }
 
