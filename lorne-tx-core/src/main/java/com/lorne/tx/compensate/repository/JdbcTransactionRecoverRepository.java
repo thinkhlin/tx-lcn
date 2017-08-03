@@ -2,8 +2,8 @@ package com.lorne.tx.compensate.repository;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import com.lorne.core.framework.utils.config.ConfigUtils;
-import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
+import com.lorne.tx.utils.SerializerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -41,7 +41,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     public int create(TransactionRecover recover) {
         String sql = "insert into " + tableName + "(id,retried_count,create_time,last_time,group_id,task_id,invocation,state)" +
             " values(?,?,?,?,?,?,?,?)";
-        return executeUpdate(sql, recover.getId(), recover.getRetriedCount(), recover.getCreateTime(), recover.getLastTime(), recover.getGroupId(), recover.getTaskId(), recover.getInvocation().toSerializable(), recover.getState());
+        return executeUpdate(sql, recover.getId(), recover.getRetriedCount(), recover.getCreateTime(), recover.getLastTime(), recover.getGroupId(), recover.getTaskId(), SerializerUtils.serializeTransactionInvocation(recover.getInvocation()), recover.getState());
     }
 
     @Override
@@ -73,7 +73,11 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
             recover.setGroupId((String) map.get("group_id"));
             recover.setState((Integer) map.get("state"));
             byte[] bytes = (byte[]) map.get("invocation");
-            recover.setInvocation(TransactionInvocation.parser(bytes));
+            try {
+                recover.setInvocation(SerializerUtils.parserTransactionInvocation(bytes));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             recovers.add(recover);
         }
         return recovers;

@@ -6,6 +6,7 @@ import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.exception.TransactionRuntimeException;
 import com.lorne.tx.serializer.KryoSerializer;
 import com.lorne.tx.serializer.ObjectSerializer;
+import com.lorne.tx.utils.SerializerUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -37,7 +38,6 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
     private volatile static boolean initialized;
 
 
-    private static ObjectSerializer serializer;
 
     /**
      * 创建本地事务对象
@@ -107,7 +107,6 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
      */
     @Override
     public void init(String tableName) {
-        serializer = new KryoSerializer();
         String configPath = ConfigUtils.getString("tx.properties", "compensate.file.path");
         filePath = configPath + "/" + tableName;
         File file = new File(filePath);
@@ -125,7 +124,7 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
         FileChannel channel = null;
         RandomAccessFile raf;
         try {
-            byte[] content = serialize(transaction);
+            byte[] content = SerializerUtils.serializeTransactionRecover(transaction);
             raf = new RandomAccessFile(file, "rw");
             channel = raf.getChannel();
             ByteBuffer buffer = ByteBuffer.allocate(content.length);
@@ -165,7 +164,7 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
             fis.read(content);
 
             if (content != null) {
-                return deserialize(content);
+                return SerializerUtils.parserTransactionRecover(content);
             }
         } catch (Exception e) {
             throw new TransactionRuntimeException(e);
@@ -204,12 +203,4 @@ public class FileTransactionRecoverRepository implements TransactionRecoverRepos
         }
     }
 
-    public static byte[] serialize(TransactionRecover transaction) throws Exception {
-        return serializer.serialize(transaction);
-
-    }
-
-    public static TransactionRecover deserialize(byte[] value) throws Exception {
-        return serializer.deSerialize(value, TransactionRecover.class);
-    }
 }

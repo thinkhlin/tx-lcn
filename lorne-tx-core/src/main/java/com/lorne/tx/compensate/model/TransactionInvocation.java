@@ -1,12 +1,5 @@
 package com.lorne.tx.compensate.model;
 
-import com.lorne.tx.exception.TransactionException;
-import com.lorne.tx.serializer.HessianSerializer;
-import com.lorne.tx.serializer.JavaSerializer;
-import com.lorne.tx.serializer.KryoSerializer;
-import com.lorne.tx.serializer.ObjectSerializer;
-import com.lorne.tx.serializer.ProtostuffSerializer;
-
 import java.io.Serializable;
 
 /**
@@ -22,7 +15,6 @@ public class TransactionInvocation implements Serializable {
 
     private static final long serialVersionUID = 7722060715819141844L;
 
-    private transient static ObjectSerializer serializer = new KryoSerializer();
     /**
      * 事务执行器
      */
@@ -37,27 +29,6 @@ public class TransactionInvocation implements Serializable {
     private Object[] argumentValues;
 
     private Class[] parameterTypes;
-
-    public byte[] toSerializable() {
-        try {
-            final byte[] serialize = serializer.serialize(this);
-
-            return serializer.serialize(this);
-        } catch (TransactionException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-
-    public static TransactionInvocation parser(byte[] bs) {
-        try {
-            return serializer.deSerialize(bs, TransactionInvocation.class);
-        } catch (TransactionException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
 
     public TransactionInvocation() {

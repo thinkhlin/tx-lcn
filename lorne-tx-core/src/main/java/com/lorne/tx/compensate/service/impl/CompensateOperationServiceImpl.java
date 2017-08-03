@@ -11,6 +11,8 @@ import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.CompensateOperationService;
 import com.lorne.tx.exception.TransactionRuntimeException;
 import com.lorne.tx.mq.service.NettyService;
+import com.lorne.tx.serializer.KryoSerializer;
+import com.lorne.tx.serializer.ObjectSerializer;
 import com.lorne.tx.utils.MethodUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,8 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     private String url;
     private String prefix;
+
+    private ObjectSerializer serializer;
 
     /**
      * 保存数据消息队列
@@ -75,6 +79,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
             hasGracefulClose = true;
         }
         queueList = new LinkedBlockingDeque<>();
+        serializer = new KryoSerializer();
     }
 
     @Override
@@ -234,4 +239,5 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
         }
 
     }
+
 }
