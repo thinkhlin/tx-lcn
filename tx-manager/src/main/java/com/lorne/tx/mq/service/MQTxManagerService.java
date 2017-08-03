@@ -27,27 +27,8 @@ public interface MQTxManagerService {
     boolean checkTransactionGroup(String groupId,String taskId);
 
 
-    boolean checkTransactionGroupState(String groupId);
-
-
     boolean closeTransactionGroup(String groupId,int state);
 
-
-//    /**
-//     * 通知事务组事务执行状态
-//     *
-//     * @param groupId
-//     * @param kid
-//     * @param state
-//     * @return
-//     */
-//    NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state);
-
-
-    void dealTxGroup(TxGroup txGroup, boolean hasOk );
-
-
-    boolean getHasOvertime(TxGroup txGroup);
 
 
     int getDelayTime();

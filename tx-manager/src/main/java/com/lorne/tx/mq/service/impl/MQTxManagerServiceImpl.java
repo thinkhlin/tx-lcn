@@ -32,32 +32,11 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
         return txManagerService.closeTransactionGroup(groupId,state);
     }
 
-
-//    @Override
-//    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
-//        return txManagerService.notifyTransactionInfo(groupId, kid, state);
-//    }
-//
-
     @Override
     public boolean checkTransactionGroup(String groupId, String taskId) {
         return txManagerService.checkTransactionGroup(groupId, taskId);
     }
 
-    @Override
-    public boolean checkTransactionGroupState(String groupId) {
-        return txManagerService.checkTransactionGroupState(groupId);
-    }
-
-    @Override
-    public void dealTxGroup(TxGroup txGroup, boolean hasOk) {
-        txManagerService.dealTxGroup(txGroup, hasOk);
-    }
-
-    @Override
-    public boolean getHasOvertime(TxGroup txGroup) {
-        return txManagerService.getHasOvertime(txGroup);
-    }
 
     @Override
     public int getDelayTime() {

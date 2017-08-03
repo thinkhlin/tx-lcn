@@ -42,55 +42,26 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
     @Override
     public void confirm(TxGroup txGroup) {
-      //  logger.info("end:" + txGroup.toJsonString());
-    //    boolean checkState = true;
-
-
-//        //检查事务是否正常
-//        for (TxInfo info : txGroup.getList()) {
-//            if (info.getState() == 0) {
-//                checkState = false;
-//            }
-//        }
-
-
-
         //绑定管道对象，检查网络
         boolean isOk = reloadChannel(txGroup.getList());
-
 
         //事务不满足直接回滚事务
         if (txGroup.getState()==0) {
             transaction(txGroup, 0);
             return;
         }
-//        txGroup.setState(1);
-
-
-        boolean hasOvertime = txManagerService.getHasOvertime(txGroup);
-
         if (isOk) {
-            if(hasOvertime){
-                transaction(txGroup, -1);
-            }else{
-                //提交事务
-               boolean hasOk =  transaction(txGroup, 1);
-               txManagerService.dealTxGroup(txGroup,hasOk);
-            }
+            //提交事务
+            boolean hasOk =  transaction(txGroup, 1);
+            txManagerService.dealTxGroup(txGroup,hasOk);
         } else {
-            if(hasOvertime){
-                transaction(txGroup, -1);
-            }else{
-                transaction(txGroup, 0);
-            }
+            transaction(txGroup, 0);
         }
-
-
     }
 
 
     /**
-     * 检查事务是否提交
+     * 匹配管道
      *
      * @param list
      */
