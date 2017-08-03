@@ -67,7 +67,6 @@ public class LCNDataSourceProxy implements DataSource {
             }
 
             pools.remove(connection.getGroupId());
-            System.out.println("pools-size->" + pools.size());
             nowCount--;
         }
     };
@@ -85,13 +84,15 @@ public class LCNDataSourceProxy implements DataSource {
         if (nowCount == maxCount) {
             logger.info("initLCNConnection max count ...");
             for (int i = 0; i < maxWaitTime; i++) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if (nowCount < maxCount) {
-                    return createLcnConnection(connection, txTransactionLocal);
+                for(int j=0;j<100;j++){
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if (nowCount < maxCount) {
+                        return createLcnConnection(connection, txTransactionLocal);
+                    }
                 }
             }
         } else if (nowCount < maxCount) {

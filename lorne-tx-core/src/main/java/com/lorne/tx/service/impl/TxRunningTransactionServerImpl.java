@@ -40,6 +40,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         String kid = KidUtils.generateShortUuid();
         String txGroupId = info.getTxGroupId();
         logger.info("tx-running-start->" + txGroupId);
+
+
         String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
 
         TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
@@ -48,9 +50,10 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         txTransactionLocal.setKid(kid);
         txTransactionLocal.setCompensateId(compensateId);
         TxTransactionLocal.setCurrent(txTransactionLocal);
-
         try {
+
             Object res = point.proceed();
+
             final TxGroup resTxGroup = txManagerService.addTransactionGroup(txGroupId, kid, TxTransactionLocal.current().isHasIsGroup());
             if (resTxGroup == null) {
                 Task waitTask = ConditionUtils.getInstance().getTask(kid);
@@ -65,9 +68,9 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         } catch (Throwable e) {
             throw e;
         } finally {
-            logger.info("tx-running-end->" + txGroupId);
             compensateService.deleteTransactionInfo(compensateId);
             TxTransactionLocal.setCurrent(null);
+            logger.info("tx-running-end->" + txGroupId);
         }
     }
 

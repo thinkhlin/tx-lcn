@@ -39,7 +39,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
         if (txGroup == null) {
             throw new ServiceException("创建事务组异常.");
         }
-        String groupId = txGroup.getGroupId();
+        final String groupId = txGroup.getGroupId();
         int state = 0;
         try {
             TxTransactionLocal txTransactionLocal = new TxTransactionLocal();

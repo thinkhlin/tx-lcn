@@ -245,15 +245,14 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     }
 
     public String sendMsg(final Request request) {
+        long t1 = System.currentTimeMillis();
         final String key = request.getKey();
         if (ctx != null && ctx.channel() != null && ctx.channel().isActive()) {
-
             final Task task = ConditionUtils.getInstance().createTask(key);
             ScheduledFuture future = executorService.schedule(new Runnable() {
                 @Override
                 public void run() {
                     Task task = ConditionUtils.getInstance().getTask(key);
-                    logger.info("sendMsg-schedule->" + request.getKey());
                     if (task != null && !task.isNotify()) {
                         task.setBack(new IBack() {
                             @Override
@@ -262,11 +261,9 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                             }
                         });
                         task.signalTask();
-                        logger.info("sendMsg-schedule-signalTask->" + request.getKey());
                     }
                 }
             }, delay, TimeUnit.SECONDS);
-
 
             threadPool.execute(new Runnable() {
                 @Override
@@ -274,7 +271,6 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                     sleepSend(task, request);
                 }
             });
-
 
             task.awaitTask();
 
@@ -284,13 +280,15 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
             try {
                 Object msg = task.getBack().doing();
+                long t2 = System.currentTimeMillis();
+
+                logger.info("send-msg-time->"+(t2-t1));
+
                 return (String) msg;
             } catch (Throwable e) {
             } finally {
                 task.remove();
             }
-
-
         }
         return null;
 
