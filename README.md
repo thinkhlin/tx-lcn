@@ -65,7 +65,7 @@
 
 ## 关于@TxTransaction 使用说明
 
-  @TxTransaction注解仅仅是分布式事务的标示，因此在使用是需要先开启本地事务。
+  @TxTransaction注解是分布式事务的标示。
   
   若存在业务方法：a-b b-c b-d，那么开启分布式事务注解的话，只需要在a方法上添加@TxTransaction即可。
   
