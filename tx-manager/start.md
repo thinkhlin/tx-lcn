@@ -1,5 +1,5 @@
 
-TxManager是LCN分布式事务框架的事务协调器，框架基于Netty做消息通讯，事务控制数据存储在Redis中。
+**TxManager是LCN分布式事务框架的事务协调器，框架基于Netty做消息通讯，事务控制数据存储在Redis中。**
 
 
 ## 使用教程
@@ -76,6 +76,7 @@ endpoints:
 
 ![ ](readme/index.png)
 
+备注：启动过程中可能会发现一些异常，是由于eureka的启动顺序导致的，可以忽略。只要确保redis配置正确，且可访问index界面即可。
 
 ## 高可用配置
 
