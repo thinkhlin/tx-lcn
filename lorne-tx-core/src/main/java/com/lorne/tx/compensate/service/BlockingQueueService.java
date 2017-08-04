@@ -11,7 +11,7 @@ import java.util.List;
  * 补偿操作实现方法
  * Created by lorne on 2017/7/12.
  */
-public interface CompensateOperationService {
+public interface BlockingQueueService {
 
     void setTransactionRecover(TransactionRecoverRepository recoverRepository);
 
@@ -25,7 +25,7 @@ public interface CompensateOperationService {
 
     boolean updateRetriedCount(String id, int retriedCount);
 
-    void init(String modelName);
+    void init(String tableName,String unique);
 
 
 }

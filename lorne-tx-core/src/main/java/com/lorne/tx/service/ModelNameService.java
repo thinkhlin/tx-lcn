@@ -6,4 +6,6 @@ package com.lorne.tx.service;
 public interface ModelNameService {
 
     String getModelName();
+
+    String getUniqueKey();
 }

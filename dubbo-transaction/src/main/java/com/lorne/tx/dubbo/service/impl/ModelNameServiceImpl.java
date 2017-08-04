@@ -22,14 +22,17 @@ public class ModelNameServiceImpl implements ModelNameService {
 
     @Override
     public String getModelName() {
-        String modelName = applicationConfig.getName();
+        return  applicationConfig.getName();
+    }
+
+    @Override
+    public String getUniqueKey() {
         DubboProtocol dubboProtocol =  DubboProtocol.getDubboProtocol();
         Collection<ExchangeServer> servers =  dubboProtocol.getServers();
         String address = "";
         for(ExchangeServer server:servers){
             address+=server.getLocalAddress();
         }
-        address =  MD5Util.md5(address);
-        return address+"_"+modelName;
+        return MD5Util.md5(address);
     }
 }

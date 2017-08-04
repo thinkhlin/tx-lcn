@@ -1,0 +1,112 @@
+package com.lorne.tx.compensate.repository;
+
+import org.springframework.stereotype.Component;
+
+/**
+ * create by lorne on 2017/8/4
+ */
+@Component
+public class SqlHelper {
+
+
+    public String getCreateTableSql(String dbType, String tableName) {
+        String sql = "";
+        switch (dbType) {
+            case "mysql": {
+                sql = "CREATE TABLE `" + tableName + "` (\n" +
+                    "  `id` varchar(10) NOT NULL,\n" +
+                    "  `retried_count` int(3) NOT NULL,\n" +
+                    "  `create_time` datetime NOT NULL,\n" +
+                    "  `last_time` datetime NOT NULL,\n" +
+                    "  `state` int(2) NOT NULL,\n" +
+                    "  `group_id` varchar(10) NOT NULL,\n" +
+                    "  `l_unique` varchar(32) NOT NULL,\n" +
+                    "  `task_id` varchar(10) NOT NULL,\n" +
+                    "  `invocation` longblob NOT NULL,\n" +
+                    "  PRIMARY KEY (`id`)\n" +
+                    ")";
+                break;
+            }
+            case "oracle": {
+                sql = "CREATE TABLE `" + tableName + "` (\n" +
+                    "  `id` varchar(10) NOT NULL,\n" +
+                    "  `retried_count` number(3,0) NOT NULL,\n" +
+                    "  `create_time` datetime  NOT NULL,\n" +
+                    "  `last_time` datetime  NOT NULL,\n" +
+                    "  `state` number(2,0) NOT NULL,\n" +
+                    "  `l_unique` varchar2(32) NOT NULL,\n" +
+                    "  `group_id` varchar2(10) NOT NULL,\n" +
+                    "  `task_id` varchar2(10) NOT NULL,\n" +
+                    "  `invocation` BLOB NOT NULL,\n" +
+                    "  PRIMARY KEY (`id`)\n" +
+                    ")";
+                break;
+            }
+            case "sqlserver": {
+                sql = "CREATE TABLE `" + tableName + "` (\n" +
+                    "  `id` varchar(10) NOT NULL,\n" +
+                    "  `retried_count` int(3) NOT NULL,\n" +
+                    "  `create_time` datetime NOT NULL,\n" +
+                    "  `last_time` datetime NOT NULL,\n" +
+                    "  `state` int(2) NOT NULL,\n" +
+                    "  `l_unique` nchar(32) NOT NULL,\n" +
+                    "  `group_id` nchar(10) NOT NULL,\n" +
+                    "  `task_id` nchar(10) NOT NULL,\n" +
+                    "  `invocation` varbinary NOT NULL,\n" +
+                    "  PRIMARY KEY (`id`)\n" +
+                    ")";
+                break;
+            }
+            default: {
+                throw new RuntimeException("dbType类型不支持,目前仅支持mysql oracle sqlserver.");
+            }
+        }
+        return sql;
+    }
+
+    public String getFindAllSql(String dbType,String tableName) {
+        return "select * from " + tableName + " where state = ? and l_unique = ? ";
+    }
+
+    public String getUpdateSql(String dbType,String tableName) {
+        switch (dbType){
+            case "mysql":{
+                return "update " + tableName + " set last_time = now(),set state = ?,set retried_count = ? where id = ? ";
+            }
+            case "sqlserver":{
+                return "update " + tableName + " set last_time = getdate(),set state = ?,set retried_count = ? where id = ? ";
+            }
+            case "oracle":{
+                return "update " + tableName + " set last_time = sysdate ,set state = ?,set retried_count = ? where id = ? ";
+            }
+            default: {
+                throw new RuntimeException("dbType类型不支持,目前仅支持mysql oracle sqlserver.");
+            }
+        }
+    }
+
+    public String getDeleteSql(String dbType,String tableName) {
+        return  "delete from " + tableName + " where id = ? ";
+    }
+
+    public String getInsertSql(String dbType,String tableName) {
+        switch (dbType){
+            case "mysql":{
+                return  "insert into " + tableName + "(id,l_unique,retried_count,create_time,last_time,group_id,task_id,invocation,state)" +
+                    " values(?,?,?,now(),now(),?,?,?,?)";
+            }
+            case "sqlserver":{
+                return  "insert into " + tableName + "(id,l_unique,retried_count,create_time,last_time,group_id,task_id,invocation,state)" +
+                    " values(?,?,?,getdate(),getdate(),?,?,?,?)";
+            }
+            case "oracle":{
+                return  "insert into " + tableName + "(id,l_unique,retried_count,create_time,last_time,group_id,task_id,invocation,state)" +
+                    " values(?,?,?,sysdate,sysdate,?,?,?,?)";
+            }
+            default: {
+                throw new RuntimeException("dbType类型不支持,目前仅支持mysql oracle sqlserver.");
+            }
+        }
+
+    }
+}

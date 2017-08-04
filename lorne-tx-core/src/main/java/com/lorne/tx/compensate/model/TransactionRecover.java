@@ -23,6 +23,12 @@ public class TransactionRecover implements Serializable {
 
 
     /**
+     * 同模块唯一标示
+     */
+    private String unique;
+
+
+    /**
      * 重试次数，
      */
     private int retriedCount = 0;
@@ -126,5 +132,13 @@ public class TransactionRecover implements Serializable {
 
     public void setState(int state) {
         this.state = state;
+    }
+
+    public String getUnique() {
+        return unique;
+    }
+
+    public void setUnique(String unique) {
+        this.unique = unique;
     }
 }

@@ -2,7 +2,6 @@ package com.lorne.tx.compensate.repository;
 
 import com.lorne.tx.compensate.model.TransactionRecover;
 
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -14,6 +13,7 @@ import java.util.List;
  * @version 1.0
  * @since JDK 1.8
  */
+
 public interface TransactionRecoverRepository {
 
     /**
@@ -41,7 +41,7 @@ public interface TransactionRecoverRepository {
      * @param state        数据库状态
      * @return rows
      */
-    int update(String id, Date lastTime, int state, int retriedCount);
+    int update(String id,int state, int retriedCount);
 
 
     /**
@@ -54,5 +54,5 @@ public interface TransactionRecoverRepository {
     /**
      * 创建表等操作
      */
-    void init(String tableName);
+    void init(String tableName,String unique);
 }

@@ -8,7 +8,7 @@ import com.lorne.tx.compensate.model.QueueMsg;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
-import com.lorne.tx.compensate.service.CompensateOperationService;
+import com.lorne.tx.compensate.service.BlockingQueueService;
 import com.lorne.tx.exception.TransactionRuntimeException;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.utils.MethodUtils;
@@ -18,25 +18,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by lorne on 2017/7/12.
  */
 @Service
-public class CompensateOperationServiceImpl implements CompensateOperationService {
+public class BlockingQueueServiceImpl implements BlockingQueueService {
 
     @Autowired
     private ApplicationContext applicationContext;
 
-    private Logger logger = LoggerFactory.getLogger(CompensateOperationServiceImpl.class);
+    private Logger logger = LoggerFactory.getLogger(BlockingQueueServiceImpl.class);
 
     private TransactionRecoverRepository recoverRepository;
 
@@ -62,7 +59,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
     private final Executor threadPools = Executors.newFixedThreadPool(max_size);
 
 
-    public CompensateOperationServiceImpl() {
+    public BlockingQueueServiceImpl() {
         url = ConfigUtils.getString("tx.properties", "url");
         int state = 0;
         try {
@@ -144,7 +141,7 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
 
     @Override
     public boolean updateRetriedCount(String id, int retriedCount) {
-        return recoverRepository.update(id, new Date(), 0, retriedCount) > 0;
+        return recoverRepository.update(id,0, retriedCount) > 0;
     }
 
     @Override
@@ -165,19 +162,12 @@ public class CompensateOperationServiceImpl implements CompensateOperationServic
         }
     }
 
-    private String getTableName(String modelName) {
-        Pattern pattern = Pattern.compile("[^a-z0-9A-Z]");
-        Matcher matcher = pattern.matcher(modelName);
-        return matcher.replaceAll("_");
-    }
 
 
     @Override
-    public void init(String modelName) {
+    public void init(String tableName,String unique) {
 
-        String tableName = "lcn_tx_"+ getTableName(modelName);
-
-        recoverRepository.init(tableName);
+        recoverRepository.init(tableName,unique);
 
         if (hasGracefulClose) {
             Runnable runnable = new Runnable() {

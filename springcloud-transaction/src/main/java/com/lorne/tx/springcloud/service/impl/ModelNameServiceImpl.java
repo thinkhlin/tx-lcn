@@ -26,9 +26,7 @@ public class ModelNameServiceImpl implements ModelNameService {
 
     @Override
     public String getModelName() {
-        String address = getIp()+serverListener.getPort();
-        address =  MD5Util.md5(address);
-        return address+"_"+modelName;
+        return modelName;
     }
 
     private String getIp(){
@@ -39,5 +37,11 @@ public class ModelNameServiceImpl implements ModelNameService {
             e.printStackTrace();
         }
         return host;
+    }
+
+    @Override
+    public String getUniqueKey() {
+        String address = getIp()+serverListener.getPort();
+        return  MD5Util.md5(address);
     }
 }

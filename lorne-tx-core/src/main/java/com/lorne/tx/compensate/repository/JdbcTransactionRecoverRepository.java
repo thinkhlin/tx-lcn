@@ -6,6 +6,7 @@ import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.utils.SerializerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.sql.*;
@@ -26,6 +27,9 @@ import java.util.Date;
 public class JdbcTransactionRecoverRepository implements TransactionRecoverRepository {
 
 
+    @Autowired
+    private SqlHelper sqlHelper;
+
     private Logger logger = LoggerFactory.getLogger(JdbcTransactionRecoverRepository.class);
 
     private DruidDataSource dataSource;
@@ -34,37 +38,35 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     private String tableName;
 
+    private String unique;
 
     private static Connection connection = null;
 
     @Override
     public int create(TransactionRecover recover) {
-        String sql = "insert into " + tableName + "(id,retried_count,create_time,last_time,group_id,task_id,invocation,state)" +
-            " values(?,?,?,?,?,?,?,?)";
-        return executeUpdate(sql, recover.getId(), recover.getRetriedCount(), recover.getCreateTime(), recover.getLastTime(), recover.getGroupId(), recover.getTaskId(), SerializerUtils.serializeTransactionInvocation(recover.getInvocation()), recover.getState());
+        String sql = sqlHelper.getInsertSql(dbType,tableName);
+        return executeUpdate(sql,recover.getId(),unique, recover.getRetriedCount(), recover.getGroupId(), recover.getTaskId(), SerializerUtils.serializeTransactionInvocation(recover.getInvocation()), recover.getState());
     }
 
     @Override
     public int remove(String id) {
-        String sql = "delete from " + tableName + " where id = ? ";
+        String sql = sqlHelper.getDeleteSql(dbType,tableName);
         return executeUpdate(sql, id);
     }
 
     @Override
-    public int update(String id, Date lastTime, int state, int retriedCount) {
-        String sql = "update " + tableName + " set last_time = ?,set state = ?,set retried_count = ? where id = ? ";
-        return executeUpdate(sql, lastTime, state, retriedCount, id);
+    public int update(String id, int state, int retriedCount) {
+        String sql = sqlHelper.getUpdateSql(dbType,tableName);
+        return executeUpdate(sql, state, retriedCount, id);
     }
 
     @Override
     public List<TransactionRecover> findAll(int state) {
-        String selectSql = "select * from " + tableName + " where state = ? ";
-        List<Map<String, Object>> list = executeQuery(selectSql, state);
-
+        String selectSql = sqlHelper.getFindAllSql(dbType,tableName);
+        List<Map<String, Object>> list = executeQuery(selectSql, state,unique);
         List<TransactionRecover> recovers = new ArrayList<>();
         for (Map<String, Object> map : list) {
             TransactionRecover recover = new TransactionRecover();
-
             recover.setId((String) map.get("id"));
             recover.setRetriedCount((Integer) map.get("retried_count"));
             recover.setCreateTime((Date) map.get("create_time"));
@@ -72,6 +74,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
             recover.setTaskId((String) map.get("task_id"));
             recover.setGroupId((String) map.get("group_id"));
             recover.setState((Integer) map.get("state"));
+            recover.setUnique((String)map.get("l_unique"));
             byte[] bytes = (byte[]) map.get("invocation");
             try {
                 recover.setInvocation(SerializerUtils.parserTransactionInvocation(bytes));
@@ -84,7 +87,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     }
 
     @Override
-    public void init(String tableName) {
+    public void init(String tableName,String unique) {
         dataSource = new DruidDataSource();
         dataSource.setUrl(ConfigUtils.getString("tx.properties", "compensate.db.url"));
         dataSource.setUsername(ConfigUtils.getString("tx.properties", "compensate.db.username"));
@@ -101,58 +104,10 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         dbType = ConfigUtils.getString("tx.properties", "compensate.db.dbType");
 
         this.tableName = tableName;
+        this.unique = unique;
 
         // TODO: 2017/7/13 扩展多中数据库的创建表语句
-        String createTableSql = "";
-
-        switch (dbType) {
-            case "mysql": {
-                createTableSql = "CREATE TABLE `" + tableName + "` (\n" +
-                    "  `id` varchar(10) NOT NULL,\n" +
-                    "  `retried_count` int(3) NOT NULL,\n" +
-                    "  `create_time` datetime NOT NULL,\n" +
-                    "  `last_time` datetime NOT NULL,\n" +
-                    "  `state` int(2) NOT NULL,\n" +
-                    "  `group_id` varchar(10) NOT NULL,\n" +
-                    "  `task_id` varchar(10) NOT NULL,\n" +
-                    "  `invocation` longblob NOT NULL,\n" +
-                    "  PRIMARY KEY (`id`)\n" +
-                    ")";
-                break;
-            }
-            case "oracle": {
-                createTableSql = "CREATE TABLE `" + tableName + "` (\n" +
-                    "  `id` varchar(10) NOT NULL,\n" +
-                    "  `retried_count` number(3,0) NOT NULL,\n" +
-                    "  `create_time` datetime  NOT NULL,\n" +
-                    "  `last_time` datetime  NOT NULL,\n" +
-                    "  `state` number(2,0) NOT NULL,\n" +
-                    "  `group_id` varchar2(10) NOT NULL,\n" +
-                    "  `task_id` varchar2(10) NOT NULL,\n" +
-                    "  `invocation` BLOB NOT NULL,\n" +
-                    "  PRIMARY KEY (`id`)\n" +
-                    ")";
-                break;
-            }
-            case "sqlserver": {
-                createTableSql = "CREATE TABLE `" + tableName + "` (\n" +
-                    "  `id` varchar(10) NOT NULL,\n" +
-                    "  `retried_count` int(3) NOT NULL,\n" +
-                    "  `create_time` datetime NOT NULL,\n" +
-                    "  `last_time` datetime NOT NULL,\n" +
-                    "  `state` int(2) NOT NULL,\n" +
-                    "  `group_id` nchar(10) NOT NULL,\n" +
-                    "  `task_id` nchar(10) NOT NULL,\n" +
-                    "  `invocation` varbinary NOT NULL,\n" +
-                    "  PRIMARY KEY (`id`)\n" +
-                    ")";
-                break;
-            }
-            default: {
-                throw new RuntimeException("dbType类型不支持,目前仅支持mysql oracle sqlserver.");
-            }
-        }
-        executeUpdate(createTableSql);
+        executeUpdate(sqlHelper.getCreateTableSql(dbType,tableName));
     }
 
 
