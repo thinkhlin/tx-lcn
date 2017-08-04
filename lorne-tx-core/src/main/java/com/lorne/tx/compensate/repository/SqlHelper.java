@@ -86,7 +86,7 @@ public class SqlHelper {
     }
 
     public String getDeleteSql(String dbType,String tableName) {
-        return  "delete from " + tableName + " where id = ? ";
+        return  "delete from " + tableName + " where state = 0 and id = ?  ";
     }
 
     public String getInsertSql(String dbType,String tableName) {

@@ -8,7 +8,7 @@ import com.lorne.core.framework.utils.task.Task;
 public interface DataSourceService {
 
 
-    void schedule(String groupId, Task waitTask);
+    void schedule(String groupId,String compensateId, Task waitTask);
 
     void deleteCompensateId(String compensateId);
 }

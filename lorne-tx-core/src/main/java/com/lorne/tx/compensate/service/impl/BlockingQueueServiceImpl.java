@@ -105,12 +105,14 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
                     if (isOk) {
                         String notifyGroup = HttpUtils.get(url + "Group?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId());
                         logger.info("补偿事务通知TM->" + notifyGroup);
+                        recoverRepository.update(data.getId(),0,0);
                         delete(data.getId());
                     } else {
                         updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
                     }
                 } else {
                     //回滚操作直接清理事务补偿日志
+                    recoverRepository.update(data.getId(),0,0);
                     delete(data.getId());
                 }
             }

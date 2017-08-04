@@ -68,7 +68,6 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         } catch (Throwable e) {
             throw e;
         } finally {
-            compensateService.deleteTransactionInfo(compensateId);
             TxTransactionLocal.setCurrent(null);
             logger.info("tx-running-end->" + txGroupId);
         }

@@ -41,7 +41,7 @@ public class LCNConnection extends AbstractConnection {
             @Override
             public void run() {
                 logger.info("自动回滚->" + transactionLocal.getGroupId());
-                dataSourceService.schedule(transactionLocal.getGroupId(), waitTask);
+                dataSourceService.schedule(transactionLocal.getGroupId(),transactionLocal.getCompensateId(), waitTask);
             }
         }, 30 * 1000);
 
@@ -50,7 +50,6 @@ public class LCNConnection extends AbstractConnection {
         waitTask.awaitTask();
 
         timer.cancel();
-
         try {
             int rs = waitTask.getState();
             logger.info("(" + transactionLocal.getGroupId() + ")->单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + rs);
