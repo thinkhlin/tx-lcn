@@ -155,7 +155,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                                 // 1  成功 0 失败 -1 task为空 -2 超过
                                 boolean res = "1".equals(data);
 
-                                if ("1".equals(data) || "0".equals(data)) {
+                                if ("1".equals(data)) {
                                     txInfo.setNotify(1);
                                 }
 
