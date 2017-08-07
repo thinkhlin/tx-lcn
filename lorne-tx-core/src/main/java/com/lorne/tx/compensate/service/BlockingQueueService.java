@@ -28,4 +28,11 @@ public interface BlockingQueueService {
     void init(String tableName,String unique);
 
 
+    /**
+     * 获取需要补偿的事务
+     *
+     * @return List<TransactionRecover>
+     */
+    List<TransactionRecover> loadCompensateList(int time);
+
 }

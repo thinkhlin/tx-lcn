@@ -83,8 +83,10 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
         return recoverRepository.findAll(state);
     }
 
+
+
     @Override
-    public void execute(TransactionRecover data) {
+    public synchronized void execute(TransactionRecover data) {
         if (data != null) {
             TransactionInvocation invocation = data.getInvocation();
             if (invocation != null) {
@@ -165,6 +167,10 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
     }
 
 
+    @Override
+    public List<TransactionRecover> loadCompensateList(int time) {
+        return recoverRepository.loadCompensateList(time);
+    }
 
     @Override
     public void init(String tableName,String unique) {

@@ -78,20 +78,47 @@ public class CompensateServiceImpl implements CompensateService {
 
         }
 
-        // add Task
+        // add Task check 检查那些未能正常执行的业务数据
         new Thread() {
             @Override
             public void run() {
                 while (true) {
-                    final List<TransactionRecover> list = blockingQueueService.findAll(2);
-                    if (list == null || list.size() == 0) {
-                        return;
-                    }
-                    for (TransactionRecover data : list) {
-                        blockingQueueService.execute(data);
-                    }
+                    try {
+                        final List<TransactionRecover> list = blockingQueueService.findAll(2);
+                        if (list == null || list.size() == 0) {
+                            return;
+                        }
+                        for (TransactionRecover data : list) {
+                            blockingQueueService.execute(data);
+                        }
+                    }catch (Exception e){}
                     try {
                         Thread.sleep(1000 * 60);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }.start();
+
+
+        // add Task 检查需要补偿的数据，这里不区分是否同一个业务模块，集群下执行相同的逻辑处理。
+        new Thread() {
+            @Override
+            public void run() {
+                int maxTime = 5;//分钟
+                while (true) {
+                    try {
+                        final List<TransactionRecover> list = blockingQueueService.loadCompensateList(maxTime);
+                        if (list == null || list.size() == 0) {
+                            return;
+                        }
+                        for (TransactionRecover data : list) {
+                            blockingQueueService.execute(data);
+                        }
+                    }catch (Exception e){}
+                    try {
+                        Thread.sleep(1000 * maxTime);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

@@ -64,8 +64,25 @@ public class SqlHelper {
         return sql;
     }
 
-    public String getFindAllSql(String dbType,String tableName) {
+    public String getFindAllByUniqueSql(String dbType, String tableName) {
         return "select * from " + tableName + " where state = ? and l_unique = ? ";
+    }
+
+    public String loadCompensateList(String dbType, String tableName,int time) {
+        switch (dbType){
+            case "mysql":{
+                return "select * from " + tableName + " where state = 0 and (now() - last_time) > (100 * "+time+")";
+            }
+            case "sqlserver":{
+                return "select * from " + tableName + " where state = 0 and (getdate() - last_time) > (60 * "+time+")";
+            }
+            case "oracle":{
+                return "select * from " + tableName + " where state = 0 and (sysdate - last_time) > (60 * "+time+")";
+            }
+            default: {
+                throw new RuntimeException("dbType类型不支持,目前仅支持mysql oracle sqlserver.");
+            }
+        }
     }
 
     public String getUpdateSql(String dbType,String tableName) {

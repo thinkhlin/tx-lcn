@@ -62,8 +62,25 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     @Override
     public List<TransactionRecover> findAll(int state) {
-        String selectSql = sqlHelper.getFindAllSql(dbType,tableName);
+        String selectSql = sqlHelper.getFindAllByUniqueSql(dbType,tableName);
         List<Map<String, Object>> list = executeQuery(selectSql, state,unique);
+       return loadList(list);
+    }
+
+
+
+    @Override
+    public List<TransactionRecover> loadCompensateList(int time) {
+        String selectSql = sqlHelper.loadCompensateList(dbType,tableName,time);
+        List<Map<String, Object>> list = executeQuery(selectSql);
+        List<TransactionRecover>  recovers =  loadList(list);
+        for(TransactionRecover recover:recovers){
+            update(recover.getId(),1,recover.getRetriedCount());
+        }
+        return recovers;
+    }
+
+    private List<TransactionRecover> loadList(List<Map<String, Object>> list){
         List<TransactionRecover> recovers = new ArrayList<>();
         for (Map<String, Object> map : list) {
             TransactionRecover recover = new TransactionRecover();

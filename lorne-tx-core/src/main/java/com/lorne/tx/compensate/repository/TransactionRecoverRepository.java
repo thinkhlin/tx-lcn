@@ -52,6 +52,13 @@ public interface TransactionRecoverRepository {
     List<TransactionRecover> findAll(int state);
 
     /**
+     * 获取需要补偿的事务
+     *
+     * @return List<TransactionRecover>
+     */
+    List<TransactionRecover> loadCompensateList(int time);
+
+    /**
      * 创建表等操作
      */
     void init(String tableName,String unique);
