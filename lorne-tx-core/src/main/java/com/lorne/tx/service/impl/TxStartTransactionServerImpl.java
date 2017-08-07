@@ -54,7 +54,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
         } finally {
             txManagerService.closeTransactionGroup(groupId, state);
             TxTransactionLocal.setCurrent(null);
-            logger.info("tx-end");
+            logger.info("tx-end->"+state);
         }
     }
 
