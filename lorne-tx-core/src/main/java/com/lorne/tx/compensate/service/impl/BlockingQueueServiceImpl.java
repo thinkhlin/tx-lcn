@@ -104,6 +104,7 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
                     TxTransactionCompensate compensate = new TxTransactionCompensate();
                     TxTransactionCompensate.setCurrent(compensate);
                     boolean isOk = MethodUtils.invoke(applicationContext, invocation);
+                    TxTransactionCompensate.setCurrent(null);
                     if (isOk) {
                         String notifyGroup = HttpUtils.get(url + "Group?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId());
                         logger.info("补偿事务通知TM->" + notifyGroup);
