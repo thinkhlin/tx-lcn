@@ -45,20 +45,16 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     @Override
     public void confirm(TxGroup txGroup) {
         //绑定管道对象，检查网络
-        boolean isOk = reloadChannel(txGroup.getList());
+        setChannel(txGroup.getList());
 
         //事务不满足直接回滚事务
         if (txGroup.getState()==0) {
             transaction(txGroup, 0);
             return;
         }
-        if (isOk) {
-            //提交事务
-            boolean hasOk =  transaction(txGroup, 1);
-            txManagerService.dealTxGroup(txGroup,hasOk);
-        } else {
-            transaction(txGroup, 0);
-        }
+
+        boolean hasOk =  transaction(txGroup, 1);
+        txManagerService.dealTxGroup(txGroup,hasOk);
     }
 
 
@@ -67,8 +63,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
      *
      * @param list
      */
-    private boolean reloadChannel(List<TxInfo> list) {
-        int count = 0;
+    private void setChannel(List<TxInfo> list) {
         for (TxInfo info : list) {
             if(Constants.address.equals(info.getAddress())){
                 Channel channel = SocketManager.getInstance().getChannelByModelName(info.getModelName());
@@ -77,7 +72,6 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                     sender.setChannel(channel);
 
                     info.setChannel(sender);
-                    count++;
                 }
             }else{
                 ChannelSender sender = new ChannelSender();
@@ -85,10 +79,8 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                 sender.setModelName(info.getModelName());
 
                 info.setChannel(sender);
-                count++;
             }
         }
-        return count == list.size();
     }
 
 
