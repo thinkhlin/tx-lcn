@@ -10,4 +10,6 @@ public class Constants {
 
     public static int socketPort;
 
+    public static String address;
+
 }

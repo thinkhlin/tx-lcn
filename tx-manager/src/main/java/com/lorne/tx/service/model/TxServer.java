@@ -1,4 +1,4 @@
-package com.lorne.tx.model;
+package com.lorne.tx.service.model;
 
 /**
  * Created by lorne on 2017/7/1.

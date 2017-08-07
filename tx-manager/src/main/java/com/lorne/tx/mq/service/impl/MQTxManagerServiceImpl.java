@@ -1,6 +1,6 @@
 package com.lorne.tx.mq.service.impl;
 
-import com.lorne.tx.manager.service.TxManagerService;
+import com.lorne.tx.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import org.springframework.beans.factory.annotation.Autowired;

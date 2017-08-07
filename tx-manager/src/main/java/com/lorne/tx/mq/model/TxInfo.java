@@ -2,6 +2,7 @@ package com.lorne.tx.mq.model;
 
 import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.model.JsonModel;
+import com.lorne.tx.service.model.ChannelSender;
 import io.netty.channel.Channel;
 
 /**
@@ -21,7 +22,12 @@ public class TxInfo extends JsonModel {
      */
     private int isGroup;
 
-    private Channel channel;
+    /**
+     * tm识别标示
+     */
+    private String address;
+
+    private ChannelSender channel;
 
 
     public String getKid() {
@@ -32,11 +38,11 @@ public class TxInfo extends JsonModel {
         this.kid = kid;
     }
 
-    public Channel getChannel() {
+    public ChannelSender getChannel() {
         return channel;
     }
 
-    public void setChannel(Channel channel) {
+    public void setChannel(ChannelSender channel) {
         this.channel = channel;
     }
 
@@ -64,6 +70,14 @@ public class TxInfo extends JsonModel {
         this.isGroup = isGroup;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
     @Override
     public String toString() {
         JSONObject jsonObject = new JSONObject();
@@ -71,6 +85,7 @@ public class TxInfo extends JsonModel {
         jsonObject.put("modelName",getModelName());
         jsonObject.put("notify",getNotify());
         jsonObject.put("isGroup",getIsGroup());
+        jsonObject.put("address",getAddress());
         return jsonObject.toString();
     }
 }

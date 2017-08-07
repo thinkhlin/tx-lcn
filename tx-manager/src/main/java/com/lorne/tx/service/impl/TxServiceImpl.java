@@ -2,15 +2,16 @@ package com.lorne.tx.service.impl;
 
 
 import com.lorne.tx.Constants;
-import com.lorne.tx.eureka.DiscoveryService;
-import com.lorne.tx.manager.service.TxManagerService;
-import com.lorne.tx.model.TxServer;
-import com.lorne.tx.model.TxState;
+import com.lorne.tx.service.DiscoveryService;
+import com.lorne.tx.service.TxManagerService;
 import com.lorne.tx.service.TxService;
-import com.lorne.tx.socket.SocketManager;
+import com.lorne.tx.service.model.TxServer;
+import com.lorne.tx.service.model.TxState;
+import com.lorne.tx.utils.socket.SocketManager;
+import com.lorne.tx.utils.socket.SocketUtils;
 import com.netflix.appinfo.InstanceInfo;
-import com.netflix.discovery.shared.Application;
 import com.netflix.eureka.EurekaServerContextHolder;
+import io.netty.channel.Channel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -150,5 +151,15 @@ public class TxServiceImpl implements TxService {
     @Override
     public boolean getServerGroupState(String groupId) {
         return managerService.checkTransactionGroupState(groupId);
+    }
+
+    @Override
+    public boolean sendMsg(String model,String msg) {
+        Channel channel = SocketManager.getInstance().getChannelByModelName(model);
+        if (channel != null &&channel.isActive()) {
+            SocketUtils.sendMsg(channel,msg);
+            return true;
+        }
+        return false;
     }
 }

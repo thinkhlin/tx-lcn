@@ -1,4 +1,4 @@
-package com.lorne.tx.manager.service;
+package com.lorne.tx.service;
 
 import com.lorne.tx.mq.model.TxGroup;
 

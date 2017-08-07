@@ -1,4 +1,4 @@
-package com.lorne.tx.socket;
+package com.lorne.tx.utils.socket;
 
 import com.lorne.tx.Constants;
 import io.netty.channel.Channel;

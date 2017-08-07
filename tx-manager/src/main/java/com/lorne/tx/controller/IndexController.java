@@ -1,6 +1,6 @@
 package com.lorne.tx.controller;
 
-import com.lorne.tx.model.TxState;
+import com.lorne.tx.service.model.TxState;
 import com.lorne.tx.service.TxService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

@@ -1,4 +1,4 @@
-package com.lorne.tx.socket.utils;
+package com.lorne.tx.utils.socket;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;

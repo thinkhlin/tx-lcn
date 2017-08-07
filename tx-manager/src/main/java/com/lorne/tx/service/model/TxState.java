@@ -1,4 +1,4 @@
-package com.lorne.tx.model;
+package com.lorne.tx.service.model;
 
 import java.util.List;
 

@@ -1,9 +1,10 @@
-package com.lorne.tx.manager.service.impl;
+package com.lorne.tx.service.impl;
 
 
 import com.lorne.core.framework.utils.KidUtils;
-import com.lorne.tx.manager.service.TransactionConfirmService;
-import com.lorne.tx.manager.service.TxManagerService;
+import com.lorne.tx.Constants;
+import com.lorne.tx.service.TransactionConfirmService;
+import com.lorne.tx.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
 import org.apache.commons.lang.StringUtils;
@@ -70,6 +71,7 @@ public class TxManagerServiceImpl implements TxManagerService {
             TxInfo txInfo = new TxInfo();
             txInfo.setModelName(modelName);
             txInfo.setKid(taskId);
+            txInfo.setAddress(Constants.address);
             txInfo.setIsGroup(isGroup);
             txGroup.addTransactionInfo(txInfo);
             value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);

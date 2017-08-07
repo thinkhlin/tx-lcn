@@ -1,4 +1,4 @@
-package com.lorne.tx.eureka;
+package com.lorne.tx.service;
 
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;

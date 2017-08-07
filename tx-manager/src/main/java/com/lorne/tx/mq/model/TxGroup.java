@@ -120,6 +120,7 @@ public class TxGroup {
                 info.setModelName(object.getString("m"));
                 info.setNotify(object.getInteger("n"));
                 info.setIsGroup(object.getInteger("ig"));
+                info.setAddress(object.getString("a"));
                 txGroup.getList().add(info);
             }
             return txGroup;
@@ -146,6 +147,7 @@ public class TxGroup {
                 item.put("m", info.getModelName());
                 item.put("n", info.getNotify());
                 item.put("ig", info.getIsGroup());
+                item.put("a", info.getAddress());
                 jsonArray.add(item);
             }
             jsonObject.put("l", jsonArray);

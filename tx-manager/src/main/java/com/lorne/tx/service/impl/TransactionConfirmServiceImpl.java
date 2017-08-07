@@ -1,4 +1,4 @@
-package com.lorne.tx.manager.service.impl;
+package com.lorne.tx.service.impl;
 
 
 import com.alibaba.fastjson.JSONObject;
@@ -8,12 +8,14 @@ import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.core.framework.utils.thread.CountDownLatchHelper;
 import com.lorne.core.framework.utils.thread.IExecute;
-import com.lorne.tx.manager.service.TransactionConfirmService;
-import com.lorne.tx.manager.service.TxManagerService;
+import com.lorne.tx.Constants;
+import com.lorne.tx.service.model.ChannelSender;
+import com.lorne.tx.utils.socket.SocketManager;
+import com.lorne.tx.service.TransactionConfirmService;
+import com.lorne.tx.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
-import com.lorne.tx.socket.SocketManager;
-import com.lorne.tx.socket.utils.SocketUtils;
+import com.lorne.tx.utils.socket.SocketUtils;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,12 +70,22 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     private boolean reloadChannel(List<TxInfo> list) {
         int count = 0;
         for (TxInfo info : list) {
-            Channel channel = SocketManager.getInstance().getChannelByModelName(info.getModelName());
-            if (channel != null) {
-                if (channel.isActive()) {
-                    info.setChannel(channel);
+            if(Constants.address.equals(info.getAddress())){
+                Channel channel = SocketManager.getInstance().getChannelByModelName(info.getModelName());
+                if (channel != null &&channel.isActive()) {
+                    ChannelSender sender = new ChannelSender();
+                    sender.setChannel(channel);
+
+                    info.setChannel(sender);
                     count++;
                 }
+            }else{
+                ChannelSender sender = new ChannelSender();
+                sender.setAddress(info.getAddress());
+                sender.setModelName(info.getModelName());
+
+                info.setChannel(sender);
+                count++;
             }
         }
         return count == list.size();
@@ -88,7 +100,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                 e.printStackTrace();
             }
         }
-        SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
+         txInfo.getChannel().send(jsonObject.toJSONString());
     }
 
     /**
@@ -179,7 +191,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                 jsonObject.put("t", txInfo.getKid());
                 String key = KidUtils.generateShortUuid();
                 jsonObject.put("k", key);
-                SocketUtils.sendMsg( txInfo.getChannel(),jsonObject.toString());
+                txInfo.getChannel().send(jsonObject.toJSONString());
             }
             txManagerService.deleteTxGroup(txGroup);
             return true;
