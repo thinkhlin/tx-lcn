@@ -88,13 +88,13 @@ public class SqlHelper {
     public String getUpdateSql(String dbType,String tableName) {
         switch (dbType){
             case "mysql":{
-                return "update " + tableName + " set last_time = now(),set state = ?,set retried_count = ? where id = ? ";
+                return "update " + tableName + " set last_time = now(),state = ?,retried_count = ? where id = ? ";
             }
             case "sqlserver":{
-                return "update " + tableName + " set last_time = getdate(),set state = ?,set retried_count = ? where id = ? ";
+                return "update " + tableName + " set last_time = getdate(),state = ?,retried_count = ? where id = ? ";
             }
             case "oracle":{
-                return "update " + tableName + " set last_time = sysdate ,set state = ?,set retried_count = ? where id = ? ";
+                return "update " + tableName + " set last_time = sysdate ,state = ?,retried_count = ? where id = ? ";
             }
             default: {
                 throw new RuntimeException("dbType类型不支持,目前仅支持mysql oracle sqlserver.");
