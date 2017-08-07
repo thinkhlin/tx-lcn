@@ -3,6 +3,7 @@ package com.lorne.tx.service.impl;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.service.InitService;
+import com.lorne.tx.service.TimeOutService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class InitServiceImpl implements InitService {
     @Autowired
     private CompensateService compensateService;
 
+    @Autowired
+    private TimeOutService timeOutService;
+
     @Override
     public void start() {
         nettyService.start();
@@ -29,5 +33,7 @@ public class InitServiceImpl implements InitService {
 
         compensateService.start();
         logger.info("check-compensate-running..");
+
+        timeOutService.loadOutTime();
     }
 }

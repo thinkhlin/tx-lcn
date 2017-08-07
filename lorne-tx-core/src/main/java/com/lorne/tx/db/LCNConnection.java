@@ -1,5 +1,6 @@
 package com.lorne.tx.db;
 
+import com.lorne.tx.Constants;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.db.service.DataSourceService;
 import org.slf4j.Logger;
@@ -42,7 +43,7 @@ public class LCNConnection extends AbstractConnection {
                 logger.info("自动回滚->" + transactionLocal.getGroupId());
                 dataSourceService.schedule(transactionLocal.getGroupId(),transactionLocal.getCompensateId(), waitTask);
             }
-        }, 30 * 1000);
+        }, Constants.maxOutTime * 1000);
 
         logger.info("transaction-awaitTask->" + transactionLocal.getGroupId());
 

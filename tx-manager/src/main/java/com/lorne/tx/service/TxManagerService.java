@@ -11,9 +11,8 @@ public interface TxManagerService {
 
     /**
      * 创建事物组
-     * @param taskId
      */
-    TxGroup createTransactionGroup(String taskId,String modelName);
+    TxGroup createTransactionGroup(String modelName);
 
 
     /**

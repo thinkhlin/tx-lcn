@@ -14,26 +14,12 @@ public class TxGroup {
 
     private String groupId;
 
-    private boolean hasOver = false;
-
     private long startTime;
-
-    private long endTime;
 
     private long nowTime;
 
     private int state;
 
-
-
-
-    public boolean isHasOver() {
-        return hasOver;
-    }
-
-    public void hasOvered() {
-        this.hasOver = true;
-    }
 
     private List<TxInfo> list;
 
@@ -53,10 +39,6 @@ public class TxGroup {
         return list;
     }
 
-    public void setHasOver(boolean hasOver) {
-        this.hasOver = hasOver;
-    }
-
     public void setList(List<TxInfo> list) {
         this.list = list;
     }
@@ -69,13 +51,6 @@ public class TxGroup {
         this.startTime = startTime;
     }
 
-    public long getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(long endTime) {
-        this.endTime = endTime;
-    }
 
     public int getState() {
         return state;
@@ -86,9 +61,7 @@ public class TxGroup {
     }
 
     public void addTransactionInfo(TxInfo info) {
-        if (!hasOver) {
-            list.add(info);
-        }
+        list.add(info);
     }
 
     public long getNowTime() {
@@ -106,9 +79,7 @@ public class TxGroup {
             JSONObject jsonObject = JSONObject.parseObject(json);
             TxGroup txGroup = new TxGroup();
             txGroup.setGroupId(jsonObject.getString("g"));
-            txGroup.setHasOver(jsonObject.getInteger("ho") == 1);
             txGroup.setStartTime(jsonObject.getLong("st"));
-            txGroup.setEndTime(jsonObject.getLong("et"));
             txGroup.setNowTime(jsonObject.getLong("nt"));
             txGroup.setState(jsonObject.getInteger("s"));
             JSONArray array = jsonObject.getJSONArray("l");
@@ -134,9 +105,7 @@ public class TxGroup {
     public String toJsonString(boolean noList) {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", getGroupId());
-        jsonObject.put("ho", hasOver ? 1 : 0);
         jsonObject.put("st", getStartTime());
-        jsonObject.put("et", getEndTime());
         jsonObject.put("nt", getNowTime());
         jsonObject.put("s", getState());
         if(noList) {

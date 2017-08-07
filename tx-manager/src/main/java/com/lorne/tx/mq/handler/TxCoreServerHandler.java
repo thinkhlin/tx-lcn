@@ -69,9 +69,8 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
             switch (action) {
                 //创建事务组
                 case "cg": {
-                    String taskId = params.getString("t");
                     String modelName = ctx.channel().remoteAddress().toString();
-                    TxGroup txGroup = txManagerService.createTransactionGroup(taskId,modelName);
+                    TxGroup txGroup = txManagerService.createTransactionGroup(modelName);
                     if(txGroup!=null) {
                         txGroup.setNowTime(System.currentTimeMillis());
                         res = txGroup.toJsonString(false);

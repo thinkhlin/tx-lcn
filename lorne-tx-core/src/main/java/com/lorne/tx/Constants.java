@@ -8,7 +8,16 @@ import com.lorne.tx.mq.model.TxServer;
 public class Constants {
 
 
+    /**
+     * tm 服务对象
+     */
     public static TxServer txServer;
+
+
+    /**
+     * 最大模块超时时间
+     */
+    public static int maxOutTime = 10;
 
 
 }

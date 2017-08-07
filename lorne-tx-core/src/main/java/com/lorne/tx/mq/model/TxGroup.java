@@ -12,19 +12,9 @@ public class TxGroup {
 
     private String groupId;
 
-    private boolean hasOver = false;
-
     private long startTime;
 
     private long nowTime;
-
-    public boolean isHasOver() {
-        return hasOver;
-    }
-
-    public void hasOvered() {
-        this.hasOver = true;
-    }
 
 
     public String getGroupId() {
@@ -33,11 +23,6 @@ public class TxGroup {
 
     public void setGroupId(String groupId) {
         this.groupId = groupId;
-    }
-
-
-    public void setHasOver(boolean hasOver) {
-        this.hasOver = hasOver;
     }
 
 
@@ -68,7 +53,6 @@ public class TxGroup {
             JSONObject jsonObject = JSONObject.parseObject(json);
             TxGroup txGroup = new TxGroup();
             txGroup.setGroupId(jsonObject.getString("g"));
-            txGroup.setHasOver(jsonObject.getInteger("ho") == 1);
             txGroup.setStartTime(jsonObject.getLong("st"));
             txGroup.setNowTime(jsonObject.getLong("nt"));
             return txGroup;
@@ -82,7 +66,6 @@ public class TxGroup {
     public String toJsonString() {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", getGroupId());
-        jsonObject.put("ho", hasOver ? 1 : 0);
         jsonObject.put("st", getStartTime());
         jsonObject.put("nt", getNowTime());
         JSONArray jsonArray = new JSONArray();

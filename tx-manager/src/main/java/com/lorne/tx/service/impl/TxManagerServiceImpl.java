@@ -47,7 +47,7 @@ public class TxManagerServiceImpl implements TxManagerService {
 
 
     @Override
-    public TxGroup createTransactionGroup(String taskId,String modelName) {
+    public TxGroup createTransactionGroup(String modelName) {
         String groupId = KidUtils.generateShortUuid();
         TxGroup txGroup = new TxGroup();
         txGroup.setStartTime(System.currentTimeMillis());
@@ -146,9 +146,7 @@ public class TxManagerServiceImpl implements TxManagerService {
             return false;
         }
         final TxGroup txGroup = TxGroup.parser(json);
-        txGroup.hasOvered();
         txGroup.setState(state);
-        txGroup.setEndTime(System.currentTimeMillis());
         transactionConfirmService.confirm(txGroup);
         return true;
     }
@@ -159,7 +157,6 @@ public class TxManagerServiceImpl implements TxManagerService {
         String key = key_prefix + txGroup.getGroupId();
         if (!hasOk) {
             //未通知成功
-
             if (txGroup.getState() == 1) {
                 ValueOperations<String, String> value = redisTemplate.opsForValue();
                 String newKey = key_prefix_notify + txGroup.getGroupId();
