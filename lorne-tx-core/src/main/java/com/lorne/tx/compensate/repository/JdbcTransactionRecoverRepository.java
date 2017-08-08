@@ -40,7 +40,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     private String unique;
 
-    private static Connection connection = null;
+    private Connection connection = null;
 
     @Override
     public int create(TransactionRecover recover) {
@@ -117,6 +117,10 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         dataSource.setTestOnBorrow(false);
         dataSource.setTestWhileIdle(true);
         dataSource.setPoolPreparedStatements(false);
+
+        try {
+            connection = dataSource.getConnection();
+        } catch (SQLException e) {}
 
         dbType = ConfigUtils.getString("tx.properties", "compensate.db.dbType");
 
