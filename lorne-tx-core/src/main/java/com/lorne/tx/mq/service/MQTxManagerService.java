@@ -1,6 +1,5 @@
 package com.lorne.tx.mq.service;
 
-import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.mq.model.TxGroup;
 
 
@@ -35,18 +34,11 @@ public interface MQTxManagerService {
     void closeTransactionGroup(String groupId, int state);
 
 
-//    /**
-//     * 通知事务组事务执行状态
-//     *
-//     * @param groupId
-//     * @param kid
-//     * @param state
-//     * @return
-//     */
-//    NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state);
-
 
     int checkTransactionInfo(String groupId, String taskId);
 
+
+
+    int httpCheckTransactionInfo(String groupId, String waitTaskId);
 
 }

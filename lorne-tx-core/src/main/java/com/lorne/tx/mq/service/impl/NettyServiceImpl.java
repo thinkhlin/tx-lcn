@@ -1,6 +1,7 @@
 package com.lorne.tx.mq.service.impl;
 
 import com.lorne.tx.Constants;
+import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.mq.handler.TransactionHandler;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyDistributeService;
@@ -29,6 +30,9 @@ public class NettyServiceImpl implements NettyService {
 
     @Autowired
     private NettyDistributeService nettyDistributeService;
+
+    @Autowired
+    private CompensateService compensateService;
 
     private TransactionHandler transactionHandler;
 
@@ -142,5 +146,10 @@ public class NettyServiceImpl implements NettyService {
         }
 
         return true;
+    }
+
+    @Override
+    public int checkCompensate(String taskId) {
+        return compensateService.countCompensateByTaskId(taskId);
     }
 }

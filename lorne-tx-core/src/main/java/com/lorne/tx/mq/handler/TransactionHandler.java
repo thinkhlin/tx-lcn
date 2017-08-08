@@ -43,7 +43,6 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     private String heartJson;
 
-
     private final static int max_size = 50;
 
     private Executor threadPool = Executors.newFixedThreadPool(max_size);
@@ -99,16 +98,27 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
             if (resObj.containsKey("a")) {
 
                 String action = resObj.getString("a");
+                String key = resObj.getString("k");
+                String res = "0";
 
                 switch (action) {
+                    case "c": {
+                        String taskId = resObj.getString("t");
+                        int row = nettyService.checkCompensate(taskId);
+                        //有数据则等待执行补偿，需要保留数据
+                        if(row>1){
+                            res = "0";
+                        }else{
+                            res = "1";
+                        }
+                        break;
+                    }
                     case "t": {
                         //通知提醒
                         final int state = resObj.getInteger("c");
                         String taskId = resObj.getString("t");
-                        String key = resObj.getString("k");
                         Task task = ConditionUtils.getInstance().getTask(taskId);
                         logger.info("接受通知数据->" + json);
-                        String res = "";
                         if (task != null) {
                             if (task.isAwait()) {   //已经等待
                                 res = notifyWaitTask(task, state);
@@ -132,19 +142,21 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                                 }
                             }
                         }
-                        JSONObject data = new JSONObject();
-                        data.put("k", key);
-                        data.put("a", action);
-
-                        JSONObject params = new JSONObject();
-                        params.put("d", res);
-                        data.put("p", params);
-
-                        SocketUtils.sendMsg(ctx, data.toString());
-                        logger.info("返回通知状态->" + data.toString());
                         break;
                     }
                 }
+
+                JSONObject data = new JSONObject();
+                data.put("k", key);
+                data.put("a", action);
+
+                JSONObject params = new JSONObject();
+                params.put("d", res);
+                data.put("p", params);
+
+                SocketUtils.sendMsg(ctx, data.toString());
+                logger.info("返回通知状态->" + data.toString());
+
 
             } else {
                 String key = resObj.getString("k");

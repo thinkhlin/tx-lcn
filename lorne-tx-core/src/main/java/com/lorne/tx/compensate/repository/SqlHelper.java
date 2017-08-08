@@ -126,4 +126,8 @@ public class SqlHelper {
         }
 
     }
+
+    public String countCompensateByTaskId(String dbType, String tableName) {
+        return "select * from " + tableName + " where  task_id = ? ";
+    }
 }

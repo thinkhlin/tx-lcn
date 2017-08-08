@@ -14,6 +14,7 @@ import com.netflix.eureka.EurekaServerContextHolder;
 import io.netty.channel.Channel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 

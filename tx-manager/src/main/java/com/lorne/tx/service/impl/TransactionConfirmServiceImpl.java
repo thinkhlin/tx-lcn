@@ -83,7 +83,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
     }
 
 
-    private void awaitSend(Task task, TxInfo txInfo,JSONObject jsonObject){
+    private void awaitSend(Task task, TxInfo txInfo,String msg){
         while (!task.isAwait()&&!Thread.currentThread().interrupted()){
             try {
                 Thread.sleep(1);
@@ -91,7 +91,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                 e.printStackTrace();
             }
         }
-         txInfo.getChannel().send(jsonObject.toJSONString());
+         txInfo.getChannel().send(msg);
     }
 
     /**
@@ -134,7 +134,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                             threadPool.execute(new Runnable() {
                                 @Override
                                 public void run() {
-                                    awaitSend(task, txInfo, jsonObject);
+                                    awaitSend(task, txInfo, jsonObject.toJSONString());
                                 }
                             });
                             task.awaitTask();
@@ -149,7 +149,7 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                                 // 1  成功 0 失败 -1 task为空 -2 超过
                                 boolean res = "1".equals(data);
 
-                                if ("1".equals(data)) {
+                                if (res) {
                                     txInfo.setNotify(1);
                                 }
 

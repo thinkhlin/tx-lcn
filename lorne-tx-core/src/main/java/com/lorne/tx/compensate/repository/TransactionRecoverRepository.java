@@ -62,4 +62,8 @@ public interface TransactionRecoverRepository {
      * 创建表等操作
      */
     void init(String tableName,String unique);
+
+
+    int countCompensateByTaskId(String taskId);
+
 }

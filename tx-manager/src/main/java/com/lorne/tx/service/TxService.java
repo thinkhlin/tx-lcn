@@ -17,4 +17,5 @@ public interface TxService {
     boolean getServerGroupState(String groupId);
 
     boolean sendMsg(String model,String msg);
+
 }

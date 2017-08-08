@@ -16,4 +16,6 @@ public interface NettyService {
     String sendMsg(Request request);
 
     boolean checkState();
+
+    int checkCompensate(String taskId);
 }

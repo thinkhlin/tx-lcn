@@ -38,4 +38,6 @@ public interface TxManagerService {
 
     int getDelayTime();
 
+
+    void clearNotifyData(int time);
 }

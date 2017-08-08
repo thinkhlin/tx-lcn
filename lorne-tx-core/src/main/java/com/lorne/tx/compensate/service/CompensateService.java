@@ -20,4 +20,6 @@ public interface CompensateService {
      */
     void addTask(String compensateId);
 
+
+    int countCompensateByTaskId(String taskId);
 }

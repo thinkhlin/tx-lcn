@@ -104,6 +104,13 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     }
 
     @Override
+    public int countCompensateByTaskId(String taskId) {
+        String selectSql = sqlHelper.countCompensateByTaskId(dbType,tableName);
+        List<Map<String, Object>> list = executeQuery(selectSql,taskId);
+        return list==null?0:list.size();
+    }
+
+    @Override
     public void init(String tableName,String unique) {
         dataSource = new DruidDataSource();
         dataSource.setUrl(ConfigUtils.getString("tx.properties", "compensate.db.url"));

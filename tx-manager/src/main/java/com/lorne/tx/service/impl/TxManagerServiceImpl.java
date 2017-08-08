@@ -1,12 +1,19 @@
 package com.lorne.tx.service.impl;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.utils.KidUtils;
+import com.lorne.core.framework.utils.task.ConditionUtils;
+import com.lorne.core.framework.utils.task.IBack;
+import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.Constants;
 import com.lorne.tx.service.TransactionConfirmService;
 import com.lorne.tx.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
+import com.lorne.tx.utils.socket.SocketManager;
+import com.lorne.tx.utils.socket.SocketUtils;
+import io.netty.channel.Channel;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +23,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.*;
 
 /**
  * Created by lorne on 2017/6/7.
@@ -42,6 +52,8 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     @Autowired
     private TransactionConfirmService transactionConfirmService;
+
+
 
     private Logger logger = LoggerFactory.getLogger(TxManagerServiceImpl.class);
 
@@ -178,4 +190,106 @@ public class TxManagerServiceImpl implements TxManagerService {
     public int getDelayTime() {
         return transaction_netty_delay_time;
     }
+
+
+    private void awaitSend(Task task,Channel channel,String msg){
+        while (!task.isAwait()&&!Thread.currentThread().interrupted()){
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        SocketUtils.sendMsg(channel,msg);
+    }
+
+
+
+    @Override
+    public void clearNotifyData(int time) {
+        Set<String> keys =  redisTemplate.keys(key_prefix_notify+"*");
+
+        ValueOperations<String, String> value = redisTemplate.opsForValue();
+        for(String key:keys){
+            String json =  value.get(key);
+            TxGroup txGroup = TxGroup.parser(json);
+            if(txGroup==null) {
+                continue;
+            }
+
+            long nowTime = System.currentTimeMillis();
+            if((nowTime - txGroup.getStartTime())>time*1000*60){
+                if(txGroup.getList()!=null&&txGroup.getList().size()>0){
+                    for(TxInfo txInfo:txGroup.getList()){
+
+                        String modelName = txInfo.getModelName();
+
+                        final Channel channel = SocketManager.getInstance().getChannelByModelName(modelName);
+
+
+                        final JSONObject jsonObject = new JSONObject();
+                        jsonObject.put("a", "c");
+                        jsonObject.put("g", txInfo.getKid());
+                        String k = KidUtils.generateShortUuid();
+                        jsonObject.put("k", k);
+                        final Task task = ConditionUtils.getInstance().createTask(key);
+
+                        Timer timer = new Timer();
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                task.setBack(new IBack() {
+                                    @Override
+                                    public Object doing(Object... objs) throws Throwable {
+                                        return "0";
+                                    }
+                                });
+                                task.signalTask();
+                            }
+                        },getDelayTime() * 3*1000);
+
+                        new Thread(){
+                            @Override
+                            public void run() {
+                                awaitSend(task, channel, jsonObject.toJSONString());
+                            }
+                        }.start();
+
+                        task.awaitTask();
+
+                        timer.cancel();
+
+                        try {
+                            String data = (String) task.getBack().doing();
+                            // 1 tx数据已经删除
+                            boolean res = "1".equals(data);
+                            if (res) {
+                                txInfo.setNotify(1);
+                            }
+
+                        } catch (Throwable throwable) {
+                            throwable.printStackTrace();
+                        } finally {
+                            task.remove();
+                        }
+
+                    }
+
+                    boolean isOver = true;
+                    for (TxInfo info : txGroup.getList()) {
+                        if (info.getIsGroup()==0&&info.getNotify() == 0) {
+                            isOver = false;
+                            break;
+                        }
+                    }
+
+                    if (isOver) {
+                        redisTemplate.delete(key);
+                    }
+                }
+            }
+        }
+    }
+
+
 }

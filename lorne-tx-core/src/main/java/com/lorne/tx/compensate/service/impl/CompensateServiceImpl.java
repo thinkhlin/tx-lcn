@@ -6,6 +6,7 @@ import com.lorne.tx.compensate.repository.JdbcTransactionRecoverRepository;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.BlockingQueueService;
 import com.lorne.tx.compensate.service.CompensateService;
+import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.service.ModelNameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,9 @@ public class CompensateServiceImpl implements CompensateService {
 
     private TransactionRecoverRepository recoverRepository;
 
+    @Autowired
+    private MQTxManagerService mqTxManagerService;
+
 
 
     private String getTableName(String modelName) {
@@ -50,9 +54,7 @@ public class CompensateServiceImpl implements CompensateService {
 
 
     private void executeCompensate(){
-        // TODO: 2017/7/11  查找补偿数据
         List<TransactionRecover> list = blockingQueueService.findAll(0);
-
         try {
             if (list != null && list.size() > 0) {
                 for (final TransactionRecover data : list) {
@@ -61,6 +63,7 @@ public class CompensateServiceImpl implements CompensateService {
             }
         } catch (Exception e) {}
     }
+
     @Override
     public void start() {
 
@@ -75,6 +78,7 @@ public class CompensateServiceImpl implements CompensateService {
         // TODO: 2017/7/11  数据库创建等操作
         blockingQueueService.init(tableName,modelNameService.getUniqueKey());
 
+        // TODO: 2017/7/11  查找补偿数据
         executeCompensate();
 
         // add Task check 检查那些未能正常执行的业务数据
@@ -155,5 +159,10 @@ public class CompensateServiceImpl implements CompensateService {
     @Override
     public void addTask(String compensateId) {
         recoverRepository.update(compensateId, 2, 1);
+    }
+
+    @Override
+    public int countCompensateByTaskId(String taskId) {
+        return recoverRepository.countCompensateByTaskId(taskId);
     }
 }

@@ -32,6 +32,7 @@ public class TxManagerController {
         return txService.getServerGroup(groupId,taskId);
     }
 
+
     @RequestMapping("/getServerGroupState")
     @ResponseBody
     public boolean getServerGroupState(@RequestParam("groupId") String groupId) {

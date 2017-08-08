@@ -1,7 +1,8 @@
 package com.lorne.tx.mq.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.lorne.core.framework.utils.task.Task;
+import com.lorne.core.framework.utils.config.ConfigUtils;
+import com.lorne.core.framework.utils.http.HttpUtils;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
@@ -10,9 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /**
  * Created by lorne on 2017/6/30.
@@ -25,7 +23,13 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
     private Logger logger = LoggerFactory.getLogger(MQTxManagerServiceImpl.class);
 
-    private Executor threadPool = Executors.newFixedThreadPool(100);
+
+    private String url;
+
+
+    public MQTxManagerServiceImpl() {
+        url = ConfigUtils.getString("tx.properties", "url");
+    }
 
     @Override
     public TxGroup createTransactionGroup() {
@@ -57,17 +61,6 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
         logger.info("closeTransactionGroup res ->" + json);
     }
 
-//    @Override
-//    public NotifyMsg notifyTransactionInfo(String groupId, String kid, boolean state) {
-//        JSONObject jsonObject = new JSONObject();
-//        jsonObject.put("g", groupId);
-//        jsonObject.put("k", kid);
-//        jsonObject.put("s", state ? 1 : 0);
-//        Request request = new Request("nti", jsonObject.toString());
-//        String json = nettyService.sendMsg(request);
-//        return NotifyMsg.parser(json);
-//    }
-
 
     @Override
     public int checkTransactionInfo(String groupId, String taskId) {
@@ -79,4 +72,16 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
         int res = "1".equals(json) ? 1 : (json == null) ? -1 : 0;
         return res;
     }
+
+
+    @Override
+    public int httpCheckTransactionInfo(String groupId, String waitTaskId) {
+        String json = HttpUtils.get(url + "Group?groupId=" + groupId + "&taskId=" + waitTaskId);
+        if (json == null) {
+            return -1;
+        }
+        return json.contains("true") ? 1 : 0;
+    }
+
+
 }
