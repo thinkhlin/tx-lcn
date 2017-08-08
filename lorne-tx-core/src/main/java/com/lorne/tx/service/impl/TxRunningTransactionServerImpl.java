@@ -40,6 +40,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         String kid = KidUtils.generateShortUuid();
         String txGroupId = info.getTxGroupId();
         logger.info("tx-running-start->" + txGroupId);
+        long t1 = System.currentTimeMillis();
 
 
         String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
@@ -70,7 +71,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             throw e;
         } finally {
             TxTransactionLocal.setCurrent(null);
-            logger.info("tx-running-end->" + txGroupId);
+            long t2 = System.currentTimeMillis();
+            logger.info("tx-running-end->" + txGroupId+",time->"+(t2-t1));
         }
     }
 
