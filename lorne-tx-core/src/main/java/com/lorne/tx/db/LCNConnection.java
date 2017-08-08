@@ -53,7 +53,7 @@ public class LCNConnection extends AbstractConnection {
         logger.info("(" + transactionLocal.getGroupId() + ")->单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + rs);
 
         if (rs == 1) {
-            connection.setAutoCommit(true);
+            connection.commit();
             waitTask.remove();
             dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
         } else {
