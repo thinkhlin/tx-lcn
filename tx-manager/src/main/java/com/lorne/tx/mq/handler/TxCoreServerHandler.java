@@ -127,6 +127,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                 }
 
                 //通知事务单元
+                case "c":
                 case "t": {
                     final String data = params.getString("d");
                     Task task = ConditionUtils.getInstance().getTask(key);
