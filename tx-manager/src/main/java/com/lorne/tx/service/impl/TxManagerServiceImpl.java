@@ -245,7 +245,7 @@ public class TxManagerServiceImpl implements TxManagerService {
                         jsonObject.put("g", txInfo.getKid());
                         String k = KidUtils.generateShortUuid();
                         jsonObject.put("k", k);
-                        final Task task = ConditionUtils.getInstance().createTask(key);
+                        final Task task = ConditionUtils.getInstance().createTask(k);
 
                         Timer timer = new Timer();
                         timer.schedule(new TimerTask() {
