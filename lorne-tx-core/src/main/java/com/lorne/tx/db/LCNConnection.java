@@ -54,11 +54,14 @@ public class LCNConnection extends AbstractConnection {
 
         if (rs == 1) {
             connection.setAutoCommit(true);
+            waitTask.remove();
+            dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
         } else {
             connection.rollback();
+            dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
+            waitTask.remove();
         }
-        dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
-        waitTask.remove();
+
     }
 
 
