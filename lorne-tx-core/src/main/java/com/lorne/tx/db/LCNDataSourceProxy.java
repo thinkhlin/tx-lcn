@@ -70,15 +70,15 @@ public class LCNDataSourceProxy implements DataSource {
 
 
     private Connection loadConnection(TxTransactionLocal txTransactionLocal, Connection connection) throws SQLException {
-        AbstractConnection old = pools.get(txTransactionLocal.getGroupId());
-        logger.info("keys:"+pools.keySet());
-        if (old != null) {
-            old.setHasIsGroup(true);
-            txTransactionLocal.setHasIsGroup(true);
-            TxTransactionLocal.setCurrent(txTransactionLocal);
-            logger.info("get old connection ->" + txTransactionLocal.getGroupId());
-            return old;
-        }
+//        AbstractConnection old = pools.get(txTransactionLocal.getGroupId());
+//        logger.info("keys:"+pools.keySet());
+//        if (old != null) {
+//            old.setHasIsGroup(true);
+//            txTransactionLocal.setHasIsGroup(true);
+//            TxTransactionLocal.setCurrent(txTransactionLocal);
+//            logger.info("get old connection ->" + txTransactionLocal.getGroupId());
+//            return old;
+//        }
         if (nowCount == maxCount) {
             logger.info("initLCNConnection max count ...");
             for (int i = 0; i < maxWaitTime; i++) {
