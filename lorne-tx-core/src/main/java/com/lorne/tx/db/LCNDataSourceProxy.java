@@ -69,16 +69,22 @@ public class LCNDataSourceProxy implements DataSource {
     };
 
 
-    private Connection loadConnection(TxTransactionLocal txTransactionLocal, Connection connection) throws SQLException {
-//        AbstractConnection old = pools.get(txTransactionLocal.getGroupId());
-//        logger.info("keys:"+pools.keySet());
-//        if (old != null) {
-//            old.setHasIsGroup(true);
-//            txTransactionLocal.setHasIsGroup(true);
-//            TxTransactionLocal.setCurrent(txTransactionLocal);
-//            logger.info("get old connection ->" + txTransactionLocal.getGroupId());
-//            return old;
-//        }
+    private Connection loadConnection(){
+        TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
+        AbstractConnection old = pools.get(txTransactionLocal.getGroupId());
+        logger.info("keys:"+pools.keySet());
+        if (old != null) {
+            old.setHasIsGroup(true);
+            txTransactionLocal.setHasIsGroup(true);
+            TxTransactionLocal.setCurrent(txTransactionLocal);
+            logger.info("get old connection ->" + txTransactionLocal.getGroupId());
+            return old;
+        }
+        return null;
+    }
+
+
+    private Connection createConnection(TxTransactionLocal txTransactionLocal, Connection connection) throws SQLException {
         if (nowCount == maxCount) {
             logger.info("initLCNConnection max count ...");
             for (int i = 0; i < maxWaitTime; i++) {
@@ -117,9 +123,9 @@ public class LCNDataSourceProxy implements DataSource {
             && StringUtils.isNotEmpty(txTransactionLocal.getGroupId())) {
 
             if (CompensateServiceImpl.COMPENSATE_KEY.equals(txTransactionLocal.getGroupId())) {
-                lcnConnection = loadConnection(txTransactionLocal, connection);
+                lcnConnection = createConnection(txTransactionLocal, connection);
             } else if (!txTransactionLocal.isHasStart()) {
-                lcnConnection = loadConnection(txTransactionLocal, connection);
+                lcnConnection = createConnection(txTransactionLocal, connection);
             }
 
         }
@@ -139,15 +145,24 @@ public class LCNDataSourceProxy implements DataSource {
         this.dataSource = dataSource;
     }
 
-
     @Override
     public Connection getConnection() throws SQLException {
-        return initLCNConnection(dataSource.getConnection());
+        Connection connection = loadConnection();
+        if(connection==null) {
+            return initLCNConnection(dataSource.getConnection());
+        }else {
+            return connection;
+        }
     }
 
     @Override
     public Connection getConnection(String username, String password) throws SQLException {
-        return initLCNConnection(dataSource.getConnection(username, password));
+        Connection connection = loadConnection();
+        if(connection==null) {
+            return initLCNConnection(dataSource.getConnection(username, password));
+        }else {
+            return connection;
+        }
     }
 
     @Override
