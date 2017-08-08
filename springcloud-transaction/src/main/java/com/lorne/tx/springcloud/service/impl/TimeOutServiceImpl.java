@@ -14,7 +14,7 @@ public class TimeOutServiceImpl implements TimeOutService {
     @Override
     public void loadOutTime() {
         //todo 暂时写死
-        int timeOut = 20;
+        int timeOut = 20*1000;
         Constants.maxOutTime = timeOut;
     }
 }
