@@ -17,6 +17,7 @@ public class TransactionFilter implements Filter {
                 RpcContext.getContext().setAttachment("tx-group", CompensateServiceImpl.COMPENSATE_KEY);
             }else{
                 RpcContext.getContext().setAttachment("tx-group",txTransactionLocal.getGroupId());
+                RpcContext.getContext().setAttachment("tx-maxTimeOut",String.valueOf(txTransactionLocal.getMaxTimeOut()));
             }
         }
         return invoker.invoke(invocation);

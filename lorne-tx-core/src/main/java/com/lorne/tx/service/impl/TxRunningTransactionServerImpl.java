@@ -49,6 +49,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         txTransactionLocal.setHasStart(false);
         txTransactionLocal.setKid(kid);
         txTransactionLocal.setCompensateId(compensateId);
+        txTransactionLocal.setMaxTimeOut(info.getMaxTimeOut());
         TxTransactionLocal.setCurrent(txTransactionLocal);
         try {
 

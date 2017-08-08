@@ -12,6 +12,8 @@ public class TxTransactionLocal {
 
     private String groupId;
 
+    private int maxTimeOut;
+
     private boolean hasIsGroup = false;
 
     private boolean hasStart = false;
@@ -65,6 +67,13 @@ public class TxTransactionLocal {
 
     }
 
+    public int getMaxTimeOut() {
+        return maxTimeOut;
+    }
+
+    public void setMaxTimeOut(int maxTimeOut) {
+        this.maxTimeOut = maxTimeOut;
+    }
 
     public String getCompensateId() {
         return compensateId;

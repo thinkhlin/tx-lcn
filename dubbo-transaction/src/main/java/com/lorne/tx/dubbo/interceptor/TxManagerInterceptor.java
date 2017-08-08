@@ -24,12 +24,14 @@ public class TxManagerInterceptor {
 
         TxTransactionCompensate compensate = TxTransactionCompensate.current();
         String groupId = null;
+        int maxTimeOut = 0;
         if(compensate==null){
             try {
                 groupId = RpcContext.getContext().getAttachment("tx-group");
+                maxTimeOut = Integer.parseInt(RpcContext.getContext().getAttachment("tx-maxTimeOut"));
             }catch (Exception e){}
         }
-        return aspectBeforeService.around(groupId,point);
+        return aspectBeforeService.around(groupId,maxTimeOut,point);
     }
 
 }

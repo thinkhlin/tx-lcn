@@ -10,8 +10,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class TimeOutServiceImpl implements TimeOutService {
 
+
     @Override
     public void loadOutTime() {
+        //todo 暂时写死
         int timeOut = 20;
         Constants.maxOutTime = timeOut;
     }

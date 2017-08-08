@@ -26,7 +26,7 @@ public class AspectBeforeServiceImpl implements AspectBeforeService {
     private TransactionServerFactoryService transactionServerFactoryService;
 
 
-    public Object around(String groupId, ProceedingJoinPoint point) throws Throwable {
+    public Object around(String groupId,int maxTimeOut, ProceedingJoinPoint point) throws Throwable {
 
         MethodSignature signature = (MethodSignature) point.getSignature();
         Method method = signature.getMethod();
@@ -44,7 +44,7 @@ public class AspectBeforeServiceImpl implements AspectBeforeService {
 
         TransactionInvocation invocation = new TransactionInvocation(clazz, thisMethod.getName(), args, method.getParameterTypes());
 
-        TxTransactionInfo state = new TxTransactionInfo(transaction, txTransactionLocal, groupId, transactionLocal, invocation, compensate);
+        TxTransactionInfo state = new TxTransactionInfo(transaction,txTransactionLocal,groupId,maxTimeOut,transactionLocal,compensate,invocation);
 
         TransactionServer server = transactionServerFactoryService.createTransactionServer(state);
 

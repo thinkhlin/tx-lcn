@@ -23,15 +23,18 @@ public class TxManagerInterceptor {
     private AspectBeforeService aspectBeforeService;
 
     public Object around(ProceedingJoinPoint point) throws Throwable {
+
         TxTransactionCompensate compensate = TxTransactionCompensate.current();
         String groupId = null;
+        int maxTimeOut = 0;
         if (compensate == null) {
             try {
                 RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
                 HttpServletRequest request = requestAttributes == null ? null : ((ServletRequestAttributes) requestAttributes).getRequest();
                 groupId = request == null ? null : request.getHeader("tx-group");
+                maxTimeOut = request == null?0:Integer.parseInt(request.getHeader("tx-maxTimeOut"));
             }catch (Exception e){}
         }
-        return aspectBeforeService.around(groupId, point);
+        return aspectBeforeService.around(groupId,maxTimeOut, point);
     }
 }

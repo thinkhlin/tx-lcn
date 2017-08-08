@@ -15,11 +15,13 @@ public class TransactionRestTemplateInterceptor implements RequestInterceptor {
     public void apply(RequestTemplate requestTemplate) {
         TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
         String groupId = txTransactionLocal == null ? null : txTransactionLocal.getGroupId();
+        int maxTimeOut = txTransactionLocal == null ? 0 : txTransactionLocal.getMaxTimeOut();
         if (txTransactionLocal != null) {
             if (txTransactionLocal.isHasCompensate()) {
                 requestTemplate.header("tx-group", CompensateServiceImpl.COMPENSATE_KEY);
             } else {
                 requestTemplate.header("tx-group", groupId);
+                requestTemplate.header("tx-maxTimeOut", String.valueOf(maxTimeOut));
             }
         }
     }

@@ -1,6 +1,7 @@
 package com.lorne.tx.service.impl;
 
 import com.lorne.core.framework.exception.ServiceException;
+import com.lorne.tx.Constants;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.mq.model.TxGroup;
@@ -45,6 +46,7 @@ public class TxStartTransactionServerImpl implements TransactionServer {
             TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
             txTransactionLocal.setGroupId(groupId);
             txTransactionLocal.setHasStart(true);
+            txTransactionLocal.setMaxTimeOut(Constants.maxOutTime);
             TxTransactionLocal.setCurrent(txTransactionLocal);
             Object obj = point.proceed();
             state = 1;

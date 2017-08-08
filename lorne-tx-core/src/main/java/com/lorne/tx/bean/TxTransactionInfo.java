@@ -18,6 +18,8 @@ public class TxTransactionInfo {
 
     private String txGroupId;
 
+    private int maxTimeOut;
+
     private TransactionLocal transactionLocal;
 
 
@@ -27,13 +29,18 @@ public class TxTransactionInfo {
     private TransactionInvocation invocation;
 
 
-    public TxTransactionInfo(TxTransaction transaction, TxTransactionLocal txTransactionLocal, String txGroupId, TransactionLocal transactionLocal, TransactionInvocation invocation, TxTransactionCompensate compensate) {
+    public TxTransactionInfo(TxTransaction transaction, TxTransactionLocal txTransactionLocal, String txGroupId, int maxTimeOut, TransactionLocal transactionLocal, TxTransactionCompensate compensate, TransactionInvocation invocation) {
         this.transaction = transaction;
         this.txTransactionLocal = txTransactionLocal;
         this.txGroupId = txGroupId;
+        this.maxTimeOut = maxTimeOut;
         this.transactionLocal = transactionLocal;
-        this.invocation = invocation;
         this.compensate = compensate;
+        this.invocation = invocation;
+    }
+
+    public int getMaxTimeOut() {
+        return maxTimeOut;
     }
 
     public TransactionLocal getTransactionLocal() {
