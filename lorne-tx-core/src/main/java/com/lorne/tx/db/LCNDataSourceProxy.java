@@ -71,8 +71,10 @@ public class LCNDataSourceProxy implements DataSource {
 
     private Connection loadConnection(){
         TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
+        if(txTransactionLocal==null){
+            return null;
+        }
         AbstractConnection old = pools.get(txTransactionLocal.getGroupId());
-        logger.info("keys:"+pools.keySet());
         if (old != null) {
             old.setHasIsGroup(true);
             txTransactionLocal.setHasIsGroup(true);
