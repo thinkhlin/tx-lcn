@@ -14,7 +14,7 @@ import com.lorne.tx.mq.model.TxInfo;
 import com.lorne.tx.service.TransactionConfirmService;
 import com.lorne.tx.service.TxManagerService;
 import com.lorne.tx.service.model.ChannelSender;
-import com.lorne.tx.utils.socket.SocketManager;
+import com.lorne.tx.utils.SocketManager;
 import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

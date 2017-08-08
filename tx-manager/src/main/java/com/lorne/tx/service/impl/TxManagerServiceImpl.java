@@ -11,8 +11,8 @@ import com.lorne.tx.service.TransactionConfirmService;
 import com.lorne.tx.service.TxManagerService;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.model.TxInfo;
-import com.lorne.tx.utils.socket.SocketManager;
-import com.lorne.tx.utils.socket.SocketUtils;
+import com.lorne.tx.utils.SocketManager;
+import com.lorne.tx.utils.SocketUtils;
 import io.netty.channel.Channel;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -59,7 +59,7 @@ public class TxManagerServiceImpl implements TxManagerService {
 
 
     @Override
-    public TxGroup createTransactionGroup(String modelName) {
+    public TxGroup createTransactionGroup() {
         String groupId = KidUtils.generateShortUuid();
         TxGroup txGroup = new TxGroup();
         txGroup.setStartTime(System.currentTimeMillis());
@@ -71,7 +71,7 @@ public class TxManagerServiceImpl implements TxManagerService {
     }
 
     @Override
-    public TxGroup addTransactionGroup(String groupId, String taskId,int isGroup, String modelName) {
+    public TxGroup addTransactionGroup(String groupId,String uniqueKey, String taskId,int isGroup, String modelName) {
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix + groupId;
         String json = value.get(key);
@@ -85,6 +85,7 @@ public class TxManagerServiceImpl implements TxManagerService {
             txInfo.setKid(taskId);
             txInfo.setAddress(Constants.address);
             txInfo.setIsGroup(isGroup);
+            txInfo.setUniqueKey(uniqueKey);
             txGroup.addTransactionInfo(txInfo);
             value.set(key, txGroup.toJsonString(), redis_save_max_time, TimeUnit.SECONDS);
             return txGroup;
@@ -224,7 +225,19 @@ public class TxManagerServiceImpl implements TxManagerService {
 
                         String modelName = txInfo.getModelName();
 
-                        final Channel channel = SocketManager.getInstance().getChannelByModelName(modelName);
+                        Channel channel = SocketManager.getInstance().getChannelByModelName(modelName);
+
+                        if(channel==null||!channel.isActive()){
+                            //查找在线的有无同模块的
+                            String uniqueKey = txInfo.getUniqueKey();
+
+                            channel = SocketManager.getInstance().getChannelByUniqueKey(uniqueKey);
+
+                            if(channel==null||!channel.isActive()){
+                                continue;
+                            }
+
+                        }
 
 
                         final JSONObject jsonObject = new JSONObject();
@@ -248,10 +261,11 @@ public class TxManagerServiceImpl implements TxManagerService {
                             }
                         },getDelayTime() * 3*1000);
 
+                        final Channel sender = channel;
                         new Thread(){
                             @Override
                             public void run() {
-                                awaitSend(task, channel, jsonObject.toJSONString());
+                                awaitSend(task, sender, jsonObject.toJSONString());
                             }
                         }.start();
 

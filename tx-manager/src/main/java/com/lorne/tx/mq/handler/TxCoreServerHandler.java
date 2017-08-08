@@ -10,8 +10,8 @@ import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
-import com.lorne.tx.utils.socket.SocketManager;
-import com.lorne.tx.utils.socket.SocketUtils;
+import com.lorne.tx.utils.SocketManager;
+import com.lorne.tx.utils.SocketUtils;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -42,6 +42,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
     private Executor  threadPool = Executors.newFixedThreadPool(max_size);
 
 
+
     public TxCoreServerHandler(MQTxManagerService txManagerService) {
         this.txManagerService = txManagerService;
     }
@@ -69,8 +70,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
             switch (action) {
                 //创建事务组
                 case "cg": {
-                    String modelName = params.getString("m");
-                    TxGroup txGroup = txManagerService.createTransactionGroup(modelName);
+                    TxGroup txGroup = txManagerService.createTransactionGroup();
                     if(txGroup!=null) {
                         txGroup.setNowTime(System.currentTimeMillis());
                         res = txGroup.toJsonString(false);
@@ -83,17 +83,19 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                 case "atg": {
                     String groupId = params.getString("g");
                     String taskId = params.getString("t");
+                    String uniqueKey = params.getString("u");
                     int isGroup = params.getInteger("s");
-                    String modelName = params.getString("m");
-                    if (StringUtils.isNotEmpty(modelName)) {
-                        TxGroup txGroup = txManagerService.addTransactionGroup(groupId, taskId, isGroup,modelName);
-                        if(txGroup!=null) {
-                            txGroup.setNowTime(System.currentTimeMillis());
-                            res = txGroup.toJsonString(false);
-                        }
-                    } else {
-                        res = "";
+                    String modelName = ctx.channel().remoteAddress().toString();
+
+                    SocketManager.getInstance().onLine(modelName,uniqueKey);
+
+                    TxGroup txGroup = txManagerService.addTransactionGroup(groupId, uniqueKey,taskId, isGroup,modelName);
+
+                    if(txGroup!=null) {
+                        txGroup.setNowTime(System.currentTimeMillis());
+                        res = txGroup.toJsonString(false);
                     }
+
                     break;
                 }
 
@@ -164,7 +166,10 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
 
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+
         SocketManager.getInstance().removeClient(ctx.channel());
+        String modelName = ctx.channel().remoteAddress().toString();
+        SocketManager.getInstance().outLine(modelName);
         super.channelUnregistered(ctx);
     }
 

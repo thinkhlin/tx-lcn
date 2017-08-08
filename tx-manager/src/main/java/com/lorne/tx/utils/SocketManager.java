@@ -1,9 +1,11 @@
-package com.lorne.tx.utils.socket;
+package com.lorne.tx.utils;
 
 import com.lorne.tx.Constants;
 import io.netty.channel.Channel;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -27,6 +29,8 @@ public class SocketManager {
     private boolean allowConnection = true;
 
     private List<Channel> clients = null;
+
+    private Map<String,String> lines = null;
 
     private static SocketManager manager = null;
 
@@ -55,6 +59,7 @@ public class SocketManager {
 
     private SocketManager() {
         clients = new CopyOnWriteArrayList<Channel>();
+        lines = new ConcurrentHashMap<>();
     }
 
     public void addClient(Channel client) {
@@ -82,5 +87,24 @@ public class SocketManager {
 
     public boolean isAllowConnection() {
         return allowConnection;
+    }
+
+    public void outLine(String modelName) {
+        lines.remove(modelName);
+    }
+
+    public void onLine(String modelName, String uniqueKey) {
+        lines.put(modelName,uniqueKey);
+    }
+
+    public Channel getChannelByUniqueKey(String uniqueKey) {
+        for (Channel channel : clients) {
+            String modelName = channel.remoteAddress().toString();
+            String value  = lines.get(modelName);
+            if (uniqueKey.equals(value)) {
+                return channel;
+            }
+        }
+        return null;
     }
 }

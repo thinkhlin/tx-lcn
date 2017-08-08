@@ -35,7 +35,6 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     @Override
     public TxGroup createTransactionGroup() {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("m", Constants.uniqueKey);
         Request request = new Request("cg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
         return TxGroup.parser(json);
@@ -46,7 +45,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("t", taskId);
-        jsonObject.put("m", Constants.uniqueKey);
+        jsonObject.put("u", Constants.uniqueKey);
         jsonObject.put("s", isGroup ? 1 : 0);
         Request request = new Request("atg", jsonObject.toString());
         String json = nettyService.sendMsg(request);

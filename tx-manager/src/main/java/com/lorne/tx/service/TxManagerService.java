@@ -12,7 +12,7 @@ public interface TxManagerService {
     /**
      * 创建事物组
      */
-    TxGroup createTransactionGroup(String modelName);
+    TxGroup createTransactionGroup();
 
 
     /**
@@ -20,7 +20,7 @@ public interface TxManagerService {
      *
      * @return
      */
-    TxGroup addTransactionGroup(String groupId, String taskId, int isGroup,String modelName);
+    TxGroup addTransactionGroup(String groupId,String uniqueKey, String taskId, int isGroup,String modelName);
 
 
     boolean checkTransactionGroup(String groupId,String taskId);

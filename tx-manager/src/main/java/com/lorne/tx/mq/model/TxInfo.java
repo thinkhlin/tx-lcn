@@ -27,6 +27,11 @@ public class TxInfo extends JsonModel {
      */
     private String address;
 
+    /**
+     * tx识别标示
+     */
+    private String uniqueKey;
+
     private ChannelSender channel;
 
 
@@ -78,6 +83,14 @@ public class TxInfo extends JsonModel {
         this.address = address;
     }
 
+    public String getUniqueKey() {
+        return uniqueKey;
+    }
+
+    public void setUniqueKey(String uniqueKey) {
+        this.uniqueKey = uniqueKey;
+    }
+
     @Override
     public String toString() {
         JSONObject jsonObject = new JSONObject();
@@ -86,6 +99,7 @@ public class TxInfo extends JsonModel {
         jsonObject.put("notify",getNotify());
         jsonObject.put("isGroup",getIsGroup());
         jsonObject.put("address",getAddress());
+        jsonObject.put("uniqueKey",getUniqueKey());
         return jsonObject.toString();
     }
 }

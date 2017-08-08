@@ -92,6 +92,7 @@ public class TxGroup {
                 info.setNotify(object.getInteger("n"));
                 info.setIsGroup(object.getInteger("ig"));
                 info.setAddress(object.getString("a"));
+                info.setUniqueKey(object.getString("u"));
                 txGroup.getList().add(info);
             }
             return txGroup;
@@ -117,6 +118,7 @@ public class TxGroup {
                 item.put("n", info.getNotify());
                 item.put("ig", info.getIsGroup());
                 item.put("a", info.getAddress());
+                item.put("u", info.getUniqueKey());
                 jsonArray.add(item);
             }
             jsonObject.put("l", jsonArray);

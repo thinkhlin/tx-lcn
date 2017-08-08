@@ -7,14 +7,13 @@ import com.lorne.tx.service.TxManagerService;
 import com.lorne.tx.service.TxService;
 import com.lorne.tx.service.model.TxServer;
 import com.lorne.tx.service.model.TxState;
-import com.lorne.tx.utils.socket.SocketManager;
-import com.lorne.tx.utils.socket.SocketUtils;
+import com.lorne.tx.utils.SocketManager;
+import com.lorne.tx.utils.SocketUtils;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.eureka.EurekaServerContextHolder;
 import io.netty.channel.Channel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 

@@ -1,7 +1,7 @@
 package com.lorne.tx.service.model;
 
 import com.lorne.core.framework.utils.http.HttpUtils;
-import com.lorne.tx.utils.socket.SocketUtils;
+import com.lorne.tx.utils.SocketUtils;
 import io.netty.channel.Channel;
 
 /**
