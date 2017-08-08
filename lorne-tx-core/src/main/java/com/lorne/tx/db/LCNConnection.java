@@ -42,7 +42,7 @@ public class LCNConnection extends AbstractConnection {
                 logger.info("自动回滚->" + transactionLocal.getGroupId());
                 dataSourceService.schedule(transactionLocal.getGroupId(),transactionLocal.getCompensateId(), waitTask);
             }
-        }, transactionLocal.getMaxTimeOut() * 1000);
+        }, transactionLocal.getMaxTimeOut());
 
         logger.info("transaction-awaitTask->" + transactionLocal.getGroupId());
 
