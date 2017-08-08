@@ -1,5 +1,6 @@
 package com.lorne.tx.compensate.service.impl;
 
+import com.lorne.tx.Constants;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.repository.JdbcTransactionRecoverRepository;
@@ -75,8 +76,10 @@ public class CompensateServiceImpl implements CompensateService {
 
         String tableName = "lcn_tx_"+ getTableName(modelNameService.getModelName());
 
+        Constants.uniqueKey = modelNameService.getUniqueKey();
+
         // TODO: 2017/7/11  数据库创建等操作
-        blockingQueueService.init(tableName,modelNameService.getUniqueKey());
+        blockingQueueService.init(tableName,Constants.uniqueKey);
 
         // TODO: 2017/7/11  查找补偿数据
         executeCompensate();

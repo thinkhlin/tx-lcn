@@ -19,5 +19,9 @@ public class Constants {
      */
     public static int maxOutTime = 10;
 
+    /**
+     * 模块唯一标示
+     */
+    public static String uniqueKey;
 
 }

@@ -31,9 +31,10 @@ public class InitServiceImpl implements InitService {
         nettyService.start();
         logger.info("socket-start..");
 
+        timeOutService.loadOutTime();
+
         compensateService.start();
         logger.info("check-compensate-running..");
 
-        timeOutService.loadOutTime();
     }
 }

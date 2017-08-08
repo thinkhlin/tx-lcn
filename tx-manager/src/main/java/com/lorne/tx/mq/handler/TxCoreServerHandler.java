@@ -69,7 +69,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
             switch (action) {
                 //创建事务组
                 case "cg": {
-                    String modelName = ctx.channel().remoteAddress().toString();
+                    String modelName = params.getString("m");
                     TxGroup txGroup = txManagerService.createTransactionGroup(modelName);
                     if(txGroup!=null) {
                         txGroup.setNowTime(System.currentTimeMillis());
@@ -84,7 +84,7 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                     String groupId = params.getString("g");
                     String taskId = params.getString("t");
                     int isGroup = params.getInteger("s");
-                    String modelName = ctx.channel().remoteAddress().toString();
+                    String modelName = params.getString("m");
                     if (StringUtils.isNotEmpty(modelName)) {
                         TxGroup txGroup = txManagerService.addTransactionGroup(groupId, taskId, isGroup,modelName);
                         if(txGroup!=null) {
@@ -96,19 +96,6 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                     }
                     break;
                 }
-//                //修改模块信息
-//                case "nti": {
-//                    String groupId = params.getString("g");
-//                    String kid = params.getString("k");
-//                    int state = params.getInteger("s");
-//                    NotifyMsg resMsg = txManagerService.notifyTransactionInfo(groupId, kid, state == 1);
-//                    if(resMsg==null){
-//                        res = "";
-//                    }else {
-//                        res = resMsg.toJsonString();
-//                    }
-//                    break;
-//                }
 
                 //关闭事务组
                 case "ctg": {

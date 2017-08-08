@@ -3,6 +3,7 @@ package com.lorne.tx.mq.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.core.framework.utils.http.HttpUtils;
+import com.lorne.tx.Constants;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
@@ -34,6 +35,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     @Override
     public TxGroup createTransactionGroup() {
         JSONObject jsonObject = new JSONObject();
+        jsonObject.put("m", Constants.uniqueKey);
         Request request = new Request("cg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
         return TxGroup.parser(json);
@@ -44,6 +46,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("g", groupId);
         jsonObject.put("t", taskId);
+        jsonObject.put("m", Constants.uniqueKey);
         jsonObject.put("s", isGroup ? 1 : 0);
         Request request = new Request("atg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
