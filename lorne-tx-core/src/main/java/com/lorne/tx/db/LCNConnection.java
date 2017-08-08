@@ -29,6 +29,7 @@ public class LCNConnection extends AbstractConnection {
         if (waitTask == null) {
             connection.rollback();
             closeConnection();
+            dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
             logger.info("waitTask is null");
             return;
         }

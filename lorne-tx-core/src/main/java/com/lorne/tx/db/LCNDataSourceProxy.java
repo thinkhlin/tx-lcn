@@ -34,7 +34,7 @@ public class LCNDataSourceProxy implements DataSource {
     private org.slf4j.Logger logger = LoggerFactory.getLogger(LCNDataSourceProxy.class);
 
 
-    private Map<String, AbstractConnection> pools = new ConcurrentHashMap<>();
+    private static Map<String, AbstractConnection> pools = new ConcurrentHashMap<>();
 
 
     @Autowired
@@ -50,6 +50,10 @@ public class LCNDataSourceProxy implements DataSource {
     private int maxWaitTime = 30;
 
     private volatile int nowCount = 0;
+
+    public static boolean hasGroup(String group){
+        return pools.containsKey(group);
+    }
 
     // not thread
     private ISubNowConnection subNowCount = new ISubNowConnection() {

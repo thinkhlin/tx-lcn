@@ -7,6 +7,7 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.service.CompensateService;
+import com.lorne.tx.db.LCNDataSourceProxy;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.service.TransactionServer;
@@ -42,21 +43,25 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         logger.info("tx-running-start->" + txGroupId);
         long t1 = System.currentTimeMillis();
 
-
-        String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
+        boolean isHasIsGroup =  LCNDataSourceProxy.hasGroup(txGroupId);
 
         TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
+
+        if(!isHasIsGroup) {
+            String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
+            txTransactionLocal.setCompensateId(compensateId);
+        }
+
         txTransactionLocal.setGroupId(txGroupId);
         txTransactionLocal.setHasStart(false);
         txTransactionLocal.setKid(kid);
-        txTransactionLocal.setCompensateId(compensateId);
         txTransactionLocal.setMaxTimeOut(info.getMaxTimeOut());
         TxTransactionLocal.setCurrent(txTransactionLocal);
         try {
 
             Object res = point.proceed();
 
-            final TxGroup resTxGroup = txManagerService.addTransactionGroup(txGroupId, kid, TxTransactionLocal.current().isHasIsGroup());
+            final TxGroup resTxGroup = txManagerService.addTransactionGroup(txGroupId, kid, isHasIsGroup);
             if (resTxGroup == null) {
                 Task waitTask = ConditionUtils.getInstance().getTask(kid);
                 if (waitTask != null) {

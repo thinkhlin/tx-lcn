@@ -4,6 +4,7 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.db.service.DataSourceService;
 import com.lorne.tx.mq.service.MQTxManagerService;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,6 +47,8 @@ public class DataSourceServiceImpl implements DataSourceService {
 
     @Override
     public void deleteCompensateId(String compensateId) {
-        compensateService.deleteTransactionInfo(compensateId);
+        if(StringUtils.isNotEmpty(compensateId)) {
+            compensateService.deleteTransactionInfo(compensateId);
+        }
     }
 }
