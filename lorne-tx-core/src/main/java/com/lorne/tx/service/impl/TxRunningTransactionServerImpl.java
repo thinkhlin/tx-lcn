@@ -45,15 +45,17 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
         boolean isHasIsGroup =  LCNDataSourceProxy.hasGroup(txGroupId);
 
-        TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
 
+
+        String compensateId = null;
         if(!isHasIsGroup) {
-            String compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
-            txTransactionLocal.setCompensateId(compensateId);
+            compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
         }
 
+        TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
         txTransactionLocal.setGroupId(txGroupId);
         txTransactionLocal.setHasStart(false);
+        txTransactionLocal.setCompensateId(compensateId);
         txTransactionLocal.setKid(kid);
         txTransactionLocal.setMaxTimeOut(info.getMaxTimeOut());
         TxTransactionLocal.setCurrent(txTransactionLocal);
@@ -73,6 +75,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             }
             return res;
         } catch (Throwable e) {
+            compensateService.deleteTransactionInfo(compensateId);
             throw e;
         } finally {
             TxTransactionLocal.setCurrent(null);
