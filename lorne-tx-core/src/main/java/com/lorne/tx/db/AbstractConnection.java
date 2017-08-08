@@ -84,6 +84,7 @@ public abstract class AbstractConnection implements Connection {
         logger.info("close-state->" + state + "," + groupId);
         if (state == 0) {
             closeConnection();
+            dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
         }
         if (state == 1) {
 
