@@ -59,11 +59,15 @@ public abstract class AbstractConnection implements Connection {
         }
     }
 
+    private boolean hasClose = false;
 
     @Override
     public void commit() throws SQLException {
         logger.info("commit");
         state = 1;
+
+        close();
+        hasClose = true;
     }
 
     @Override
@@ -71,6 +75,9 @@ public abstract class AbstractConnection implements Connection {
         logger.info("rollback");
         state = 0;
         connection.rollback();
+
+        close();
+        hasClose = true;
     }
 
     public void closeConnection() throws SQLException {
@@ -81,6 +88,10 @@ public abstract class AbstractConnection implements Connection {
 
     @Override
     public void close() throws SQLException {
+        if(hasClose){
+            hasClose = false;
+            return;
+        }
         logger.info("close-state->" + state + "," + groupId);
         if (state == 0) {
             closeConnection();
