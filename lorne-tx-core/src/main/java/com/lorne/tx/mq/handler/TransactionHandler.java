@@ -65,17 +65,19 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     }
 
     private String notifyWaitTask(Task task, int state) {
-        String res = "0";
+        String res;
         task.setState(state);
         task.signalTask();
         int count = 0;
+
         while (true) {
             if (task.isRemove()) {
                 res = "1";
                 break;
             }
-            if (count > 800) {
-                res = "0";
+            if (count > 1000) {
+                //已经通知了，有可能失败.
+                res = "2";
                 break;
             }
 
@@ -108,12 +110,12 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         logger.info("接受通知数据->" + json);
                         String res = "";
                         if (task != null) {
-                            int index = 0;
                             if (task.isAwait()) {   //已经等待
                                 res = notifyWaitTask(task, state);
                             } else {
+                                int index = 0;
                                 while (true) {
-                                    if (index > 800) {
+                                    if (index > 500) {
                                         res = "0";
                                         break;
                                     }

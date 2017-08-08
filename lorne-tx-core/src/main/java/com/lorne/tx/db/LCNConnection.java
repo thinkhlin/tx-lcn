@@ -26,7 +26,6 @@ public class LCNConnection extends AbstractConnection {
 
     @Override
     public void transaction() throws SQLException {
-        logger.info("transaction-running->" + transactionLocal.getGroupId());
         if (waitTask == null) {
             connection.rollback();
             closeConnection();
@@ -45,23 +44,21 @@ public class LCNConnection extends AbstractConnection {
         }, transactionLocal.getMaxTimeOut());
 
         logger.info("transaction-awaitTask->" + transactionLocal.getGroupId());
-
         waitTask.awaitTask();
 
         timer.cancel();
-        try {
-            int rs = waitTask.getState();
-            logger.info("(" + transactionLocal.getGroupId() + ")->单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + rs);
-            if (rs == 1) {
-                connection.commit();
-            } else {
-                connection.rollback();
-            }
-        } catch (Throwable throwable) {
+
+        int rs = waitTask.getState();
+
+        logger.info("(" + transactionLocal.getGroupId() + ")->单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + rs);
+
+        if (rs == 1) {
+            connection.setAutoCommit(true);
+        } else {
             connection.rollback();
-        } finally {
-            waitTask.remove();
         }
+        dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
+        waitTask.remove();
     }
 
 

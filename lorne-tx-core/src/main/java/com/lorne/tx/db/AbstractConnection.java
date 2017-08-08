@@ -112,8 +112,6 @@ public abstract class AbstractConnection implements Connection {
                     public void run() {
                         try {
                             transaction();
-                            state = 0;
-                            dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
                         } catch (Exception e) {
                             try {
                                 connection.rollback();
