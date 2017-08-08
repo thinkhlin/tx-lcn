@@ -74,7 +74,6 @@ public abstract class AbstractConnection implements Connection {
     public void rollback() throws SQLException {
         logger.info("rollback");
         state = 0;
-        connection.rollback();
 
         close();
         hasClose = true;
@@ -95,7 +94,7 @@ public abstract class AbstractConnection implements Connection {
         logger.info("close-state->" + state + "," + groupId);
         if (state == 0) {
             //再嵌套时，第一次成功后面出现回滚。
-            if(waitTask.isAwait()&&!waitTask.isRemove()) {
+            if(waitTask!=null&&waitTask.isAwait()&&!waitTask.isRemove()) {
                 //通知第一个连接回滚事务。
                 waitTask.setState(0);
                 waitTask.signalTask();
