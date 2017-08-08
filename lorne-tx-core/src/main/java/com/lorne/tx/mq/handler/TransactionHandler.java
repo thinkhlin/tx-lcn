@@ -103,7 +103,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
                 switch (action) {
                     case "c": {
-                        String taskId = resObj.getString("t");
+                        String taskId = resObj.getString("g");
                         int row = nettyService.checkCompensate(taskId);
                         //有数据则等待执行补偿，需要保留数据
                         if(row>1){
