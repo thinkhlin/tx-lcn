@@ -54,16 +54,6 @@ public class CompensateServiceImpl implements CompensateService {
     }
 
 
-    private void executeCompensate(){
-        List<TransactionRecover> list = blockingQueueService.findAll(0);
-        try {
-            if (list != null && list.size() > 0) {
-                for (final TransactionRecover data : list) {
-                    blockingQueueService.execute(data);
-                }
-            }
-        } catch (Exception e) {}
-    }
 
     @Override
     public void start() {
@@ -82,7 +72,14 @@ public class CompensateServiceImpl implements CompensateService {
         blockingQueueService.init(tableName,Constants.uniqueKey);
 
         // TODO: 2017/7/11  查找补偿数据
-        executeCompensate();
+        List<TransactionRecover> list = blockingQueueService.findAll(0);
+        try {
+            if (list != null && list.size() > 0) {
+                for (final TransactionRecover data : list) {
+                    blockingQueueService.execute(data);
+                }
+            }
+        } catch (Exception e) {}
 
         // add Task check 检查那些未能正常执行的业务数据
         new Thread() {
@@ -122,10 +119,6 @@ public class CompensateServiceImpl implements CompensateService {
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
-
-
-                        executeCompensate();
-
 
                         final List<TransactionRecover> list = blockingQueueService.loadCompensateList(maxTime);
                         if (list != null && list.size() > 0) {
