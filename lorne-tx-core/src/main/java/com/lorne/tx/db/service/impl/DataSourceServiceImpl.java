@@ -8,6 +8,8 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * create by lorne on 2017/7/29
  */
@@ -23,7 +25,7 @@ public class DataSourceServiceImpl implements DataSourceService {
 
 
     @Override
-    public void schedule(String groupId,String compensateId, Task waitTask) {
+    public void schedule(String groupId,List<String> compensates, Task waitTask) {
         String waitTaskId = waitTask.getKey();
         int rs = txManagerService.checkTransactionInfo(groupId, waitTaskId);
         if (rs == 1 || rs == 0) {
@@ -41,14 +43,19 @@ public class DataSourceServiceImpl implements DataSourceService {
         //添加到补偿队列
         waitTask.setState(-100);
         waitTask.signalTask();
-        compensateService.addTask(compensateId);
-
+        for(String compensateId:compensates) {
+            if(StringUtils.isNotEmpty(compensateId)) {
+                compensateService.addTask(compensateId);
+            }
+        }
     }
 
     @Override
-    public void deleteCompensateId(String compensateId) {
-        if(StringUtils.isNotEmpty(compensateId)) {
-            compensateService.deleteTransactionInfo(compensateId);
+    public void deleteCompensateId(List<String> compensates) {
+        for(String compensateId:compensates){
+            if(StringUtils.isNotEmpty(compensateId)) {
+                compensateService.deleteTransactionInfo(compensateId);
+            }
         }
     }
 }

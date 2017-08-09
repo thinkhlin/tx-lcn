@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
@@ -30,10 +32,13 @@ public abstract class AbstractConnection implements Connection {
 
     protected DataSourceService dataSourceService;
 
-
     private LCNDataSourceProxy.ISubNowConnection runnable;
 
-    protected TxTransactionLocal transactionLocal;
+    private int maxOutTime;
+
+    private boolean hasGroup = false;
+
+    private List<String> compensateList;
 
     private String groupId;
 
@@ -41,22 +46,31 @@ public abstract class AbstractConnection implements Connection {
 
 
     public AbstractConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable) {
+        compensateList = new ArrayList<>();
         this.connection = connection;
         this.runnable = runnable;
-        this.transactionLocal = transactionLocal;
         this.dataSourceService = dataSourceService;
         groupId = transactionLocal.getGroupId();
+        maxOutTime = transactionLocal.getMaxTimeOut();
+
+        compensateList.add(transactionLocal.getCompensateId());
+
         if (!CompensateServiceImpl.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
             waitTask = ConditionUtils.getInstance().createTask(transactionLocal.getKid());
             logger.info("task-create-> " + waitTask.getKey());
         }
     }
 
+    protected List<String> getCompensateList() {
+        return compensateList;
+    }
 
-    public void setHasIsGroup(boolean isGroup) {
-        if (transactionLocal != null) {
-            transactionLocal.setHasIsGroup(isGroup);
-        }
+    protected void setHasIsGroup(boolean isGroup) {
+        hasGroup = isGroup;
+    }
+
+    protected int getMaxOutTime() {
+        return maxOutTime;
     }
 
     private boolean hasClose = false;
@@ -79,7 +93,7 @@ public abstract class AbstractConnection implements Connection {
         hasClose = true;
     }
 
-    public void closeConnection() throws SQLException {
+    protected void closeConnection() throws SQLException {
         runnable.close(this);
         connection.close();
         logger.info("close-connection->" + groupId);
@@ -100,12 +114,12 @@ public abstract class AbstractConnection implements Connection {
                 waitTask.signalTask();
             }else {
                 closeConnection();
-                dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
+                dataSourceService.deleteCompensateId(compensateList);
             }
         }
         if (state == 1) {
 
-            if (CompensateServiceImpl.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
+            if (CompensateServiceImpl.COMPENSATE_KEY.equals(groupId)) {
 
                 if(TxTransactionCompensate.current()!=null){
                     connection.commit();
@@ -120,7 +134,7 @@ public abstract class AbstractConnection implements Connection {
             } else {
                 //分布式事务
 
-                if (transactionLocal.isHasIsGroup()) {
+                if (hasGroup) {
                     //加入队列的连接，仅操作连接对象，不处理事务
                     return;
                 }
@@ -152,11 +166,11 @@ public abstract class AbstractConnection implements Connection {
         }
     }
 
-    public String getGroupId() {
+    protected String getGroupId() {
         return groupId;
     }
 
-    public Task getWaitTask() {
+    protected Task getWaitTask() {
         return waitTask;
     }
 
@@ -166,7 +180,7 @@ public abstract class AbstractConnection implements Connection {
     }
 
 
-    public abstract void transaction() throws SQLException;
+    protected abstract void transaction() throws SQLException;
 
 
     /*****default*******/

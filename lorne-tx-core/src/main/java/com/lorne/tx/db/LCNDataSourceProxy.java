@@ -81,6 +81,8 @@ public class LCNDataSourceProxy implements DataSource {
         AbstractConnection old = pools.get(txTransactionLocal.getGroupId());
         if (old != null) {
             old.setHasIsGroup(true);
+            old.getCompensateList().add(txTransactionLocal.getCompensateId());
+
             txTransactionLocal.setHasIsGroup(true);
             TxTransactionLocal.setCurrent(txTransactionLocal);
             logger.info("get old connection ->" + txTransactionLocal.getGroupId());
@@ -146,7 +148,6 @@ public class LCNDataSourceProxy implements DataSource {
         this.maxCount = maxCount;
     }
 
-
     public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
     }
@@ -170,6 +171,11 @@ public class LCNDataSourceProxy implements DataSource {
             return connection;
         }
     }
+
+
+
+
+    /**default**/
 
     @Override
     public PrintWriter getLogWriter() throws SQLException {

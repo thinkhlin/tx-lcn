@@ -46,11 +46,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         boolean isHasIsGroup =  LCNDataSourceProxy.hasGroup(txGroupId);
 
 
-
-        String compensateId = null;
-        if(!isHasIsGroup) {
-            compensateId = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
-        }
+        String compensateId  = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
 
         TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
         txTransactionLocal.setGroupId(txGroupId);

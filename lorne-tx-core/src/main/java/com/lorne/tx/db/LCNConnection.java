@@ -25,11 +25,11 @@ public class LCNConnection extends AbstractConnection {
     }
 
     @Override
-    public void transaction() throws SQLException {
+    protected void transaction() throws SQLException {
         if (waitTask == null) {
             connection.rollback();
             closeConnection();
-            dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
+            dataSourceService.deleteCompensateId(getCompensateList());
             logger.info("waitTask is null");
             return;
         }
@@ -39,27 +39,27 @@ public class LCNConnection extends AbstractConnection {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                logger.info("自动回滚->" + transactionLocal.getGroupId());
-                dataSourceService.schedule(transactionLocal.getGroupId(),transactionLocal.getCompensateId(), waitTask);
+                logger.info("自动回滚->" + getGroupId());
+                dataSourceService.schedule(getGroupId(),getCompensateList(), waitTask);
             }
-        }, transactionLocal.getMaxTimeOut());
+        }, getMaxOutTime());
 
-        logger.info("transaction-awaitTask->" + transactionLocal.getGroupId());
+        logger.info("transaction-awaitTask->" + getGroupId());
         waitTask.awaitTask();
 
         timer.cancel();
 
         int rs = waitTask.getState();
 
-        logger.info("(" + transactionLocal.getGroupId() + ")->单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + rs);
+        logger.info("(" + getGroupId() + ")->单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + rs);
 
         if (rs == 1) {
             connection.commit();
             waitTask.remove();
-            dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
+            dataSourceService.deleteCompensateId(getCompensateList());
         } else {
             connection.rollback();
-            dataSourceService.deleteCompensateId(transactionLocal.getCompensateId());
+            dataSourceService.deleteCompensateId(getCompensateList());
             waitTask.remove();
         }
 
