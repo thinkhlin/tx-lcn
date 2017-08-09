@@ -15,8 +15,11 @@ public abstract class HookRunnable implements Runnable {
                 while (!hasOver){}
             }
         });
-        run0();
-        hasOver = true;
+        try {
+            run0();
+        }finally {
+            hasOver = true;
+        }
     }
 
     public abstract void run0();
