@@ -7,7 +7,6 @@ import com.lorne.tx.compensate.repository.JdbcTransactionRecoverRepository;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.BlockingQueueService;
 import com.lorne.tx.compensate.service.CompensateService;
-import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.service.ModelNameService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,9 +40,6 @@ public class CompensateServiceImpl implements CompensateService {
     private ModelNameService modelNameService;
 
     private TransactionRecoverRepository recoverRepository;
-
-    @Autowired
-    private MQTxManagerService mqTxManagerService;
 
 
 

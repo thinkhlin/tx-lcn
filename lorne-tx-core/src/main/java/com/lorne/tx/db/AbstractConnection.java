@@ -6,6 +6,7 @@ import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.db.service.DataSourceService;
+import com.lorne.tx.thread.HookRunnable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,9 +140,9 @@ public abstract class AbstractConnection implements Connection {
                     return;
                 }
 
-                Runnable runnable = new Runnable() {
+                Runnable runnable = new HookRunnable() {
                     @Override
-                    public void run() {
+                    public void run0() {
                         try {
                             transaction();
                         } catch (Exception e) {
