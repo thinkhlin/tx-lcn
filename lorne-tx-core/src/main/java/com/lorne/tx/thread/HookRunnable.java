@@ -9,18 +9,24 @@ public abstract class HookRunnable implements Runnable {
 
     @Override
     public void run() {
-        Runtime.getRuntime().addShutdownHook(new Thread(){
+
+        Thread thread = new Thread(){
             @Override
             public void run() {
                 while (!hasOver){}
             }
-        });
+        };
+
+        Runtime.getRuntime().addShutdownHook(thread);
+
         try {
             run0();
         }finally {
             hasOver = true;
+            Runtime.getRuntime().removeShutdownHook(thread);
         }
     }
 
     public abstract void run0();
+
 }
