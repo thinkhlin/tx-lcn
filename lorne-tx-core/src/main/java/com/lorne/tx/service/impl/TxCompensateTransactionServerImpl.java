@@ -10,8 +10,8 @@ import org.springframework.stereotype.Service;
 /**
  * Created by yuliang on 2017/7/11.
  */
-@Service(value = "txRunningCompensateTransactionServer")
-public class TxRunningCompensateTransactionServerImpl implements TransactionServer {
+@Service(value = "txCompensateTransactionServer")
+public class TxCompensateTransactionServerImpl implements TransactionServer {
 
     @Override
     public Object execute(final ProceedingJoinPoint point, TxTransactionInfo info) throws Throwable {

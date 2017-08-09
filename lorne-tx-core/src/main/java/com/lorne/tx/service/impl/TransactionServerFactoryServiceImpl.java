@@ -6,6 +6,7 @@ import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.TransactionServerFactoryService;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,10 +29,7 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
     private TransactionServer txDefaultTransactionServer;
 
     @Autowired
-    private TransactionServer txRunningCompensateTransactionServer;
-
-    @Autowired
-    private TransactionServer txStartCompensateTransactionServer;
+    private TransactionServer txCompensateTransactionServer;
 
     @Autowired
     private NettyService nettyService;
@@ -48,14 +46,14 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
             if (TxTransactionLocal.current() != null) {
                 return txDefaultTransactionServer;
             } else {
-                return txRunningCompensateTransactionServer;
+                return txCompensateTransactionServer;
             }
         }
 
         /** 事务补偿业务开始标示**/
         if (info.getCompensate() != null) {
             //正常处理，同模下将依旧执行方法。
-            return txStartCompensateTransactionServer;
+            return txCompensateTransactionServer;
         }
 
         /*********补偿事务处理逻辑*结束***********/

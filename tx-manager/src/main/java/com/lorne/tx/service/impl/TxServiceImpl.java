@@ -142,15 +142,14 @@ public class TxServiceImpl implements TxService {
     }
 
 
-
     @Override
-    public boolean getServerGroup(String groupId,String taskId) {
-        return managerService.checkTransactionGroup(groupId,taskId);
+    public boolean checkClearGroup(String groupId, String taskId) {
+        return managerService.checkClearGroup(groupId,taskId);
     }
 
     @Override
-    public boolean getServerGroupState(String groupId) {
-        return managerService.checkTransactionGroupState(groupId);
+    public boolean checkGroup(String groupId, String taskId) {
+        return managerService.checkTransactionGroup(groupId, taskId);
     }
 
     @Override

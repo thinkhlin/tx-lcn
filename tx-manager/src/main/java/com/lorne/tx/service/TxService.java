@@ -12,10 +12,9 @@ public interface TxService {
 
     TxState getState();
 
-    boolean getServerGroup(String groupId,String taskId);
-
-    boolean getServerGroupState(String groupId);
-
     boolean sendMsg(String model,String msg);
 
+    boolean checkClearGroup(String groupId, String taskId);
+
+    boolean checkGroup(String groupId, String taskId);
 }

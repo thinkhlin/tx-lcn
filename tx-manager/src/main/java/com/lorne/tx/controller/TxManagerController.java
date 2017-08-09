@@ -26,17 +26,17 @@ public class TxManagerController {
     }
 
 
-    @RequestMapping("/getServerGroup")
+    @RequestMapping("/getServerClear")
     @ResponseBody
     public boolean getServerGroup(@RequestParam("groupId") String groupId,@RequestParam("taskId") String taskId) {
-        return txService.getServerGroup(groupId,taskId);
+        return txService.checkClearGroup(groupId,taskId);
     }
 
 
-    @RequestMapping("/getServerGroupState")
+    @RequestMapping("/getServerState")
     @ResponseBody
-    public boolean getServerGroupState(@RequestParam("groupId") String groupId) {
-        return txService.getServerGroupState(groupId);
+    public boolean getServerGroupState(@RequestParam("groupId") String groupId,@RequestParam("taskId") String taskId) {
+        return txService.checkGroup(groupId,taskId);
     }
 
     @RequestMapping("/sendMsg")

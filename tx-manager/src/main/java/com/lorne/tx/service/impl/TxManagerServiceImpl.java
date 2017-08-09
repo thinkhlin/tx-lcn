@@ -95,6 +95,34 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     @Override
     public  boolean checkTransactionGroup(String groupId, String taskId) {
+        ValueOperations<String, String> value = redisTemplate.opsForValue();
+        String key = key_prefix + groupId;
+        String json = value.get(key);
+        if (StringUtils.isEmpty(json)) {
+            key = key_prefix_notify + groupId;
+            json = value.get(key);
+            if (StringUtils.isEmpty(json)) {
+                return false;
+            }
+        }
+        TxGroup txGroup = TxGroup.parser(json);
+        boolean res = txGroup.getState() == 1;
+        if(!res) {
+            return false;
+        }
+
+        for (TxInfo info : txGroup.getList()) {
+            if (info.getKid().equals(taskId)) {
+                return info.getNotify()==0;
+            }
+        }
+
+        return false;
+    }
+
+
+    @Override
+    public boolean checkClearGroup(String groupId, String taskId) {
         logger.info("checkTransactionGroup->groupId:"+groupId+",taskId:"+taskId);
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix + groupId;
@@ -133,22 +161,6 @@ public class TxManagerServiceImpl implements TxManagerService {
         return res;
     }
 
-
-    @Override
-    public boolean checkTransactionGroupState(String groupId) {
-        ValueOperations<String, String> value = redisTemplate.opsForValue();
-        String key = key_prefix + groupId;
-        String json = value.get(key);
-        if (StringUtils.isEmpty(json)) {
-            key = key_prefix_notify + groupId;
-            json = value.get(key);
-            if (StringUtils.isEmpty(json)) {
-                return false;
-            }
-        }
-        TxGroup txGroup = TxGroup.parser(json);
-        return txGroup.getState() == 1;
-    }
 
     @Override
     public boolean closeTransactionGroup(String groupId,int state) {

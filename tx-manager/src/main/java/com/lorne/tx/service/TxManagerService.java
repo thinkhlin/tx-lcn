@@ -26,9 +26,6 @@ public interface TxManagerService {
     boolean checkTransactionGroup(String groupId,String taskId);
 
 
-    boolean checkTransactionGroupState(String groupId);
-
-
     boolean closeTransactionGroup(String groupId,int state);
 
 
@@ -40,4 +37,6 @@ public interface TxManagerService {
 
 
     void clearNotifyData(int time);
+
+    boolean checkClearGroup(String groupId, String taskId);
 }

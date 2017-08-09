@@ -91,31 +91,23 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
             TransactionInvocation invocation = data.getInvocation();
             if (invocation != null) {
                 //通知TM
-                String murl = url + "GroupState?groupId=" + data.getGroupId();
-                logger.info("获取补偿事务状态url->" + murl);
-                String groupState = HttpUtils.get(murl);
-                logger.info("获取补偿事务状态TM->" + groupState);
-
-                if (null == groupState) {
-                    return;
-                }
-
-                if (groupState.contains("true")) {
+                String res = HttpUtils.get(url + "State?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId());
+                if(res!=null&&res.contains("true")) {
                     TxTransactionCompensate compensate = new TxTransactionCompensate();
                     TxTransactionCompensate.setCurrent(compensate);
                     boolean isOk = MethodUtils.invoke(applicationContext, invocation);
                     TxTransactionCompensate.setCurrent(null);
                     if (isOk) {
-                        String notifyGroup = HttpUtils.get(url + "Group?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId());
-                        logger.info("补偿事务通知TM->" + notifyGroup);
-                        recoverRepository.update(data.getId(),0,0);
+                        recoverRepository.update(data.getId(), 0, 0);
                         delete(data.getId());
+                        String murl = url + "Clear?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
+                        String clearRes = HttpUtils.get(murl);
+                        logger.info("url->"+murl+",res->"+clearRes);
                     } else {
                         updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
                     }
-                } else {
-                    //回滚操作直接清理事务补偿日志
-                    recoverRepository.update(data.getId(),0,0);
+                }else{
+                    recoverRepository.update(data.getId(), 0, 0);
                     delete(data.getId());
                 }
             }
