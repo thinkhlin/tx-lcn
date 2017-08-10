@@ -2,6 +2,8 @@ package com.lorne.tx.thread;
 
 import com.lorne.tx.Constants;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * create by lorne on 2017/8/9
  */
@@ -11,22 +13,28 @@ public abstract class HookRunnable implements Runnable {
 
     @Override
     public void run() {
-        Thread thread = new Thread(){
+        Thread thread = new Thread() {
             @Override
             public void run() {
                 Constants.hasExit = true;
-                while (!hasOver){}
+                while (!hasOver) {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         };
-        if(!Constants.hasExit) {
+        if (!Constants.hasExit) {
             Runtime.getRuntime().addShutdownHook(thread);
-        }else{
+        } else {
             System.out.println("jvm has exit..");
             return;
         }
         try {
             run0();
-        }finally {
+        } finally {
 
             hasOver = true;
 
