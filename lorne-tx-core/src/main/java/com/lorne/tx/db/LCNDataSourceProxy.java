@@ -111,6 +111,7 @@ public class LCNDataSourceProxy implements DataSource {
         } else if (nowCount < maxCount) {
             return createLcnConnection(connection, txTransactionLocal);
         } else {
+            dataSourceService.deleteCompensateId(txTransactionLocal.getCompensateId());
             throw new SQLException("connection was overload");
         }
         return connection;

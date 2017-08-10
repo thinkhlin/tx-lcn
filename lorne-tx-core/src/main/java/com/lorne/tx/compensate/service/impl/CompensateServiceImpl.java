@@ -29,12 +29,9 @@ import java.util.regex.Pattern;
 public class CompensateServiceImpl implements CompensateService {
 
 
-
-
     public static volatile boolean hasCompensate = true;
 
     private Logger logger = LoggerFactory.getLogger(CompensateServiceImpl.class);
-
 
     private String url;
 
@@ -54,6 +51,7 @@ public class CompensateServiceImpl implements CompensateService {
     private TransactionRecoverRepository recoverRepository;
 
 
+
     public CompensateServiceImpl() {
         url = ConfigUtils.getString("tx.properties", "url");
     }
@@ -63,7 +61,6 @@ public class CompensateServiceImpl implements CompensateService {
         Matcher matcher = pattern.matcher(modelName);
         return matcher.replaceAll("_");
     }
-
 
     private synchronized void executeService(TransactionRecover data) {
         if (data != null) {

@@ -58,11 +58,16 @@ public class DataSourceServiceImpl implements DataSourceService {
     }
 
     @Override
-    public void deleteCompensateId(List<String> compensates) {
+    public void deleteCompensates(List<String> compensates) {
         for(String compensateId:compensates){
             if(StringUtils.isNotEmpty(compensateId)) {
-                compensateService.deleteTransactionInfo(compensateId);
+                deleteCompensateId(compensateId);
             }
         }
+    }
+
+    @Override
+    public void deleteCompensateId(String compensateId) {
+        compensateService.deleteTransactionInfo(compensateId);
     }
 }

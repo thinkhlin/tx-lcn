@@ -12,5 +12,7 @@ public interface DataSourceService {
 
     void schedule(String groupId,List<String> compensates, Task waitTask);
 
-    void deleteCompensateId(List<String> compensates);
+    void deleteCompensates(List<String> compensates);
+
+    void deleteCompensateId(String compensateId);
 }

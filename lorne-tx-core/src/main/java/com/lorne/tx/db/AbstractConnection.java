@@ -5,7 +5,6 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.service.CompensateService;
-import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.db.service.DataSourceService;
 import com.lorne.tx.thread.HookRunnable;
 import org.slf4j.Logger;
@@ -116,7 +115,7 @@ public abstract class AbstractConnection implements Connection {
                 waitTask.signalTask();
             }else {
                 closeConnection();
-                dataSourceService.deleteCompensateId(compensateList);
+                dataSourceService.deleteCompensates(compensateList);
             }
         }
         if (state == 1) {

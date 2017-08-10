@@ -24,7 +24,7 @@ public class LCNConnection extends AbstractConnection {
     protected void transaction() throws SQLException {
         if (waitTask == null) {
             connection.rollback();
-            dataSourceService.deleteCompensateId(getCompensateList());
+            dataSourceService.deleteCompensates(getCompensateList());
             System.out.println("waitTask is null");
             return;
         }
@@ -53,7 +53,7 @@ public class LCNConnection extends AbstractConnection {
         } else {
             connection.rollback();
         }
-        dataSourceService.deleteCompensateId(getCompensateList());
+        dataSourceService.deleteCompensates(getCompensateList());
         waitTask.remove();
     }
 
