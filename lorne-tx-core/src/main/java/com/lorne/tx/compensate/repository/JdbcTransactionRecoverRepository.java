@@ -111,24 +111,6 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     @Override
     public void init(String tableName,String unique) {
-//        DruidDataSource dataSource = new DruidDataSource();
-//        dataSource.setUrl(ConfigUtils.getString("tx.properties", "compensate.db.url"));
-//        dataSource.setUsername(ConfigUtils.getString("tx.properties", "compensate.db.username"));
-//        dataSource.setPassword(ConfigUtils.getString("tx.properties", "compensate.db.password"));
-//        dataSource.setInitialSize(2);
-//        dataSource.setMaxActive(20);
-//        dataSource.setMinIdle(0);
-//        dataSource.setMaxWait(60000);
-//        dataSource.setValidationQuery("SELECT 1");
-//        dataSource.setTestOnBorrow(false);
-//        dataSource.setTestWhileIdle(true);
-//        dataSource.setPoolPreparedStatements(false);
-
- //       this.dataSource = dataSource;
-
-//        try {
-//            connection = compensateDataSource.getConnection();
-//        } catch (SQLException e) {}
 
         dbType = ConfigUtils.getString("tx.properties", "compensate.db.dbType");
 
