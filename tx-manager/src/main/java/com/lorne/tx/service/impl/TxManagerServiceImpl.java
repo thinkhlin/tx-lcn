@@ -137,10 +137,17 @@ public class TxManagerServiceImpl implements TxManagerService {
         TxGroup txGroup = TxGroup.parser(json);
         boolean res = txGroup.getState() == 1;
 
+        boolean hasSet = false;
         for (TxInfo info : txGroup.getList()) {
             if (info.getKid().equals(taskId)) {
                 info.setNotify(1);
+                hasSet = true;
             }
+        }
+
+        if(hasSet) {
+            String pnKey = key_prefix_notify + groupId;
+            value.set(pnKey, txGroup.toJsonString());
         }
 
         boolean isOver = true;
@@ -157,13 +164,13 @@ public class TxManagerServiceImpl implements TxManagerService {
                 }
             }
         }
+
         if (isOver) {
             if(key.startsWith(key_prefix_notify)) {
                 redisTemplate.delete(key);
-            } else {
-                value.set(key, txGroup.toJsonString());
             }
         }
+
         logger.info("end-checkTransactionGroup->groupId:"+groupId+",taskId:"+taskId+",res:"+res);
         return res;
     }
