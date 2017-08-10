@@ -1,14 +1,15 @@
 package com.lorne.tx.compensate.repository;
 
-import com.alibaba.druid.pool.DruidDataSource;
 import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.utils.SerializerUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
@@ -27,12 +28,7 @@ import java.util.Date;
 public class JdbcTransactionRecoverRepository implements TransactionRecoverRepository {
 
 
-    @Autowired
-    private SqlHelper sqlHelper;
-
     private Logger logger = LoggerFactory.getLogger(JdbcTransactionRecoverRepository.class);
-
-    private DruidDataSource dataSource;
 
     private String dbType;
 
@@ -40,29 +36,30 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     private String unique;
 
-    private Connection connection = null;
+    @Autowired
+    private DataSource compensateDataSource;
 
     @Override
     public int create(TransactionRecover recover) {
-        String sql = sqlHelper.getInsertSql(dbType,tableName);
+        String sql = SqlHelper.getInsertSql(dbType,tableName);
         return executeUpdate(sql,recover.getId(),unique, recover.getRetriedCount(), recover.getGroupId(), recover.getTaskId(), SerializerUtils.serializeTransactionInvocation(recover.getInvocation()), recover.getState());
     }
 
     @Override
     public int remove(String id) {
-        String sql = sqlHelper.getDeleteSql(dbType,tableName);
+        String sql = SqlHelper.getDeleteSql(dbType,tableName);
         return executeUpdate(sql, id);
     }
 
     @Override
     public int update(String id, int state, int retriedCount) {
-        String sql = sqlHelper.getUpdateSql(dbType,tableName);
+        String sql = SqlHelper.getUpdateSql(dbType,tableName);
         return executeUpdate(sql, state, retriedCount, id);
     }
 
     @Override
     public List<TransactionRecover> findAll(int state) {
-        String selectSql = sqlHelper.getFindAllByUniqueSql(dbType,tableName);
+        String selectSql = SqlHelper.getFindAllByUniqueSql(dbType,tableName);
         List<Map<String, Object>> list = executeQuery(selectSql, state,unique);
        return loadList(list);
     }
@@ -71,7 +68,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     @Override
     public List<TransactionRecover> loadCompensateList(int time) {
-        String selectSql = sqlHelper.loadCompensateList(dbType,tableName,time);
+        String selectSql = SqlHelper.loadCompensateList(dbType,tableName,time);
         List<Map<String, Object>> list = executeQuery(selectSql);
         List<TransactionRecover>  recovers =  loadList(list);
         for(TransactionRecover recover:recovers){
@@ -105,29 +102,31 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
 
     @Override
     public int countCompensateByTaskId(String taskId) {
-        String selectSql = sqlHelper.countCompensateByTaskId(dbType,tableName);
+        String selectSql = SqlHelper.countCompensateByTaskId(dbType,tableName);
         List<Map<String, Object>> list = executeQuery(selectSql,taskId);
         return list==null?0:list.size();
     }
 
     @Override
     public void init(String tableName,String unique) {
-        dataSource = new DruidDataSource();
-        dataSource.setUrl(ConfigUtils.getString("tx.properties", "compensate.db.url"));
-        dataSource.setUsername(ConfigUtils.getString("tx.properties", "compensate.db.username"));
-        dataSource.setPassword(ConfigUtils.getString("tx.properties", "compensate.db.password"));
-        dataSource.setInitialSize(2);
-        dataSource.setMaxActive(20);
-        dataSource.setMinIdle(0);
-        dataSource.setMaxWait(60000);
-        dataSource.setValidationQuery("SELECT 1");
-        dataSource.setTestOnBorrow(false);
-        dataSource.setTestWhileIdle(true);
-        dataSource.setPoolPreparedStatements(false);
+//        DruidDataSource dataSource = new DruidDataSource();
+//        dataSource.setUrl(ConfigUtils.getString("tx.properties", "compensate.db.url"));
+//        dataSource.setUsername(ConfigUtils.getString("tx.properties", "compensate.db.username"));
+//        dataSource.setPassword(ConfigUtils.getString("tx.properties", "compensate.db.password"));
+//        dataSource.setInitialSize(2);
+//        dataSource.setMaxActive(20);
+//        dataSource.setMinIdle(0);
+//        dataSource.setMaxWait(60000);
+//        dataSource.setValidationQuery("SELECT 1");
+//        dataSource.setTestOnBorrow(false);
+//        dataSource.setTestWhileIdle(true);
+//        dataSource.setPoolPreparedStatements(false);
 
-        try {
-            connection = dataSource.getConnection();
-        } catch (SQLException e) {}
+ //       this.dataSource = dataSource;
+
+//        try {
+//            connection = compensateDataSource.getConnection();
+//        } catch (SQLException e) {}
 
         dbType = ConfigUtils.getString("tx.properties", "compensate.db.dbType");
 
@@ -135,16 +134,15 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         this.unique = unique;
 
         // TODO: 2017/7/13 扩展多中数据库的创建表语句
-        executeUpdate(sqlHelper.getCreateTableSql(dbType,tableName));
+        executeUpdate(SqlHelper.getCreateTableSql(dbType,tableName));
     }
 
 
     private int executeUpdate(String sql, Object... params) {
         PreparedStatement ps = null;
+        Connection connection = null;
         try {
-            if (connection == null || connection.isClosed()) {
-                connection = dataSource.getConnection();
-            }
+            connection = compensateDataSource.getConnection();
             ps = connection.prepareStatement(sql);
             if (params != null) {
                 for (int i = 0; i < params.length; i++) {
@@ -160,6 +158,9 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                 if (ps != null) {
                     ps.close();
                 }
+                if(connection!=null){
+                    connection.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -170,11 +171,10 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     private List<Map<String, Object>> executeQuery(String sql, Object... params) {
         PreparedStatement ps = null;
         ResultSet rs = null;
+        Connection connection = null;
         List<Map<String, Object>> list = null;
         try {
-            if (connection == null || connection.isClosed()) {
-                connection = dataSource.getConnection();
-            }
+            connection = compensateDataSource.getConnection();
             ps = connection.prepareStatement(sql);
             if (params != null) {
                 for (int i = 0; i < params.length; i++) {
@@ -201,6 +201,9 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
                 }
                 if (ps != null) {
                     ps.close();
+                }
+                if (connection!=null){
+                    connection.close();
                 }
             } catch (SQLException e) {
                 e.printStackTrace();

@@ -1,15 +1,12 @@
 package com.lorne.tx.compensate.repository;
 
-import org.springframework.stereotype.Component;
-
 /**
  * create by lorne on 2017/8/4
  */
-@Component
 public class SqlHelper {
 
 
-    public String getCreateTableSql(String dbType, String tableName) {
+    public static String getCreateTableSql(String dbType, String tableName) {
         String sql = "";
         switch (dbType) {
             case "mysql": {
@@ -64,11 +61,11 @@ public class SqlHelper {
         return sql;
     }
 
-    public String getFindAllByUniqueSql(String dbType, String tableName) {
+    public static String getFindAllByUniqueSql(String dbType, String tableName) {
         return "select * from " + tableName + " where state = ? and l_unique = ? ";
     }
 
-    public String loadCompensateList(String dbType, String tableName,int time) {
+    public static String loadCompensateList(String dbType, String tableName,int time) {
         switch (dbType){
             case "mysql":{
                 return "select * from " + tableName + " where state = 0 and (now() - last_time) > (100 * "+time+")";
@@ -85,7 +82,7 @@ public class SqlHelper {
         }
     }
 
-    public String getUpdateSql(String dbType,String tableName) {
+    public static String getUpdateSql(String dbType,String tableName) {
         switch (dbType){
             case "mysql":{
                 return "update " + tableName + " set last_time = now(),state = ?,retried_count = ? where id = ? ";
@@ -102,11 +99,11 @@ public class SqlHelper {
         }
     }
 
-    public String getDeleteSql(String dbType,String tableName) {
+    public static String getDeleteSql(String dbType,String tableName) {
         return  "delete from " + tableName + " where state = 0 and id = ?  ";
     }
 
-    public String getInsertSql(String dbType,String tableName) {
+    public static String getInsertSql(String dbType,String tableName) {
         switch (dbType){
             case "mysql":{
                 return  "insert into " + tableName + "(id,l_unique,retried_count,create_time,last_time,group_id,task_id,invocation,state)" +
@@ -127,7 +124,7 @@ public class SqlHelper {
 
     }
 
-    public String countCompensateByTaskId(String dbType, String tableName) {
+    public static String countCompensateByTaskId(String dbType, String tableName) {
         return "select * from " + tableName + " where  task_id = ? ";
     }
 }
