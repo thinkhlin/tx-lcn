@@ -84,14 +84,25 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
 
 
     private void awaitSend(Task task, TxInfo txInfo,String msg){
-        while (!task.isAwait()&&!Thread.currentThread().interrupted()){
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            while (!task.isAwait() && !Thread.currentThread().interrupted()) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        }
-         txInfo.getChannel().send(msg);
+
+            if(txInfo.getChannel()!=null) {
+                txInfo.getChannel().send(msg);
+            }else{
+                task.setBack(new IBack() {
+                    @Override
+                    public Object doing(Object... objs) throws Throwable {
+                        return "-2";
+                    }
+                });
+                task.signalTask();
+            }
     }
 
     /**
@@ -179,13 +190,15 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
         }else{
             //回滚操作只发送通过不需要等待确认
             for (TxInfo txInfo : txGroup.getList()) {
-                JSONObject jsonObject = new JSONObject();
-                jsonObject.put("a", "t");
-                jsonObject.put("c", checkSate);
-                jsonObject.put("t", txInfo.getKid());
-                String key = KidUtils.generateShortUuid();
-                jsonObject.put("k", key);
-                txInfo.getChannel().send(jsonObject.toJSONString());
+                if(txInfo.getChannel()!=null) {
+                    JSONObject jsonObject = new JSONObject();
+                    jsonObject.put("a", "t");
+                    jsonObject.put("c", checkSate);
+                    jsonObject.put("t", txInfo.getKid());
+                    String key = KidUtils.generateShortUuid();
+                    jsonObject.put("k", key);
+                    txInfo.getChannel().send(jsonObject.toJSONString());
+                }
             }
             txManagerService.deleteTxGroup(txGroup);
             return true;
