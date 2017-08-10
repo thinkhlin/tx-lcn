@@ -8,6 +8,8 @@ import com.lorne.tx.mq.model.TxServer;
 public class Constants {
 
 
+    public static volatile boolean hasExit = false;
+
     /**
      * tm 服务对象
      */

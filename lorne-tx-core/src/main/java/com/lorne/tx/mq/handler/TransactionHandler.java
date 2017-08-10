@@ -259,7 +259,6 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
     }
 
     public String sendMsg(final Request request) {
-        long t1 = System.currentTimeMillis();
         final String key = request.getKey();
         if (ctx != null && ctx.channel() != null && ctx.channel().isActive()) {
             final Task task = ConditionUtils.getInstance().createTask(key);
@@ -294,10 +293,6 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
             try {
                 Object msg = task.getBack().doing();
-                long t2 = System.currentTimeMillis();
-
-                logger.info("send-msg-time->"+(t2-t1));
-
                 return (String) msg;
             } catch (Throwable e) {
             } finally {

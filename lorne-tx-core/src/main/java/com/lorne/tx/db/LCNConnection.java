@@ -2,8 +2,6 @@ package com.lorne.tx.db;
 
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.db.service.DataSourceService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -17,8 +15,6 @@ import java.util.TimerTask;
 
 public class LCNConnection extends AbstractConnection {
 
-    private Logger logger = LoggerFactory.getLogger(LCNConnection.class);
-
 
     public LCNConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable) {
         super(connection, dataSourceService, transactionLocal, runnable);
@@ -28,9 +24,8 @@ public class LCNConnection extends AbstractConnection {
     protected void transaction() throws SQLException {
         if (waitTask == null) {
             connection.rollback();
-            closeConnection();
             dataSourceService.deleteCompensateId(getCompensateList());
-            logger.info("waitTask is null");
+            System.out.println("waitTask is null");
             return;
         }
 
@@ -39,30 +34,27 @@ public class LCNConnection extends AbstractConnection {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                logger.info("自动回滚->" + getGroupId());
+                System.out.println("自动回滚->" + getGroupId());
                 dataSourceService.schedule(getGroupId(),getCompensateList(), waitTask);
             }
         }, getMaxOutTime());
 
-        logger.info("transaction-awaitTask->" + getGroupId());
+        System.out.println("transaction-awaitTask->" + getGroupId());
         waitTask.awaitTask();
 
         timer.cancel();
 
         int rs = waitTask.getState();
 
-        logger.info("(" + getGroupId() + ")->单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + rs);
+        System.out.println("(" + getGroupId() + ")->单元事务（1：提交 0：回滚 -1：事务模块网络异常回滚 -2：事务模块超时异常回滚）:" + rs);
 
-        try {
-            if (rs == 1) {
-                connection.commit();
-            } else {
-                connection.rollback();
-            }
-        }finally {
-            dataSourceService.deleteCompensateId(getCompensateList());
-            waitTask.remove();
+        if (rs == 1) {
+            connection.commit();
+        } else {
+            connection.rollback();
         }
+        dataSourceService.deleteCompensateId(getCompensateList());
+        waitTask.remove();
     }
 
 

@@ -71,7 +71,6 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
             }
             return res;
         } catch (Throwable e) {
-            compensateService.deleteTransactionInfo(compensateId);
             throw e;
         } finally {
             TxTransactionLocal.setCurrent(null);

@@ -1,5 +1,7 @@
 package com.lorne.tx.thread;
 
+import com.lorne.tx.Constants;
+
 /**
  * create by lorne on 2017/8/9
  */
@@ -7,25 +9,21 @@ public abstract class HookRunnable implements Runnable {
 
     private volatile boolean hasOver;
 
-    private static volatile boolean hasExit = false;
-
     @Override
     public void run() {
-
         Thread thread = new Thread(){
             @Override
             public void run() {
-                hasExit = true;
+                Constants.hasExit = true;
                 while (!hasOver){}
             }
         };
-        if(!hasExit) {
+        if(!Constants.hasExit) {
             Runtime.getRuntime().addShutdownHook(thread);
         }else{
             System.out.println("jvm has exit..");
             return;
         }
-
         try {
             run0();
         }finally {
