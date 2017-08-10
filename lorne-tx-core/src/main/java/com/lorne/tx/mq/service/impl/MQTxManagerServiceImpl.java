@@ -60,7 +60,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
         jsonObject.put("s", state);
         Request request = new Request("ctg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
-        logger.info("closeTransactionGroup res ->" + json);
+        logger.info("closeTransactionGroup-res-"+groupId+"->" + json);
     }
 
 
