@@ -4,6 +4,7 @@ import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionLocal;
+import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.db.service.DataSourceService;
 import com.lorne.tx.thread.HookRunnable;
@@ -56,7 +57,7 @@ public abstract class AbstractConnection implements Connection {
 
         compensateList.add(transactionLocal.getCompensateId());
 
-        if (!CompensateServiceImpl.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
+        if (!CompensateService.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
             waitTask = ConditionUtils.getInstance().createTask(transactionLocal.getKid());
             logger.info("task-create-> " + waitTask.getKey());
         }
@@ -120,7 +121,7 @@ public abstract class AbstractConnection implements Connection {
         }
         if (state == 1) {
 
-            if (CompensateServiceImpl.COMPENSATE_KEY.equals(groupId)) {
+            if (CompensateService.COMPENSATE_KEY.equals(groupId)) {
 
                 if(TxTransactionCompensate.current()!=null){
                     connection.commit();

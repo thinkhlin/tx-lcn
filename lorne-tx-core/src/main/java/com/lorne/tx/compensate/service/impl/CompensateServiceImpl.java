@@ -1,14 +1,20 @@
 package com.lorne.tx.compensate.service.impl;
 
+import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.tx.Constants;
+import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
-import com.lorne.tx.compensate.repository.JdbcTransactionRecoverRepository;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.BlockingQueueService;
 import com.lorne.tx.compensate.service.CompensateService;
+import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.service.ModelNameService;
+import com.lorne.tx.utils.MethodUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,25 +29,34 @@ import java.util.regex.Pattern;
 public class CompensateServiceImpl implements CompensateService {
 
 
-    //补偿事务标示 识别groupId （远程调用时传递的参数）
-    public final static String COMPENSATE_KEY = "COMPENSATE";
 
 
     public static volatile boolean hasCompensate = true;
 
+    private Logger logger = LoggerFactory.getLogger(CompensateServiceImpl.class);
+
+
+    private String url;
 
     @Autowired
     private BlockingQueueService blockingQueueService;
 
     @Autowired
-    private JdbcTransactionRecoverRepository jdbcTransactionRecoverRepository;
-
-    @Autowired
     private ModelNameService modelNameService;
 
+    @Autowired
+    private ApplicationContext applicationContext;
+
+    @Autowired
+    private MQTxManagerService txManagerService;
+
+    @Autowired
     private TransactionRecoverRepository recoverRepository;
 
 
+    public CompensateServiceImpl() {
+        url = ConfigUtils.getString("tx.properties", "url");
+    }
 
     private String getTableName(String modelName) {
         Pattern pattern = Pattern.compile("[^a-z0-9A-Z]");
@@ -50,6 +65,40 @@ public class CompensateServiceImpl implements CompensateService {
     }
 
 
+    private synchronized void executeService(TransactionRecover data) {
+        if (data != null) {
+            TransactionInvocation invocation = data.getInvocation();
+            if (invocation != null) {
+                //通知TM
+                String stateUrl = url + "State?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
+                int state = txManagerService.httpCheckTransactionInfo(data.getGroupId(),data.getTaskId());
+                logger.info("url->"+stateUrl+",res->"+state);
+                if(state==1) {
+                    TxTransactionCompensate compensate = new TxTransactionCompensate();
+                    TxTransactionCompensate.setCurrent(compensate);
+                    boolean isOk = MethodUtils.invoke(applicationContext, invocation);
+                    TxTransactionCompensate.setCurrent(null);
+                    if (isOk) {
+                        recoverRepository.update(data.getId(), 0, 0);
+                        deleteTransactionInfo(data.getId());
+                        String murl = url + "Clear?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
+                        int clearRes = txManagerService.httpClearTransactionInfo(data.getGroupId(),data.getTaskId(),false);
+                        logger.info("url->"+murl+",res->"+clearRes);
+                    } else {
+                        updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
+                    }
+                }else if (state==0){
+                    recoverRepository.update(data.getId(), 0, 0);
+                    deleteTransactionInfo(data.getId());
+                }
+            }
+        }
+    }
+
+    private boolean updateRetriedCount(String id, int retriedCount) {
+        return recoverRepository.update(id,0, retriedCount) > 0;
+    }
+
 
     @Override
     public void start() {
@@ -57,7 +106,6 @@ public class CompensateServiceImpl implements CompensateService {
         hasCompensate = true;
 
         //// TODO: 2017/7/13 获取recoverRepository对象
-        recoverRepository = loadTransactionRecoverRepository();
         blockingQueueService.setTransactionRecover(recoverRepository);
 
         String tableName = "lcn_tx_"+ getTableName(modelNameService.getModelName());
@@ -68,11 +116,11 @@ public class CompensateServiceImpl implements CompensateService {
         blockingQueueService.init(tableName,Constants.uniqueKey);
 
         // TODO: 2017/7/11  查找补偿数据
-        List<TransactionRecover> list = blockingQueueService.findAll(0);
+        List<TransactionRecover> list = recoverRepository.findAll(0);
         try {
             if (list != null && list.size() > 0) {
                 for (final TransactionRecover data : list) {
-                    blockingQueueService.execute(data);
+                    executeService(data);
                 }
             }
         } catch (Exception e) {}
@@ -90,10 +138,10 @@ public class CompensateServiceImpl implements CompensateService {
                             e.printStackTrace();
                         }
 
-                        final List<TransactionRecover> list = blockingQueueService.findAll(2);
+                        final List<TransactionRecover> list = recoverRepository.findAll(2);
                         if (list != null && list.size() > 0) {
                             for (TransactionRecover data : list) {
-                                blockingQueueService.execute(data);
+                                executeService(data);
                             }
                         }
                     }catch (Exception e){}
@@ -116,10 +164,10 @@ public class CompensateServiceImpl implements CompensateService {
                             e.printStackTrace();
                         }
 
-                        final List<TransactionRecover> list = blockingQueueService.loadCompensateList(maxTime);
+                        final List<TransactionRecover> list = recoverRepository.loadCompensateList(maxTime);
                         if (list != null && list.size() > 0) {
                             for (TransactionRecover data : list) {
-                                blockingQueueService.execute(data);
+                                executeService(data);
                             }
                         }
                     }catch (Exception e){}
@@ -131,9 +179,6 @@ public class CompensateServiceImpl implements CompensateService {
         hasCompensate = false;
     }
 
-    private TransactionRecoverRepository loadTransactionRecoverRepository() {
-        return jdbcTransactionRecoverRepository;
-    }
 
 
     @Override

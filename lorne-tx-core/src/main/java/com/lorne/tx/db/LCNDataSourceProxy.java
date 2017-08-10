@@ -3,7 +3,7 @@ package com.lorne.tx.db;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
+import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.db.service.DataSourceService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.LoggerFactory;
@@ -132,7 +132,7 @@ public class LCNDataSourceProxy implements DataSource {
             && StringUtils.isNotEmpty(txTransactionLocal.getGroupId())) {
             if(TxTransactionCompensate.current()!=null){
                 return connection;
-            }else if (CompensateServiceImpl.COMPENSATE_KEY.equals(txTransactionLocal.getGroupId())) {
+            }else if (CompensateService.COMPENSATE_KEY.equals(txTransactionLocal.getGroupId())) {
                 lcnConnection = createConnection(txTransactionLocal, connection);
             } else if (!txTransactionLocal.isHasStart()) {
                 lcnConnection = createConnection(txTransactionLocal, connection);

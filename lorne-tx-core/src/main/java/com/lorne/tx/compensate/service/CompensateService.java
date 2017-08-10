@@ -7,6 +7,10 @@ import com.lorne.tx.compensate.model.TransactionInvocation;
  */
 public interface CompensateService {
 
+    //补偿事务标示 识别groupId （远程调用时传递的参数）
+    String COMPENSATE_KEY = "COMPENSATE";
+
+
     void start();
 
     String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId);

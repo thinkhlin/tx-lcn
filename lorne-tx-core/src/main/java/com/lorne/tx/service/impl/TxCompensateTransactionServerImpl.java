@@ -2,7 +2,7 @@ package com.lorne.tx.service.impl;
 
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
+import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.service.TransactionServer;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.stereotype.Service;
@@ -18,7 +18,7 @@ public class TxCompensateTransactionServerImpl implements TransactionServer {
 
         TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
         txTransactionLocal.setHasCompensate(true);
-        txTransactionLocal.setGroupId(CompensateServiceImpl.COMPENSATE_KEY);
+        txTransactionLocal.setGroupId(CompensateService.COMPENSATE_KEY);
         TxTransactionLocal.setCurrent(txTransactionLocal);
 
         try {

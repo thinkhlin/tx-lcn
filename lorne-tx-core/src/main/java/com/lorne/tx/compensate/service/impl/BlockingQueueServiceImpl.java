@@ -2,26 +2,17 @@ package com.lorne.tx.compensate.service.impl;
 
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.config.ConfigUtils;
-import com.lorne.tx.bean.TxTransactionCompensate;
+import com.lorne.tx.Constants;
 import com.lorne.tx.compensate.model.QueueMsg;
 import com.lorne.tx.compensate.model.TransactionInvocation;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.BlockingQueueService;
 import com.lorne.tx.exception.TransactionRuntimeException;
-import com.lorne.tx.mq.service.MQTxManagerService;
-import com.lorne.tx.mq.service.NettyService;
-import com.lorne.tx.utils.MethodUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import com.lorne.tx.thread.HookRunnable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
@@ -30,17 +21,9 @@ import java.util.concurrent.LinkedBlockingDeque;
 @Service
 public class BlockingQueueServiceImpl implements BlockingQueueService {
 
-    @Autowired
-    private ApplicationContext applicationContext;
 
-    @Autowired
-    private MQTxManagerService txManagerService;
-
-    private Logger logger = LoggerFactory.getLogger(BlockingQueueServiceImpl.class);
 
     private TransactionRecoverRepository recoverRepository;
-
-    private String url;
 
 
     /**
@@ -51,19 +34,14 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
     /**
      * 是否可以优雅关闭 程序可配置
      */
-    private boolean hasGracefulClose = false;
+    private boolean hasGracefulClose = true;
 
 
-    @Autowired
-    private NettyService nettyService;
 
-
-    private static final int max_size = 20;
-    private final Executor threadPools = Executors.newFixedThreadPool(max_size);
+    private static final int max_size = 10;
 
 
     public BlockingQueueServiceImpl() {
-        url = ConfigUtils.getString("tx.properties", "url");
         int state = 0;
         try {
             state = ConfigUtils.getInt("tx.properties", "graceful.close");
@@ -81,44 +59,6 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
         this.recoverRepository = recoverRepository;
     }
 
-    @Override
-    public List<TransactionRecover> findAll(int state) {
-        return recoverRepository.findAll(state);
-    }
-
-
-
-
-    @Override
-    public synchronized void execute(TransactionRecover data) {
-        if (data != null) {
-            TransactionInvocation invocation = data.getInvocation();
-            if (invocation != null) {
-                //通知TM
-                String stateUrl = url + "State?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
-                int state = txManagerService.httpCheckTransactionInfo(data.getGroupId(),data.getTaskId());
-                logger.info("url->"+stateUrl+",res->"+state);
-                if(state==1) {
-                    TxTransactionCompensate compensate = new TxTransactionCompensate();
-                    TxTransactionCompensate.setCurrent(compensate);
-                    boolean isOk = MethodUtils.invoke(applicationContext, invocation);
-                    TxTransactionCompensate.setCurrent(null);
-                    if (isOk) {
-                        recoverRepository.update(data.getId(), 0, 0);
-                        delete(data.getId());
-                        String murl = url + "Clear?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
-                        int clearRes = txManagerService.httpClearTransactionInfo(data.getGroupId(),data.getTaskId(),false);
-                        logger.info("url->"+murl+",res->"+clearRes);
-                    } else {
-                        updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
-                    }
-                }else if (state==0){
-                    recoverRepository.update(data.getId(), 0, 0);
-                    delete(data.getId());
-                }
-            }
-        }
-    }
 
     @Override
     public String save(TransactionInvocation transactionInvocation, String groupId, String taskId) {
@@ -143,11 +83,6 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
     }
 
     @Override
-    public boolean updateRetriedCount(String id, int retriedCount) {
-        return recoverRepository.update(id,0, retriedCount) > 0;
-    }
-
-    @Override
     public boolean delete(String id) {
         try {
             QueueMsg msg = new QueueMsg();
@@ -166,10 +101,6 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
     }
 
 
-    @Override
-    public List<TransactionRecover> loadCompensateList(int time) {
-        return recoverRepository.loadCompensateList(time);
-    }
 
     @Override
     public void init(String tableName,String unique) {
@@ -177,55 +108,44 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
         recoverRepository.init(tableName,unique);
 
         if (hasGracefulClose) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    for (int i = 0; i < max_size; i++) {
-                        threadPools.execute(new Runnable() {
-                            @Override
-                            public void run() {
-                                while (true) {
-                                    try {
-                                        QueueMsg msg = queueList.take();
-                                        if (msg != null) {
-                                            if (msg.getType() == 1) {
-                                                recoverRepository.create(msg.getRecover());
-                                            } else {
-                                                int rs = recoverRepository.remove(msg.getId());
-                                                if (rs == 0) {
-                                                    delete(msg.getId());
-                                                }
-                                            }
-                                        }
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
 
+            for (int i = 0; i < max_size; i++) {
+                Runnable runnable = new HookRunnable() {
+
+                    private void deal( QueueMsg msg ){
+                        if (msg != null) {
+                            if (msg.getType() == 1) {
+                                recoverRepository.create(msg.getRecover());
+                            } else {
+                                int rs = recoverRepository.remove(msg.getId());
+                                if (rs == 0) {
+                                    delete(msg.getId());
                                 }
                             }
-                        });
+                        }
                     }
-                }
-            };
 
-            Thread thread = new Thread(runnable);
-            thread.start();
+                    @Override
+                    public void run0() {
+                        try {
+                            while (!Constants.hasExit) {
+                                    QueueMsg msg = queueList.take();
+                                    deal(msg);
+                            }
 
+                            QueueMsg msg;
+                            while (( msg = queueList.take())!=null){
+                                deal(msg);
+                            }
 
-            /**关闭时需要操作的业务**/
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                };
 
-            Thread shutdownQueueList = new Thread(runnable);
-            Runtime.getRuntime().addShutdownHook(shutdownQueueList);
-
-
-            Thread shutdownNetty = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    nettyService.close();
-                }
-            });
-            Runtime.getRuntime().addShutdownHook(shutdownNetty);
-
+                new Thread(runnable).start();
+            }
 
         }
 

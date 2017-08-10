@@ -2,11 +2,11 @@ package com.lorne.tx.service.impl;
 
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
+import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.compensate.service.impl.CompensateServiceImpl;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.service.TransactionServer;
 import com.lorne.tx.service.TransactionServerFactoryService;
-
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,7 +40,7 @@ public class TransactionServerFactoryServiceImpl implements TransactionServerFac
 
         /*********补偿事务处理逻辑*开始***********/
         /** 事务补偿业务处理中**/
-        if (CompensateServiceImpl.COMPENSATE_KEY.equals(info.getTxGroupId())) {
+        if (CompensateService.COMPENSATE_KEY.equals(info.getTxGroupId())) {
             //控制返回业务数据，但让其事务回滚。第一次执行时，需要启用线程控制事务，后面的事务与开始启动的事务事务嵌套即可。然后通过开始事务统一回滚。
             //因此执行业务过程中时的事务与txInServiceTransactionServer处理一致
             if (TxTransactionLocal.current() != null) {
