@@ -94,6 +94,8 @@ public class TxCoreServerHandler extends ChannelInboundHandlerAdapter { // (1)
                     if(txGroup!=null) {
                         txGroup.setNowTime(System.currentTimeMillis());
                         res = txGroup.toJsonString(false);
+                    }else {
+                         res = "";
                     }
 
                     break;
