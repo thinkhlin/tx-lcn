@@ -143,8 +143,8 @@ public class TxServiceImpl implements TxService {
 
 
     @Override
-    public boolean checkClearGroup(String groupId, String taskId) {
-        return managerService.checkClearGroup(groupId,taskId);
+    public boolean checkClearGroup(String groupId, String taskId, int isGroup) {
+        return managerService.checkClearGroup(groupId,taskId,isGroup);
     }
 
     @Override

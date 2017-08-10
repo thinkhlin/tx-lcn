@@ -28,8 +28,8 @@ public class TxManagerController {
 
     @RequestMapping("/getServerClear")
     @ResponseBody
-    public boolean getServerGroup(@RequestParam("groupId") String groupId,@RequestParam("taskId") String taskId) {
-        return txService.checkClearGroup(groupId,taskId);
+    public boolean getServerGroup(@RequestParam("groupId") String groupId,@RequestParam("taskId") String taskId,@RequestParam("isGroup") int isGroup) {
+        return txService.checkClearGroup(groupId,taskId,isGroup);
     }
 
 

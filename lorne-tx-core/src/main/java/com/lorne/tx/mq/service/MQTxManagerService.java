@@ -41,4 +41,6 @@ public interface MQTxManagerService {
 
     int httpCheckTransactionInfo(String groupId, String waitTaskId);
 
+
+    int httpClearTransactionInfo(String groupId, String waitTaskId,boolean isGroup);
 }

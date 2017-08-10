@@ -1,5 +1,6 @@
 package com.lorne.tx.db.service.impl;
 
+import com.lorne.core.framework.utils.http.HttpUtils;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.db.service.DataSourceService;
@@ -31,12 +32,18 @@ public class DataSourceServiceImpl implements DataSourceService {
         if (rs == 1 || rs == 0) {
             waitTask.setState(rs);
             waitTask.signalTask();
+            //clear
+            txManagerService.httpClearTransactionInfo(groupId,waitTaskId,true);
+
             return;
         }
         rs = txManagerService.httpCheckTransactionInfo(groupId, waitTaskId);
         if (rs == 1 || rs == 0) {
             waitTask.setState(rs);
             waitTask.signalTask();
+            //clear
+
+            txManagerService.httpClearTransactionInfo(groupId,waitTaskId,false);
             return;
         }
 

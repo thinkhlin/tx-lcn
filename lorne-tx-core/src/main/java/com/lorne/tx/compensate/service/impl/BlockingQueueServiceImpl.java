@@ -2,7 +2,6 @@ package com.lorne.tx.compensate.service.impl;
 
 import com.lorne.core.framework.utils.KidUtils;
 import com.lorne.core.framework.utils.config.ConfigUtils;
-import com.lorne.core.framework.utils.http.HttpUtils;
 import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.compensate.model.QueueMsg;
 import com.lorne.tx.compensate.model.TransactionInvocation;
@@ -10,6 +9,7 @@ import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.repository.TransactionRecoverRepository;
 import com.lorne.tx.compensate.service.BlockingQueueService;
 import com.lorne.tx.exception.TransactionRuntimeException;
+import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.utils.MethodUtils;
 import org.slf4j.Logger;
@@ -32,6 +32,9 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
 
     @Autowired
     private ApplicationContext applicationContext;
+
+    @Autowired
+    private MQTxManagerService txManagerService;
 
     private Logger logger = LoggerFactory.getLogger(BlockingQueueServiceImpl.class);
 
@@ -85,14 +88,17 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
 
 
 
+
     @Override
     public synchronized void execute(TransactionRecover data) {
         if (data != null) {
             TransactionInvocation invocation = data.getInvocation();
             if (invocation != null) {
                 //通知TM
-                String res = HttpUtils.get(url + "State?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId());
-                if(res!=null&&res.contains("true")) {
+                String stateUrl = url + "State?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
+                int state = txManagerService.httpCheckTransactionInfo(data.getGroupId(),data.getTaskId());
+                logger.info("url->"+stateUrl+",res->"+state);
+                if(state==1) {
                     TxTransactionCompensate compensate = new TxTransactionCompensate();
                     TxTransactionCompensate.setCurrent(compensate);
                     boolean isOk = MethodUtils.invoke(applicationContext, invocation);
@@ -101,7 +107,7 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
                         recoverRepository.update(data.getId(), 0, 0);
                         delete(data.getId());
                         String murl = url + "Clear?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
-                        String clearRes = HttpUtils.get(murl);
+                        int clearRes = txManagerService.httpClearTransactionInfo(data.getGroupId(),data.getTaskId(),false);
                         logger.info("url->"+murl+",res->"+clearRes);
                     } else {
                         updateRetriedCount(data.getId(), data.getRetriedCount() + 1);

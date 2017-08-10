@@ -14,7 +14,7 @@ public interface TxService {
 
     boolean sendMsg(String model,String msg);
 
-    boolean checkClearGroup(String groupId, String taskId);
+    boolean checkClearGroup(String groupId, String taskId, int isGroup);
 
     boolean checkGroup(String groupId, String taskId);
 }

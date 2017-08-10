@@ -122,7 +122,7 @@ public class TxManagerServiceImpl implements TxManagerService {
 
 
     @Override
-    public boolean checkClearGroup(String groupId, String taskId) {
+    public boolean checkClearGroup(String groupId, String taskId, int isGroup) {
         logger.info("checkTransactionGroup->groupId:"+groupId+",taskId:"+taskId);
         ValueOperations<String, String> value = redisTemplate.opsForValue();
         String key = key_prefix + groupId;
@@ -145,9 +145,16 @@ public class TxManagerServiceImpl implements TxManagerService {
 
         boolean isOver = true;
         for (TxInfo info : txGroup.getList()) {
-            if (info.getIsGroup()==0&&info.getNotify() == 0) {
-                isOver = false;
-                break;
+            if(isGroup==1) {
+                if (info.getIsGroup() == 0 && info.getNotify() == 0) {
+                    isOver = false;
+                    break;
+                }
+            }else{
+                if (info.getNotify() == 0) {
+                    isOver = false;
+                    break;
+                }
             }
         }
         if (isOver) {

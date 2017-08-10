@@ -38,5 +38,5 @@ public interface TxManagerService {
 
     void clearNotifyData(int time);
 
-    boolean checkClearGroup(String groupId, String taskId);
+    boolean checkClearGroup(String groupId, String taskId, int isGroup);
 }

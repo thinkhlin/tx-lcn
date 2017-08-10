@@ -78,7 +78,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
 
     @Override
     public int httpCheckTransactionInfo(String groupId, String waitTaskId) {
-        String json = HttpUtils.get(url + "Group?groupId=" + groupId + "&taskId=" + waitTaskId);
+        String json = HttpUtils.get(url + "State?groupId=" + groupId + "&taskId=" + waitTaskId);
         if (json == null) {
             return -1;
         }
@@ -86,4 +86,13 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
 
+    @Override
+    public int httpClearTransactionInfo(String groupId, String waitTaskId, boolean isGroup) {
+        String murl = url + "Clear?groupId=" +groupId + "&taskId=" + waitTaskId+"&isGroup="+(isGroup?1:0);
+        String clearRes = HttpUtils.get(murl);
+        if(clearRes==null){
+            return -1;
+        }
+        return  clearRes.contains("true") ? 1 : 0;
+    }
 }
