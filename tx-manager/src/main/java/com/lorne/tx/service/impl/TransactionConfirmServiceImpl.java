@@ -125,20 +125,23 @@ public class TransactionConfirmServiceImpl implements TransactionConfirmService 
                             jsonObject.put("a", "t");
                             jsonObject.put("c", checkSate);
                             jsonObject.put("t", txInfo.getKid());
-                            String key = KidUtils.generateShortUuid();
+                            final String key = KidUtils.generateShortUuid();
                             jsonObject.put("k", key);
-                            final Task task = ConditionUtils.getInstance().createTask(key);
+                            Task task = ConditionUtils.getInstance().createTask(key);
 
                             ScheduledFuture future = executorService.schedule(new Runnable() {
                                 @Override
                                 public void run() {
-                                    task.setBack(new IBack() {
-                                        @Override
-                                        public Object doing(Object... objs) throws Throwable {
-                                            return "-2";
-                                        }
-                                    });
-                                    task.signalTask();
+                                    Task task = ConditionUtils.getInstance().createTask(key);
+                                    if(task!=null&&!task.isNotify()) {
+                                        task.setBack(new IBack() {
+                                            @Override
+                                            public Object doing(Object... objs) throws Throwable {
+                                                return "-2";
+                                            }
+                                        });
+                                        task.signalTask();
+                                    }
                                 }
                             }, txManagerService.getDelayTime() * 3, TimeUnit.SECONDS);
 
