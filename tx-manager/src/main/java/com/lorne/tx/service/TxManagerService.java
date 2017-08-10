@@ -23,7 +23,13 @@ public interface TxManagerService {
     TxGroup addTransactionGroup(String groupId,String uniqueKey, String taskId, int isGroup,String modelName);
 
 
-    boolean checkTransactionGroup(String groupId,String taskId);
+    /**
+     *
+     * @param groupId
+     * @param taskId
+     * @return  1 存在 0不存在 -1 未结束
+     */
+    int checkTransactionGroup(String groupId,String taskId);
 
 
     boolean closeTransactionGroup(String groupId,int state);

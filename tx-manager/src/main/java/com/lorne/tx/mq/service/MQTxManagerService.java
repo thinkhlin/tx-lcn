@@ -23,7 +23,7 @@ public interface MQTxManagerService {
     TxGroup addTransactionGroup(String groupId,String uniqueKey, String taskId,int isGroup, String modelName);
 
 
-    boolean checkTransactionGroup(String groupId,String taskId);
+    int checkTransactionGroup(String groupId,String taskId);
 
 
     boolean closeTransactionGroup(String groupId,int state);

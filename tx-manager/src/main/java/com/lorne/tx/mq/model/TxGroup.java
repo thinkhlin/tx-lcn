@@ -20,6 +20,8 @@ public class TxGroup {
 
     private int state;
 
+    private int hasOver;
+
 
     private List<TxInfo> list;
 
@@ -73,6 +75,13 @@ public class TxGroup {
     }
 
 
+    public int getHasOver() {
+        return hasOver;
+    }
+
+    public void setHasOver(int hasOver) {
+        this.hasOver = hasOver;
+    }
 
     public static TxGroup parser(String json) {
         try {
@@ -82,6 +91,7 @@ public class TxGroup {
             txGroup.setStartTime(jsonObject.getLong("st"));
             txGroup.setNowTime(jsonObject.getLong("nt"));
             txGroup.setState(jsonObject.getInteger("s"));
+            txGroup.setHasOver(jsonObject.getInteger("o"));
             JSONArray array = jsonObject.getJSONArray("l");
             int length = array.size();
             for (int i = 0; i < length; i++) {
@@ -109,6 +119,7 @@ public class TxGroup {
         jsonObject.put("st", getStartTime());
         jsonObject.put("nt", getNowTime());
         jsonObject.put("s", getState());
+        jsonObject.put("o",getHasOver());
         if(noList) {
             JSONArray jsonArray = new JSONArray();
             for (TxInfo info : getList()) {

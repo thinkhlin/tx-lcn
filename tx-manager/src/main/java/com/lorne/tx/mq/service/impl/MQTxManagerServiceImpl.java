@@ -33,7 +33,7 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     }
 
     @Override
-    public boolean checkTransactionGroup(String groupId, String taskId) {
+    public int checkTransactionGroup(String groupId, String taskId) {
         return txManagerService.checkTransactionGroup(groupId, taskId);
     }
 

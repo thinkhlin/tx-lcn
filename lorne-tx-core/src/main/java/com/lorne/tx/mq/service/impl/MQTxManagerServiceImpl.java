@@ -71,8 +71,11 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
         jsonObject.put("t", taskId);
         Request request = new Request("ckg", jsonObject.toString());
         String json = nettyService.sendMsg(request);
-        int res = "1".equals(json) ? 1 : (json == null) ? -1 : 0;
-        return res;
+        try {
+            return Integer.parseInt(json);
+        }catch (Exception e){
+            return -2;
+        }
     }
 
 
@@ -80,9 +83,14 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     public int httpCheckTransactionInfo(String groupId, String waitTaskId) {
         String json = HttpUtils.get(url + "State?groupId=" + groupId + "&taskId=" + waitTaskId);
         if (json == null) {
-            return -1;
+            return -2;
         }
-        return json.contains("true") ? 1 : 0;
+        json = json.trim();
+        try {
+            return Integer.parseInt(json);
+        }catch (Exception e){
+            return -2;
+        }
     }
 
 

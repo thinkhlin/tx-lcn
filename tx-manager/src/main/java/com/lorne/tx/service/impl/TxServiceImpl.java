@@ -148,7 +148,7 @@ public class TxServiceImpl implements TxService {
     }
 
     @Override
-    public boolean checkGroup(String groupId, String taskId) {
+    public int checkGroup(String groupId, String taskId) {
         return managerService.checkTransactionGroup(groupId, taskId);
     }
 

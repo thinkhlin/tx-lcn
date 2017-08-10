@@ -112,7 +112,7 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
                     } else {
                         updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
                     }
-                }else{
+                }else if (state==0){
                     recoverRepository.update(data.getId(), 0, 0);
                     delete(data.getId());
                 }

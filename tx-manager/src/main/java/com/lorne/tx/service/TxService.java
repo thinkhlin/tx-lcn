@@ -16,5 +16,5 @@ public interface TxService {
 
     boolean checkClearGroup(String groupId, String taskId, int isGroup);
 
-    boolean checkGroup(String groupId, String taskId);
+    int checkGroup(String groupId, String taskId);
 }
