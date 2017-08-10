@@ -23,7 +23,9 @@ public abstract class HookRunnable implements Runnable {
             run0();
         }finally {
             hasOver = true;
-            Runtime.getRuntime().removeShutdownHook(thread);
+            if (!thread.isAlive()) {
+                Runtime.getRuntime().removeShutdownHook(thread);
+            }
         }
     }
 

@@ -145,7 +145,7 @@ public class TxManagerServiceImpl implements TxManagerService {
             }
         }
 
-        if(hasSet) {
+        if(hasSet&&res) {
             String pnKey = key_prefix_notify + groupId;
             value.set(pnKey, txGroup.toJsonString());
         }
