@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
+import com.lorne.tx.Constants;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.utils.SocketUtils;
@@ -71,7 +72,17 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
         while (true) {
             if (task.isRemove()) {
-                res = "1";
+
+                if(task.getState()==0||task.getState()==1){
+                    res = "1";
+                }else{
+                    //可能存在自动补偿先执行了，但是通知还没有执行的情况。
+                    if(!Constants.hasExit){
+                        //补偿本次事务,通过taskId获取groupId。然后执行补偿
+                        nettyService.executeCompensate(task.getKey());
+                    }
+                    res = "0";
+                }
                 break;
             }
             if (count > 1000) {
@@ -104,7 +115,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                 switch (action) {
                     case "c": {
                         String taskId = resObj.getString("g");
-                        int row = nettyService.checkCompensate(taskId);
+                        long row = nettyService.checkCompensate(taskId);
                         //有数据则等待执行补偿，需要保留数据
                         if(row>0){
                             res = "0";

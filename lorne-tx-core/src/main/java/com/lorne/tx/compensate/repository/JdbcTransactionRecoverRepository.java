@@ -103,10 +103,31 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     }
 
     @Override
-    public int countCompensateByTaskId(String taskId) {
+    public long countCompensateByTaskId(String taskId) {
         String selectSql = SqlHelper.countCompensateByTaskId(dbType,tableName);
+        return executeQueryInt(selectSql,taskId);
+    }
+
+    @Override
+    public TransactionRecover getCompensateByTaskId(String taskId) {
+        String selectSql = SqlHelper.getCompensateByTaskIdSql(dbType,tableName);
         List<Map<String, Object>> list = executeQuery(selectSql,taskId);
-        return list==null?0:list.size();
+        if(list!=null&&list.size()>0){
+            List<TransactionRecover>  recovers =  loadList(list);
+            return recovers.get(0);
+        }
+        return null;
+    }
+
+
+    @Override
+    public List<TransactionRecover> getCompensateByGroupId(String groupId) {
+        String selectSql = SqlHelper.getCompensateByGroupIdSql(dbType,tableName);
+        List<Map<String, Object>> list = executeQuery(selectSql,groupId);
+        if(list!=null&&list.size()>0){
+            return loadList(list);
+        }
+        return null;
     }
 
     @Override
@@ -151,7 +172,42 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
         }
         return 0;
     }
-
+    private long executeQueryInt(String sql, Object... params) {
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        Connection connection = null;
+        long count = 0;
+        try {
+            connection = compensateDataSource.getConnection();
+            ps = connection.prepareStatement(sql);
+            if (params != null) {
+                for (int i = 0; i < params.length; i++) {
+                    ps.setObject((i + 1), params[i]);
+                }
+            }
+            rs = ps.executeQuery();
+            if(rs.next()){
+                count = rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            logger.error("executeQuery->" + e.getMessage());
+        } finally {
+            try {
+                if (rs != null) {
+                    rs.close();
+                }
+                if (ps != null) {
+                    ps.close();
+                }
+                if (connection!=null){
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return count;
+    }
     private List<Map<String, Object>> executeQuery(String sql, Object... params) {
         PreparedStatement ps = null;
         ResultSet rs = null;

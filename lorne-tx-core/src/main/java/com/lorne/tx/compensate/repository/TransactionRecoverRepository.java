@@ -64,6 +64,9 @@ public interface TransactionRecoverRepository {
     void init(String tableName,String unique);
 
 
-    int countCompensateByTaskId(String taskId);
+    long countCompensateByTaskId(String taskId);
 
+    TransactionRecover getCompensateByTaskId(String taskId);
+
+    List<TransactionRecover> getCompensateByGroupId(String groupId);
 }

@@ -17,5 +17,7 @@ public interface NettyService {
 
     boolean checkState();
 
-    int checkCompensate(String taskId);
+    long checkCompensate(String taskId);
+
+    void executeCompensate(String taskId);
 }

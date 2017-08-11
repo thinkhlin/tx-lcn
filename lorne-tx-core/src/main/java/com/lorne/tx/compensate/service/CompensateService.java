@@ -10,20 +10,15 @@ public interface CompensateService {
     //补偿事务标示 识别groupId （远程调用时传递的参数）
     String COMPENSATE_KEY = "COMPENSATE";
 
-
     void start();
 
     String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId);
 
     boolean deleteTransactionInfo(String id);
 
-//    /**
-//     * 执行任务确认事务是否正常
-//     *
-//     * @param compensateId
-//     */
-//    void addTask(String compensateId);
+    long countCompensateByTaskId(String taskId);
+
+    void executeCompensateByTaskId(String taskId);
 
 
-    int countCompensateByTaskId(String taskId);
 }

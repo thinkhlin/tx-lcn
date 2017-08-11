@@ -65,6 +65,14 @@ public class SqlHelper {
         return "select * from " + tableName + " where state = ? and l_unique = ? ";
     }
 
+    public static String getCompensateByTaskIdSql(String dbType, String tableName) {
+        return "select * from " + tableName + " where state = 0 and task_id = ? ";
+    }
+
+    public static String getCompensateByGroupIdSql(String dbType, String tableName) {
+        return "select * from " + tableName + " where state = 0 and group_id = ? ";
+    }
+
     public static String loadCompensateList(String dbType, String tableName,int time) {
         switch (dbType){
             case "mysql":{
@@ -125,6 +133,6 @@ public class SqlHelper {
     }
 
     public static String countCompensateByTaskId(String dbType, String tableName) {
-        return "select * from " + tableName + " where  task_id = ? ";
+        return "select count(*) from " + tableName + " where  task_id = ? ";
     }
 }

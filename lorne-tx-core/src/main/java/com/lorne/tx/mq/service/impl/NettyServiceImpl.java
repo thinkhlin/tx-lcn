@@ -149,7 +149,12 @@ public class NettyServiceImpl implements NettyService {
     }
 
     @Override
-    public int checkCompensate(String taskId) {
+    public long checkCompensate(String taskId) {
         return compensateService.countCompensateByTaskId(taskId);
+    }
+
+    @Override
+    public void executeCompensate(String taskId) {
+        compensateService.executeCompensateByTaskId(taskId);
     }
 }

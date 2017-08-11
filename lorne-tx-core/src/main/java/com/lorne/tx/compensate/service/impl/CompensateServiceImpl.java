@@ -10,6 +10,7 @@ import com.lorne.tx.compensate.service.BlockingQueueService;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.service.ModelNameService;
+import com.lorne.tx.thread.HookRunnable;
 import com.lorne.tx.utils.MethodUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,8 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,6 +53,7 @@ public class CompensateServiceImpl implements CompensateService {
     @Autowired
     private TransactionRecoverRepository recoverRepository;
 
+    private Executor threadPool = Executors.newFixedThreadPool(10);
 
 
     public CompensateServiceImpl() {
@@ -62,36 +66,41 @@ public class CompensateServiceImpl implements CompensateService {
         return matcher.replaceAll("_");
     }
 
-    private void executeService(TransactionRecover data) {
-        if (data != null) {
-            TransactionInvocation invocation = data.getInvocation();
-            if (invocation != null) {
-                //通知TM
-                String stateUrl = url + "State?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
-                int state = txManagerService.httpCheckTransactionInfo(data.getGroupId(),data.getTaskId());
-                logger.info("url->"+stateUrl+",res->"+state);
-                if(state==1) {
-                    TxTransactionCompensate compensate = new TxTransactionCompensate();
-                    TxTransactionCompensate.setCurrent(compensate);
-                    boolean isOk = MethodUtils.invoke(applicationContext, invocation);
-                    TxTransactionCompensate.setCurrent(null);
-                    if (isOk) {
-                        recoverRepository.update(data.getId(), 0, 0);
-                        deleteTransactionInfo(data.getId());
-                        String murl = url + "Clear?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
-                        int clearRes = txManagerService.httpClearTransactionInfo(data.getGroupId(),data.getTaskId(),false);
-                        logger.info("url->"+murl+",res->"+clearRes);
-                    } else {
-                        updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
+    private void executeService(final TransactionRecover data) {
+        threadPool.execute(new HookRunnable() {
+            @Override
+            public void run0() {
+                if (data != null) {
+                    TransactionInvocation invocation = data.getInvocation();
+                    if (invocation != null) {
+                        //通知TM
+                        String stateUrl = url + "State?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
+                        int state = txManagerService.httpCheckTransactionInfo(data.getGroupId(),data.getTaskId());
+                        logger.info("url->"+stateUrl+",res->"+state);
+                        if(state==1) {
+                            TxTransactionCompensate compensate = new TxTransactionCompensate();
+                            TxTransactionCompensate.setCurrent(compensate);
+                            boolean isOk = MethodUtils.invoke(applicationContext, invocation);
+                            TxTransactionCompensate.setCurrent(null);
+                            if (isOk) {
+                                recoverRepository.update(data.getId(), 0, 0);
+                                deleteTransactionInfo(data.getId());
+                                String murl = url + "Clear?groupId=" + data.getGroupId() + "&taskId=" + data.getTaskId();
+                                int clearRes = txManagerService.httpClearTransactionInfo(data.getGroupId(),data.getTaskId(),false);
+                                logger.info("url->"+murl+",res->"+clearRes);
+                            } else {
+                                updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
+                            }
+                        }else if (state==0){
+                            recoverRepository.update(data.getId(), 0, 0);
+                            deleteTransactionInfo(data.getId());
+                        }else if (state==-1){
+                            updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
+                        }
                     }
-                }else if (state==0){
-                    recoverRepository.update(data.getId(), 0, 0);
-                    deleteTransactionInfo(data.getId());
-                }else if (state==-1){
-                    updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
                 }
             }
-        }
+        });
     }
 
     private boolean updateRetriedCount(String id, int retriedCount) {
@@ -168,7 +177,20 @@ public class CompensateServiceImpl implements CompensateService {
 
 
     @Override
-    public int countCompensateByTaskId(String taskId) {
+    public void executeCompensateByTaskId(String taskId) {
+        TransactionRecover recover =  recoverRepository.getCompensateByTaskId(taskId);
+        if(recover!=null){
+            List<TransactionRecover> recovers =  recoverRepository.getCompensateByGroupId(recover.getGroupId());
+            if(recovers!=null){
+                for(TransactionRecover data:recovers){
+                    executeService(data);
+                }
+            }
+        }
+    }
+
+    @Override
+    public long countCompensateByTaskId(String taskId) {
         return recoverRepository.countCompensateByTaskId(taskId);
     }
 }
