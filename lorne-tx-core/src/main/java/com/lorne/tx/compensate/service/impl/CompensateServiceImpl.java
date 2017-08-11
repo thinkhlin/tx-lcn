@@ -62,7 +62,7 @@ public class CompensateServiceImpl implements CompensateService {
         return matcher.replaceAll("_");
     }
 
-    private synchronized void executeService(TransactionRecover data) {
+    private void executeService(TransactionRecover data) {
         if (data != null) {
             TransactionInvocation invocation = data.getInvocation();
             if (invocation != null) {
@@ -87,6 +87,8 @@ public class CompensateServiceImpl implements CompensateService {
                 }else if (state==0){
                     recoverRepository.update(data.getId(), 0, 0);
                     deleteTransactionInfo(data.getId());
+                }else if (state==-1){
+                    updateRetriedCount(data.getId(), data.getRetriedCount() + 1);
                 }
             }
         }
@@ -121,32 +123,6 @@ public class CompensateServiceImpl implements CompensateService {
                 }
             }
         } catch (Exception e) {}
-
-        // add Task check 检查那些未能正常执行的业务数据
-        new Thread() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-
-                        try {
-                            Thread.sleep(1000 * 60);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-
-                        final List<TransactionRecover> list = recoverRepository.findAll(2);
-                        if (list != null && list.size() > 0) {
-                            for (TransactionRecover data : list) {
-                                executeService(data);
-                            }
-                        }
-                    }catch (Exception e){}
-
-                }
-            }
-        }.start();
-
 
         // add Task 检查需要补偿的数据，这里不区分是否同一个业务模块，集群下执行相同的逻辑处理。
         new Thread() {
@@ -190,10 +166,6 @@ public class CompensateServiceImpl implements CompensateService {
         return blockingQueueService.delete(id);
     }
 
-//    @Override
-//    public void addTask(String compensateId) {
-//        recoverRepository.update(compensateId, 2, 1);
-//    }
 
     @Override
     public int countCompensateByTaskId(String taskId) {
