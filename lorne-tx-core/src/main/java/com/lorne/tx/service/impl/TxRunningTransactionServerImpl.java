@@ -46,7 +46,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         long t1 = System.currentTimeMillis();
 
         boolean isHasIsGroup =  LCNDataSourceProxy.hasGroup(txGroupId);
-
+        boolean executedService = false;
 
         String compensateId  = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
 
@@ -60,6 +60,7 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         try {
 
             Object res = point.proceed();
+            executedService = true;
 
             Task waitTask = ConditionUtils.getInstance().getTask(kid);
 
@@ -79,6 +80,12 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
             return res;
         } catch (Throwable e) {
+
+            //业务执行过程中异常
+            if(!executedService){
+                compensateService.deleteTransactionInfo(compensateId);
+            }
+
             throw e;
         } finally {
             TxTransactionLocal.setCurrent(null);
