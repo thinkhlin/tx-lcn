@@ -190,10 +190,10 @@ public class CompensateServiceImpl implements CompensateService {
         return blockingQueueService.delete(id);
     }
 
-    @Override
-    public void addTask(String compensateId) {
-        recoverRepository.update(compensateId, 2, 1);
-    }
+//    @Override
+//    public void addTask(String compensateId) {
+//        recoverRepository.update(compensateId, 2, 1);
+//    }
 
     @Override
     public int countCompensateByTaskId(String taskId) {

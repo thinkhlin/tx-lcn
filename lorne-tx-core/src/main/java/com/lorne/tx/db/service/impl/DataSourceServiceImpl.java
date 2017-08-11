@@ -37,24 +37,22 @@ public class DataSourceServiceImpl implements DataSourceService {
 
             return;
         }
-        rs = txManagerService.httpCheckTransactionInfo(groupId, waitTaskId);
-        if (rs == 1 || rs == 0) {
-            waitTask.setState(rs);
-            waitTask.signalTask();
-            //clear
+        if(rs==-2) {
+            rs = txManagerService.httpCheckTransactionInfo(groupId, waitTaskId);
+            if (rs == 1 || rs == 0) {
+                waitTask.setState(rs);
+                waitTask.signalTask();
+                //clear
 
-            txManagerService.httpClearTransactionInfo(groupId,waitTaskId,false);
-            return;
+                txManagerService.httpClearTransactionInfo(groupId, waitTaskId, false);
+                return;
+            }
         }
 
         //添加到补偿队列
         waitTask.setState(-100);
         waitTask.signalTask();
-        for(String compensateId:compensates) {
-            if(StringUtils.isNotEmpty(compensateId)) {
-                compensateService.addTask(compensateId);
-            }
-        }
+
     }
 
     @Override

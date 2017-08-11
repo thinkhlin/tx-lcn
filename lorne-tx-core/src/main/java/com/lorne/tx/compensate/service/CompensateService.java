@@ -17,12 +17,12 @@ public interface CompensateService {
 
     boolean deleteTransactionInfo(String id);
 
-    /**
-     * 执行任务确认事务是否正常
-     *
-     * @param compensateId
-     */
-    void addTask(String compensateId);
+//    /**
+//     * 执行任务确认事务是否正常
+//     *
+//     * @param compensateId
+//     */
+//    void addTask(String compensateId);
 
 
     int countCompensateByTaskId(String taskId);

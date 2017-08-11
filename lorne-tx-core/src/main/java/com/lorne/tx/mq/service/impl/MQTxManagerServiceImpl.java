@@ -82,6 +82,8 @@ public class MQTxManagerServiceImpl implements MQTxManagerService {
     @Override
     public int httpCheckTransactionInfo(String groupId, String waitTaskId) {
         String json = HttpUtils.get(url + "State?groupId=" + groupId + "&taskId=" + waitTaskId);
+        System.out.println("httpCheckTransactionInfo-->groupId:"+groupId+",taskId:"+waitTaskId+",res:"+json);
+
         if (json == null) {
             return -2;
         }
