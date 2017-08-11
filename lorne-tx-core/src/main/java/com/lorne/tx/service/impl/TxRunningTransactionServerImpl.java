@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * 分布式事务启动开始时的业务处理
  * Created by lorne on 2017/6/8.
@@ -59,16 +61,22 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
             Object res = point.proceed();
 
+            Task waitTask = ConditionUtils.getInstance().getTask(kid);
+
+            //lcn 连接已经开始等待时.
+            while (waitTask!=null&&!waitTask.isAwait()) {
+                TimeUnit.MILLISECONDS.sleep(1);
+            }
+
             final TxGroup resTxGroup = txManagerService.addTransactionGroup(txGroupId, kid, isHasIsGroup);
+
             if (resTxGroup == null) {
-                Task waitTask = ConditionUtils.getInstance().getTask(kid);
-                if (waitTask != null) {
-                    //修改事务组状态异常
-                    waitTask.setState(-1);
-                    waitTask.signalTask();
-                }
+                //修改事务组状态异常
+                waitTask.setState(-1);
+                waitTask.signalTask();
                 throw new ServiceException("修改事务组状态异常." + txGroupId);
             }
+
             return res;
         } catch (Throwable e) {
             throw e;

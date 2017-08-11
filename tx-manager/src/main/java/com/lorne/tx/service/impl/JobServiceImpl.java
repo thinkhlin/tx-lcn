@@ -20,7 +20,6 @@ public class JobServiceImpl implements JobService{
         new Thread(){
             @Override
             public void run() {
-                super.run();
 
                 int time = 5;
                 while(true){

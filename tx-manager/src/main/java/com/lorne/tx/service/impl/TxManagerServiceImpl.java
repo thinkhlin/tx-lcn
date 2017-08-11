@@ -45,6 +45,11 @@ public class TxManagerServiceImpl implements TxManagerService {
 
     private final static String key_prefix_notify = "tx_manager_notify_";
 
+    private final static int max_size = 100;
+
+    private Executor threadPool = Executors.newFixedThreadPool(max_size);
+
+    private ScheduledExecutorService executorService = Executors.newScheduledThreadPool(max_size);
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
@@ -278,8 +283,8 @@ public class TxManagerServiceImpl implements TxManagerService {
                         jsonObject.put("k", k);
                         final Task task = ConditionUtils.getInstance().createTask(k);
 
-                        Timer timer = new Timer();
-                        timer.schedule(new TimerTask() {
+
+                        ScheduledFuture future =  executorService.schedule(new TimerTask() {
                             @Override
                             public void run() {
                                 task.setBack(new IBack() {
@@ -290,19 +295,22 @@ public class TxManagerServiceImpl implements TxManagerService {
                                 });
                                 task.signalTask();
                             }
-                        },getDelayTime() * 3*1000);
+                        },getDelayTime(),TimeUnit.SECONDS);
 
                         final Channel sender = channel;
-                        new Thread(){
+
+                        threadPool.execute(new Runnable() {
                             @Override
                             public void run() {
                                 awaitSend(task, sender, jsonObject.toJSONString());
                             }
-                        }.start();
+                        });
 
                         task.awaitTask();
 
-                        timer.cancel();
+                        if(!future.isDone()){
+                            future.cancel(false);
+                        }
 
                         try {
                             String data = (String) task.getBack().doing();
