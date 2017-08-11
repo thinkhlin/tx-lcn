@@ -114,9 +114,11 @@ public abstract class AbstractConnection implements Connection {
                 waitTask.setState(0);
                 waitTask.signalTask();
             }else {
+                connection.rollback();
                 closeConnection();
                 dataSourceService.deleteCompensates(compensateList);
             }
+            logger.info("rollback->" + compensateList);
         }
         if (state == 1) {
 

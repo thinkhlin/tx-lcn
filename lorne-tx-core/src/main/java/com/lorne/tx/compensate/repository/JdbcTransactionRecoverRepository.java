@@ -3,14 +3,11 @@ package com.lorne.tx.compensate.repository;
 import com.lorne.core.framework.utils.config.ConfigUtils;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.utils.SerializerUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
@@ -38,8 +35,7 @@ public class JdbcTransactionRecoverRepository implements TransactionRecoverRepos
     private String unique;
 
     @Autowired
-    @Qualifier("compensateDataSource")
-    private DataSource compensateDataSource;
+    private CompensateDataSource compensateDataSource;
 
     @Override
     public int create(TransactionRecover recover) {
