@@ -152,6 +152,8 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                                     }
                                 }
                             }
+                        }else{
+                            res = "0";
                         }
                         break;
                     }
