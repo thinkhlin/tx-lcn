@@ -49,22 +49,32 @@ public class BlockingQueueServiceImpl implements BlockingQueueService {
         this.recoverRepository = recoverRepository;
     }
 
+//
+//    @Override
+//    public String save(final TransactionInvocation transactionInvocation, final String groupId,final String taskId) {
+//        final String id = KidUtils.generateShortUuid();
+//        threadPool.execute(new HookRunnable() {
+//            @Override
+//            public void run0() {
+//                TransactionRecover recover = new TransactionRecover();
+//                recover.setGroupId(groupId);
+//                recover.setTaskId(taskId);
+//                recover.setId(id);
+//                recover.setInvocation(transactionInvocation);
+//                recoverRepository.create(recover);
+//            }
+//        });
+//        return id;
+//    }
 
     @Override
-    public String save(final TransactionInvocation transactionInvocation, final String groupId,final String taskId) {
-        final String id = KidUtils.generateShortUuid();
+    public void save(final TransactionRecover recover) {
         threadPool.execute(new HookRunnable() {
             @Override
             public void run0() {
-                TransactionRecover recover = new TransactionRecover();
-                recover.setGroupId(groupId);
-                recover.setTaskId(taskId);
-                recover.setId(id);
-                recover.setInvocation(transactionInvocation);
                 recoverRepository.create(recover);
             }
         });
-        return id;
     }
 
     @Override

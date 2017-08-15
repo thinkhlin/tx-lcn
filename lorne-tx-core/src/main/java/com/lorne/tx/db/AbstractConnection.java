@@ -4,6 +4,7 @@ import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionLocal;
+import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.db.service.DataSourceService;
 import com.lorne.tx.thread.HookRunnable;
@@ -39,7 +40,9 @@ public abstract class AbstractConnection implements Connection {
 
     private boolean hasGroup = false;
 
-    private List<String> compensateList;
+    private List<TransactionRecover> compensateList;
+
+    protected TransactionRecover nowCompensate;
 
     private String groupId;
 
@@ -53,8 +56,8 @@ public abstract class AbstractConnection implements Connection {
         this.dataSourceService = dataSourceService;
         groupId = transactionLocal.getGroupId();
         maxOutTime = transactionLocal.getMaxTimeOut();
-
-        compensateList.add(transactionLocal.getCompensateId());
+        nowCompensate = transactionLocal.getRecover();
+        compensateList.add(nowCompensate);
 
         if (!CompensateService.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
             waitTask = ConditionUtils.getInstance().createTask(transactionLocal.getKid());
@@ -62,8 +65,13 @@ public abstract class AbstractConnection implements Connection {
         }
     }
 
-    protected List<String> getCompensateList() {
+    protected List<TransactionRecover> getCompensateList() {
         return compensateList;
+    }
+
+    protected void addCompensate(TransactionRecover recover) {
+        nowCompensate = recover;
+        compensateList.add(recover);
     }
 
     protected void setHasIsGroup(boolean isGroup) {
@@ -116,7 +124,7 @@ public abstract class AbstractConnection implements Connection {
             }else {
                 connection.rollback();
                 closeConnection();
-                dataSourceService.deleteCompensates(compensateList);
+                //dataSourceService.deleteCompensates(compensateList);
             }
             logger.info("rollback->" + compensateList);
         }
@@ -136,6 +144,8 @@ public abstract class AbstractConnection implements Connection {
 
             } else {
                 //分布式事务
+
+                dataSourceService.saveTransactionRecover(nowCompensate);
 
                 if (hasGroup) {
                     //加入队列的连接，仅操作连接对象，不处理事务

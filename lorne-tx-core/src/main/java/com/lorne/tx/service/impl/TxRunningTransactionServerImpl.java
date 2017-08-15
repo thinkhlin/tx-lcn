@@ -6,12 +6,11 @@ import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.compensate.service.CompensateService;
+import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.db.LCNDataSourceProxy;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.service.TransactionServer;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +31,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
     private MQTxManagerService txManagerService;
 
 
-    @Autowired
-    private CompensateService compensateService;
+//    @Autowired
+//    private CompensateService compensateService;
 
 
     private Logger logger = LoggerFactory.getLogger(TxRunningTransactionServerImpl.class);
@@ -48,12 +47,19 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
 
         boolean isHasIsGroup =  LCNDataSourceProxy.hasGroup(txGroupId);
 
-        String compensateId  = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
+       // String compensateId  = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
+
+        TransactionRecover recover = new TransactionRecover();
+        recover.setId(KidUtils.generateShortUuid());
+        recover.setInvocation(info.getInvocation());
+        recover.setTaskId(kid);
+        recover.setGroupId(txGroupId);
 
         TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
         txTransactionLocal.setGroupId(txGroupId);
         txTransactionLocal.setHasStart(false);
-        txTransactionLocal.setCompensateId(compensateId);
+       // txTransactionLocal.setCompensateId(compensateId);
+        txTransactionLocal.setRecover(recover);
         txTransactionLocal.setKid(kid);
         txTransactionLocal.setMaxTimeOut(info.getMaxTimeOut());
         TxTransactionLocal.setCurrent(txTransactionLocal);

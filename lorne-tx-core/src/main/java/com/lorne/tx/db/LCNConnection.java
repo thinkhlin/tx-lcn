@@ -29,6 +29,7 @@ public class LCNConnection extends AbstractConnection {
             return;
         }
 
+
         //start 结束就是全部事务的结束表示,考虑start挂掉的情况
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {

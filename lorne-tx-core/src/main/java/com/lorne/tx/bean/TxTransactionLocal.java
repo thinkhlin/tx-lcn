@@ -1,5 +1,7 @@
 package com.lorne.tx.bean;
 
+import com.lorne.tx.compensate.model.TransactionRecover;
+
 /**
  * 分布式事务远程调用控制对象
  * Created by lorne on 2017/6/5.
@@ -20,7 +22,17 @@ public class TxTransactionLocal {
 
     private String kid;
 
-    private String compensateId;
+  //  private String compensateId;
+
+    private TransactionRecover recover;
+
+    public TransactionRecover getRecover() {
+        return recover;
+    }
+
+    public void setRecover(TransactionRecover recover) {
+        this.recover = recover;
+    }
 
     public boolean isHasIsGroup() {
         return hasIsGroup;
@@ -75,13 +87,13 @@ public class TxTransactionLocal {
         this.maxTimeOut = maxTimeOut;
     }
 
-    public String getCompensateId() {
-        return compensateId;
-    }
-
-    public void setCompensateId(String compensateId) {
-        this.compensateId = compensateId;
-    }
+//    public String getCompensateId() {
+//        return compensateId;
+//    }
+//
+//    public void setCompensateId(String compensateId) {
+//        this.compensateId = compensateId;
+//    }
 
     public static TxTransactionLocal current() {
         return currentLocal.get();

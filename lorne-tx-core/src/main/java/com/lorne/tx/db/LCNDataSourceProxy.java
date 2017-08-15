@@ -82,7 +82,7 @@ public class LCNDataSourceProxy implements DataSource {
         AbstractConnection old = pools.get(txTransactionLocal.getGroupId());
         if (old != null) {
             old.setHasIsGroup(true);
-            old.getCompensateList().add(txTransactionLocal.getCompensateId());
+            old.addCompensate(txTransactionLocal.getRecover());
 
             txTransactionLocal.setHasIsGroup(true);
             TxTransactionLocal.setCurrent(txTransactionLocal);
@@ -111,7 +111,7 @@ public class LCNDataSourceProxy implements DataSource {
         } else if (nowCount < maxCount) {
             return createLcnConnection(connection, txTransactionLocal);
         } else {
-            dataSourceService.deleteCompensateId(txTransactionLocal.getCompensateId());
+            //dataSourceService.deleteCompensateId(txTransactionLocal.getRecover().getId()); 执行完以后才会删除补偿
             throw new SQLException("connection was overload");
         }
         return connection;

@@ -162,11 +162,16 @@ public class CompensateServiceImpl implements CompensateService {
     }
 
 
+//
+//    @Override
+//    public String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId) {
+//        // TODO: 2017/7/11  记录补偿数据
+//        return blockingQueueService.save(invocation, groupId, taskId);
+//    }
 
     @Override
-    public String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId) {
-        // TODO: 2017/7/11  记录补偿数据
-        return blockingQueueService.save(invocation, groupId, taskId);
+    public void saveTransactionInfo(TransactionRecover recover) {
+        blockingQueueService.save(recover);
     }
 
     @Override

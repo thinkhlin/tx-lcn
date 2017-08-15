@@ -1,6 +1,6 @@
 package com.lorne.tx.compensate.service;
 
-import com.lorne.tx.compensate.model.TransactionInvocation;
+import com.lorne.tx.compensate.model.TransactionRecover;
 
 /**
  * Created by yuliang on 2017/7/11.
@@ -12,7 +12,7 @@ public interface CompensateService {
 
     void start();
 
-    String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId);
+  //  String saveTransactionInfo(TransactionInvocation invocation, String groupId, String taskId);
 
     boolean deleteTransactionInfo(String id);
 
@@ -21,4 +21,5 @@ public interface CompensateService {
     void executeCompensateByTaskId(String taskId);
 
 
+    void saveTransactionInfo(TransactionRecover recover);
 }
