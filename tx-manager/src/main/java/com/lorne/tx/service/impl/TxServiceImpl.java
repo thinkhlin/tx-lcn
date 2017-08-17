@@ -70,14 +70,6 @@ public class TxServiceImpl implements TxService {
                 //没有满足的默认数据
                 return null;
             }
-            int minNowConnection = state.getNowConnection();
-            for (TxState s : states) {
-                if (s.getMaxConnection() > s.getNowConnection()) {
-                    if (s.getNowConnection() < minNowConnection) {
-                        state = s;
-                    }
-                }
-            }
             return TxServer.format(state);
         }
     }
