@@ -1,6 +1,7 @@
-package com.lorne.tx.db;
+package com.lorne.tx.db.relational;
 
 import com.lorne.tx.bean.TxTransactionLocal;
+import com.lorne.tx.db.ICallClose;
 import com.lorne.tx.db.service.DataSourceService;
 
 import java.sql.Connection;
@@ -16,7 +17,7 @@ import java.util.TimerTask;
 public class LCNConnection extends AbstractConnection {
 
 
-    public LCNConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable) {
+    public LCNConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, ICallClose<AbstractConnection> runnable) {
         super(connection, dataSourceService, transactionLocal, runnable);
     }
 

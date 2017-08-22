@@ -1,4 +1,4 @@
-package com.lorne.tx.db;
+package com.lorne.tx.db.relational;
 
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.Task;
@@ -6,6 +6,7 @@ import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.service.CompensateService;
+import com.lorne.tx.db.ICallClose;
 import com.lorne.tx.db.service.DataSourceService;
 import com.lorne.tx.thread.HookRunnable;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ public abstract class AbstractConnection implements Connection {
 
     protected DataSourceService dataSourceService;
 
-    private LCNDataSourceProxy.ISubNowConnection runnable;
+    private ICallClose<AbstractConnection> runnable;
 
     private int maxOutTime;
 
@@ -49,7 +50,7 @@ public abstract class AbstractConnection implements Connection {
     protected Task waitTask;
 
 
-    public AbstractConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, LCNDataSourceProxy.ISubNowConnection runnable) {
+    public AbstractConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, ICallClose<AbstractConnection> runnable) {
         compensateList = new ArrayList<>();
         this.connection = connection;
         this.runnable = runnable;
@@ -69,12 +70,12 @@ public abstract class AbstractConnection implements Connection {
         return compensateList;
     }
 
-    protected void addCompensate(TransactionRecover recover) {
+    public void addCompensate(TransactionRecover recover) {
         nowCompensate = recover;
         compensateList.add(recover);
     }
 
-    protected void setHasIsGroup(boolean isGroup) {
+    public void setHasIsGroup(boolean isGroup) {
         hasGroup = isGroup;
     }
 
@@ -179,11 +180,11 @@ public abstract class AbstractConnection implements Connection {
         }
     }
 
-    protected String getGroupId() {
+    public String getGroupId() {
         return groupId;
     }
 
-    protected Task getWaitTask() {
+    public Task getWaitTask() {
         return waitTask;
     }
 
