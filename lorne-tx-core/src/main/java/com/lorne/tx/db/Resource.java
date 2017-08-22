@@ -6,7 +6,7 @@ import com.lorne.tx.compensate.model.TransactionRecover;
 /**
  * create by lorne on 2017/8/22
  */
-public interface LCNResource<T> {
+public interface Resource<T> {
 
     void close() throws Exception;
 

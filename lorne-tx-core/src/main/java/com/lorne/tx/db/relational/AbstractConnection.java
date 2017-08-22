@@ -1,5 +1,6 @@
 package com.lorne.tx.db.relational;
 
+import com.lorne.core.framework.model.Response;
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionCompensate;
@@ -7,6 +8,7 @@ import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.db.ICallClose;
+import com.lorne.tx.db.Resource;
 import com.lorne.tx.db.service.DataSourceService;
 import com.lorne.tx.thread.HookRunnable;
 import org.slf4j.Logger;
@@ -24,7 +26,7 @@ import java.util.concurrent.Executor;
  * create by lorne on 2017/7/29
  */
 
-public abstract class AbstractConnection implements Connection {
+public abstract class AbstractConnection implements Connection,Resource<Connection> {
 
 
     private Logger logger = LoggerFactory.getLogger(LCNConnection.class);
@@ -84,6 +86,11 @@ public abstract class AbstractConnection implements Connection {
     }
 
     private boolean hasClose = false;
+
+    @Override
+    public Connection get() {
+        return connection;
+    }
 
     @Override
     public void commit() throws SQLException {
@@ -193,8 +200,6 @@ public abstract class AbstractConnection implements Connection {
         connection.setAutoCommit(false);
     }
 
-
-    protected abstract void transaction() throws SQLException;
 
 
     /*****default*******/

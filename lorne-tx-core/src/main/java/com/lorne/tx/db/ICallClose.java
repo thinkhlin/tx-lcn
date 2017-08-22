@@ -5,6 +5,6 @@ package com.lorne.tx.db;
  */
 public interface ICallClose<T> {
 
-    void close(T connection);
+    void close(T resource);
 
 }

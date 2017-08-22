@@ -22,7 +22,7 @@ public class LCNConnection extends AbstractConnection {
     }
 
     @Override
-    protected void transaction() throws SQLException {
+    public void transaction() throws SQLException {
         if (waitTask == null) {
             connection.rollback();
             dataSourceService.deleteCompensates(getCompensateList());

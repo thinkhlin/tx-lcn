@@ -1,23 +1,15 @@
 package com.lorne.tx.db;
 
-import com.lorne.core.framework.utils.task.Task;
-import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.db.relational.AbstractConnection;
 import com.lorne.tx.db.relational.LCNConnection;
-import com.lorne.tx.db.service.DataSourceService;
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 
@@ -26,96 +18,16 @@ import java.util.logging.Logger;
  * create by lorne on 2017/7/29
  */
 
-public class LCNDataSourceProxy implements DataSource {
-
+public class LCNDataSourceProxy extends AbstractResourceProxy<Connection,AbstractConnection> implements DataSource {
 
 
     private org.slf4j.Logger logger = LoggerFactory.getLogger(LCNDataSourceProxy.class);
 
 
-    private static Map<String, AbstractConnection> pools = new ConcurrentHashMap<>();
-
-
-    @Autowired
-    private DataSourceService dataSourceService;
-
-
     private DataSource dataSource;
 
-    //default size
-    private volatile int maxCount = 5;
 
-    //default time (seconds)
-    private int maxWaitTime = 30;
-
-    private volatile int nowCount = 0;
-
-    public static boolean hasGroup(String group){
-        return pools.containsKey(group);
-    }
-
-    // not thread
-    private ICallClose<AbstractConnection> subNowCount = new ICallClose<AbstractConnection>() {
-
-        @Override
-        public void close(AbstractConnection connection) {
-            Task waitTask = connection.getWaitTask();
-            if (waitTask != null) {
-                if (!waitTask.isRemove()) {
-                    waitTask.remove();
-                }
-            }
-
-            pools.remove(connection.getGroupId());
-            nowCount--;
-        }
-    };
-
-
-    private Connection loadConnection(){
-        TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
-        if(txTransactionLocal==null){
-            return null;
-        }
-        AbstractConnection old = pools.get(txTransactionLocal.getGroupId());
-        if (old != null) {
-            old.setHasIsGroup(true);
-            old.addCompensate(txTransactionLocal.getRecover());
-
-            txTransactionLocal.setHasIsGroup(true);
-            TxTransactionLocal.setCurrent(txTransactionLocal);
-            logger.info("get old connection ->" + txTransactionLocal.getGroupId());
-            return old;
-        }
-        return null;
-    }
-
-
-    private Connection createConnection(TxTransactionLocal txTransactionLocal, Connection connection) throws SQLException {
-        if (nowCount == maxCount) {
-            logger.info("initLCNConnection max count ...");
-            for (int i = 0; i < maxWaitTime; i++) {
-                for(int j=0;j<100;j++){
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    if (nowCount < maxCount) {
-                        return createLcnConnection(connection, txTransactionLocal);
-                    }
-                }
-            }
-        } else if (nowCount < maxCount) {
-            return createLcnConnection(connection, txTransactionLocal);
-        } else {
-            //dataSourceService.deleteCompensateId(txTransactionLocal.getRecover().getId()); 执行完以后才会删除补偿
-            throw new SQLException("connection was overload");
-        }
-        return connection;
-    }
-
-    private Connection createLcnConnection(Connection connection, TxTransactionLocal txTransactionLocal) {
+    protected Connection createLcnConnection(Connection connection, TxTransactionLocal txTransactionLocal) {
         nowCount++;
         LCNConnection lcn = new LCNConnection(connection, dataSourceService, txTransactionLocal, subNowCount);
         pools.put(txTransactionLocal.getGroupId(), lcn);
@@ -123,31 +35,6 @@ public class LCNDataSourceProxy implements DataSource {
         return lcn;
     }
 
-    private Connection initLCNConnection(Connection connection) throws SQLException {
-        Connection lcnConnection = connection;
-        TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
-
-        if (txTransactionLocal != null
-            && StringUtils.isNotEmpty(txTransactionLocal.getGroupId())) {
-            if(TxTransactionCompensate.current()!=null){
-                return connection;
-            }else if (CompensateService.COMPENSATE_KEY.equals(txTransactionLocal.getGroupId())) {
-                lcnConnection = createConnection(txTransactionLocal, connection);
-            } else if (!txTransactionLocal.isHasStart()) {
-                lcnConnection = createConnection(txTransactionLocal, connection);
-            }
-
-        }
-        return lcnConnection;
-    }
-
-    public void setMaxWaitTime(int maxWaitTime) {
-        this.maxWaitTime = maxWaitTime;
-    }
-
-    public void setMaxCount(int maxCount) {
-        this.maxCount = maxCount;
-    }
 
     public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
@@ -172,7 +59,6 @@ public class LCNDataSourceProxy implements DataSource {
             return connection;
         }
     }
-
 
 
 

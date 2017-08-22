@@ -7,7 +7,7 @@ import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionInfo;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.model.TransactionRecover;
-import com.lorne.tx.db.LCNDataSourceProxy;
+import com.lorne.tx.db.AbstractResourceProxy;
 import com.lorne.tx.mq.model.TxGroup;
 import com.lorne.tx.mq.service.MQTxManagerService;
 import com.lorne.tx.service.TransactionServer;
@@ -31,8 +31,9 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
     private MQTxManagerService txManagerService;
 
 
-//    @Autowired
-//    private CompensateService compensateService;
+    @Autowired
+    private AbstractResourceProxy resourceProxy;
+
 
 
     private Logger logger = LoggerFactory.getLogger(TxRunningTransactionServerImpl.class);
@@ -45,9 +46,8 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         logger.info("tx-running-start->" + txGroupId);
         long t1 = System.currentTimeMillis();
 
-        boolean isHasIsGroup =  LCNDataSourceProxy.hasGroup(txGroupId);
+        boolean isHasIsGroup =  resourceProxy.hasGroup(txGroupId);
 
-       // String compensateId  = compensateService.saveTransactionInfo(info.getInvocation(), txGroupId, kid);
 
         TransactionRecover recover = new TransactionRecover();
         recover.setId(KidUtils.generateShortUuid());
@@ -58,7 +58,6 @@ public class TxRunningTransactionServerImpl implements TransactionServer {
         TxTransactionLocal txTransactionLocal = new TxTransactionLocal();
         txTransactionLocal.setGroupId(txGroupId);
         txTransactionLocal.setHasStart(false);
-       // txTransactionLocal.setCompensateId(compensateId);
         txTransactionLocal.setRecover(recover);
         txTransactionLocal.setKid(kid);
         txTransactionLocal.setMaxTimeOut(info.getMaxTimeOut());
