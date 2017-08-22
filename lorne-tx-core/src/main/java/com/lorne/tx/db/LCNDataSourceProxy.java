@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 
 
 /**
+ * 关系型数据库代理连接池对象
  * create by lorne on 2017/7/29
  */
 
