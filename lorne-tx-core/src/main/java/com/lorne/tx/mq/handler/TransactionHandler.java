@@ -1,13 +1,18 @@
 package com.lorne.tx.mq.handler;
 
 import com.alibaba.fastjson.JSONObject;
+
 import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.IBack;
 import com.lorne.core.framework.utils.task.Task;
+
 import com.lorne.tx.Constants;
+import com.lorne.tx.db.task.TaskGroup;
+import com.lorne.tx.db.task.TaskGroupManager;
 import com.lorne.tx.mq.model.Request;
 import com.lorne.tx.mq.service.NettyService;
 import com.lorne.tx.utils.SocketUtils;
+
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -64,7 +69,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
 
     }
 
-    private String notifyWaitTask(Task task, int state) {
+    private String notifyWaitTask(TaskGroup task, int state) {
         String res;
         task.setState(state);
         task.signalTask();
@@ -128,7 +133,7 @@ public class TransactionHandler extends ChannelInboundHandlerAdapter {
                         //通知提醒
                         final int state = resObj.getInteger("c");
                         String taskId = resObj.getString("t");
-                        Task task = ConditionUtils.getInstance().getTask(taskId);
+                        TaskGroup task = TaskGroupManager.getInstance().getTask(taskId);
                         logger.info("接受通知数据->" + json);
                         if (task != null) {
                             if (task.isAwait()) {   //已经等待

@@ -1,8 +1,7 @@
 package com.lorne.tx.db.relational;
 
-import com.lorne.core.framework.model.Response;
-import com.lorne.core.framework.utils.task.ConditionUtils;
 import com.lorne.core.framework.utils.task.Task;
+
 import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.model.TransactionRecover;
@@ -10,7 +9,11 @@ import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.db.ICallClose;
 import com.lorne.tx.db.Resource;
 import com.lorne.tx.db.service.DataSourceService;
+import com.lorne.tx.db.task.TaskGroup;
+import com.lorne.tx.db.task.TaskGroupManager;
+import com.lorne.tx.db.task.TxTask;
 import com.lorne.tx.thread.HookRunnable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +52,8 @@ public abstract class AbstractConnection implements Connection,Resource<Connecti
 
     private String groupId;
 
-    protected Task waitTask;
+
+    protected TxTask waitTask;
 
 
     public AbstractConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, ICallClose<AbstractConnection> runnable) {
@@ -63,7 +67,8 @@ public abstract class AbstractConnection implements Connection,Resource<Connecti
         compensateList.add(nowCompensate);
 
         if (!CompensateService.COMPENSATE_KEY.equals(transactionLocal.getGroupId())) {
-            waitTask = ConditionUtils.getInstance().createTask(transactionLocal.getKid());
+            TaskGroup taskGroup = TaskGroupManager.getInstance().createTask(transactionLocal.getKid(),"db");
+            waitTask = taskGroup.getCurrent();
             logger.info("task-create-> " + waitTask.getKey());
         }
     }
