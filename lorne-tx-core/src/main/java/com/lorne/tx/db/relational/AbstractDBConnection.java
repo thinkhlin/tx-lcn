@@ -1,7 +1,5 @@
 package com.lorne.tx.db.relational;
 
-import com.lorne.core.framework.utils.task.Task;
-
 import com.lorne.tx.bean.TxTransactionCompensate;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.model.TransactionRecover;
@@ -13,7 +11,6 @@ import com.lorne.tx.db.task.TaskGroup;
 import com.lorne.tx.db.task.TaskGroupManager;
 import com.lorne.tx.db.task.TxTask;
 import com.lorne.tx.thread.HookRunnable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -196,7 +193,7 @@ public abstract class AbstractDBConnection implements Connection,IResource<Conne
         return groupId;
     }
 
-    public Task getWaitTask() {
+    public TxTask getWaitTask() {
         return waitTask;
     }
 

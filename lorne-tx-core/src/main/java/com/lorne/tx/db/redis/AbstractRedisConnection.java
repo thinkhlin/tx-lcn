@@ -1,7 +1,6 @@
 package com.lorne.tx.db.redis;
 
 
-import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.service.CompensateService;
@@ -59,7 +58,7 @@ public abstract class AbstractRedisConnection implements RedisConnection,IResour
 
 
     @Override
-    public Task getWaitTask() {
+    public TxTask getWaitTask() {
         return waitTask;
     }
 

@@ -2,7 +2,6 @@ package com.lorne.tx.db.redis;
 
 import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.db.ICallClose;
-import com.lorne.tx.db.relational.AbstractDBConnection;
 import com.lorne.tx.db.service.DataSourceService;
 import org.springframework.data.redis.connection.RedisConnection;
 

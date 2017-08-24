@@ -1,7 +1,7 @@
 package com.lorne.tx.db;
 
-import com.lorne.core.framework.utils.task.Task;
 import com.lorne.tx.compensate.model.TransactionRecover;
+import com.lorne.tx.db.task.TxTask;
 
 import java.util.List;
 
@@ -12,7 +12,7 @@ public interface IResource<T> {
 
     void close() throws Exception;
 
-    Task getWaitTask();
+    TxTask getWaitTask();
 
     String getGroupId();
 
