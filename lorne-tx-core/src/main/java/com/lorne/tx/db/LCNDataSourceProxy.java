@@ -1,8 +1,8 @@
 package com.lorne.tx.db;
 
 import com.lorne.tx.bean.TxTransactionLocal;
-import com.lorne.tx.db.relational.AbstractConnection;
-import com.lorne.tx.db.relational.LCNConnection;
+import com.lorne.tx.db.relational.AbstractDBConnection;
+import com.lorne.tx.db.relational.LCNDBConnection;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  * create by lorne on 2017/7/29
  */
 
-public class LCNDataSourceProxy extends AbstractResourceProxy<Connection,AbstractConnection> implements DataSource {
+public class LCNDataSourceProxy extends AbstractResourceProxy<Connection,AbstractDBConnection> implements DataSource {
 
 
     private org.slf4j.Logger logger = LoggerFactory.getLogger(LCNDataSourceProxy.class);
@@ -29,7 +29,7 @@ public class LCNDataSourceProxy extends AbstractResourceProxy<Connection,Abstrac
 
     protected Connection createLcnConnection(Connection connection, TxTransactionLocal txTransactionLocal) {
         nowCount++;
-        LCNConnection lcn = new LCNConnection(connection, dataSourceService, txTransactionLocal, subNowCount);
+        LCNDBConnection lcn = new LCNDBConnection(connection, dataSourceService, txTransactionLocal, subNowCount);
         pools.put(txTransactionLocal.getGroupId(), lcn);
         logger.info("get new connection ->" + txTransactionLocal.getGroupId());
         return lcn;
@@ -44,7 +44,11 @@ public class LCNDataSourceProxy extends AbstractResourceProxy<Connection,Abstrac
     public Connection getConnection() throws SQLException {
         Connection connection = loadConnection();
         if(connection==null) {
-            return initLCNConnection(dataSource.getConnection());
+             connection = initLCNConnection(dataSource.getConnection());
+            if(connection==null){
+                throw new SQLException("connection was overload");
+            }
+            return connection;
         }else {
             return connection;
         }

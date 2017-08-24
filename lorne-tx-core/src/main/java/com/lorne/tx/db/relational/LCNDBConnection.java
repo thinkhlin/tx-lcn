@@ -14,10 +14,10 @@ import java.util.TimerTask;
  * create by lorne on 2017/7/29
  */
 
-public class LCNConnection extends AbstractConnection {
+public class LCNDBConnection extends AbstractDBConnection {
 
 
-    public LCNConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, ICallClose<AbstractConnection> runnable) {
+    public LCNDBConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, ICallClose<AbstractDBConnection> runnable) {
         super(connection, dataSourceService, transactionLocal, runnable);
     }
 

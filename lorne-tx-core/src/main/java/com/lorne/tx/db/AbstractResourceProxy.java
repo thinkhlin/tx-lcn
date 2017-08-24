@@ -9,7 +9,6 @@ import com.lorne.tx.db.service.DataSourceService;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * create by lorne on 2017/8/22
  */
 
-public abstract class AbstractResourceProxy<C,T extends Resource> {
+public abstract class AbstractResourceProxy<C,T extends IResource> {
 
 
     protected Map<String, T> pools = new ConcurrentHashMap<>();
@@ -78,7 +77,7 @@ public abstract class AbstractResourceProxy<C,T extends Resource> {
 
 
 
-    private C createConnection(TxTransactionLocal txTransactionLocal, C connection) throws SQLException {
+    private C createConnection(TxTransactionLocal txTransactionLocal, C connection){
         if (nowCount == maxCount) {
             for (int i = 0; i < maxWaitTime; i++) {
                 for(int j=0;j<100;j++){
@@ -95,14 +94,15 @@ public abstract class AbstractResourceProxy<C,T extends Resource> {
         } else if (nowCount < maxCount) {
             return createLcnConnection(connection, txTransactionLocal);
         } else {
-            throw new SQLException("connection was overload");
+            System.out.println("connection was overload");
+            return null;
         }
         return connection;
     }
 
 
 
-    protected C initLCNConnection(C connection) throws SQLException {
+    protected C initLCNConnection(C connection) {
         C lcnConnection = connection;
         TxTransactionLocal txTransactionLocal = TxTransactionLocal.current();
 

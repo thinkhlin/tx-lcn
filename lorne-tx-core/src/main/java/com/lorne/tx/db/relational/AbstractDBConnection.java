@@ -7,7 +7,7 @@ import com.lorne.tx.bean.TxTransactionLocal;
 import com.lorne.tx.compensate.model.TransactionRecover;
 import com.lorne.tx.compensate.service.CompensateService;
 import com.lorne.tx.db.ICallClose;
-import com.lorne.tx.db.Resource;
+import com.lorne.tx.db.IResource;
 import com.lorne.tx.db.service.DataSourceService;
 import com.lorne.tx.db.task.TaskGroup;
 import com.lorne.tx.db.task.TaskGroupManager;
@@ -29,10 +29,10 @@ import java.util.concurrent.Executor;
  * create by lorne on 2017/7/29
  */
 
-public abstract class AbstractConnection implements Connection,Resource<Connection> {
+public abstract class AbstractDBConnection implements Connection,IResource<Connection> {
 
 
-    private Logger logger = LoggerFactory.getLogger(LCNConnection.class);
+    private Logger logger = LoggerFactory.getLogger(LCNDBConnection.class);
 
     private volatile int state = 0;
 
@@ -40,7 +40,7 @@ public abstract class AbstractConnection implements Connection,Resource<Connecti
 
     protected DataSourceService dataSourceService;
 
-    private ICallClose<AbstractConnection> runnable;
+    private ICallClose<AbstractDBConnection> runnable;
 
     private int maxOutTime;
 
@@ -56,7 +56,7 @@ public abstract class AbstractConnection implements Connection,Resource<Connecti
     protected TxTask waitTask;
 
 
-    public AbstractConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, ICallClose<AbstractConnection> runnable) {
+    public AbstractDBConnection(Connection connection, DataSourceService dataSourceService, TxTransactionLocal transactionLocal, ICallClose<AbstractDBConnection> runnable) {
         compensateList = new ArrayList<>();
         this.connection = connection;
         this.runnable = runnable;
@@ -73,7 +73,7 @@ public abstract class AbstractConnection implements Connection,Resource<Connecti
         }
     }
 
-    protected List<TransactionRecover> getCompensateList() {
+    public List<TransactionRecover> getCompensateList() {
         return compensateList;
     }
 
@@ -86,7 +86,7 @@ public abstract class AbstractConnection implements Connection,Resource<Connecti
         hasGroup = isGroup;
     }
 
-    protected int getMaxOutTime() {
+    public int getMaxOutTime() {
         return maxOutTime;
     }
 
