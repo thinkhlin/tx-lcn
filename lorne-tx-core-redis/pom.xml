@@ -4,10 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.lorne.tx</groupId>
-    <artifactId>lorne-tx-core</artifactId>
+    <artifactId>lorne-tx-core-redis</artifactId>
     <version>3.0.0.RELEASE</version>
 
-    <name>lorne-tx-core</name>
+    <name>lorne-tx-core-redis</name>
     <description>Demo project for Spring Boot</description>
 
     <repositories>
@@ -85,60 +85,15 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.lorne.core</groupId>
-            <artifactId>lorne_core</artifactId>
-            <version>1.0.1.RELEASE</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-tx</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.lorne.tx</groupId>
+            <artifactId>lorne-tx-core</artifactId>
+            <version>3.0.0.RELEASE</version>
         </dependency>
 
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <version>4.1.12.Final</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
-            <version>${org.springframework-version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.caucho</groupId>
-            <artifactId>hessian</artifactId>
-            <version>${hessian.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.esotericsoftware</groupId>
-            <artifactId>kryo-shaded</artifactId>
-            <version>${kryo.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.dyuproject.protostuff</groupId>
-            <artifactId>protostuff-core</artifactId>
-            <version>${protostuff.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.dyuproject.protostuff</groupId>
-            <artifactId>protostuff-runtime</artifactId>
-            <version>${protostuff.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>druid</artifactId>
-            <version>1.0.19</version>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+            <version>1.8.4.RELEASE</version>
         </dependency>
 
     </dependencies>

@@ -88,7 +88,9 @@
 
 ## 目录说明
 
-lorne-tx-core 是LCN分布式事务框架的切面核心类库
+lorne-tx-core 是LCN分布式事务框架的切面核心类库，支持关系型数据库分布式事务
+
+lorne-tx-core-redis 是LCN分布式事务框架对Redis数据库的分布式事务扩展支持
 
 dubbo-transaction 是LCN dubbo分布式事务框架
 
