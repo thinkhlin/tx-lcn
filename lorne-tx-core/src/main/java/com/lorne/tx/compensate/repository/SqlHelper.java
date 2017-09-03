@@ -25,32 +25,32 @@ public class SqlHelper {
                 break;
             }
             case "oracle": {
-                sql = "CREATE TABLE `" + tableName + "` (\n" +
-                    "  `id` varchar(10) NOT NULL,\n" +
-                    "  `retried_count` number(3,0) NOT NULL,\n" +
-                    "  `create_time` datetime  NOT NULL,\n" +
-                    "  `last_time` datetime  NOT NULL,\n" +
-                    "  `state` number(2,0) NOT NULL,\n" +
-                    "  `l_unique` varchar2(32) NOT NULL,\n" +
-                    "  `group_id` varchar2(10) NOT NULL,\n" +
-                    "  `task_id` varchar2(10) NOT NULL,\n" +
-                    "  `invocation` BLOB NOT NULL,\n" +
-                    "  PRIMARY KEY (`id`)\n" +
+                sql = "CREATE TABLE " + tableName + " (\n" +
+                    "  id varchar(10) NOT NULL,\n" +
+                    "  retried_count number(3,0) NOT NULL,\n" +
+                    "  create_time datetime  NOT NULL,\n" +
+                    "  last_time datetime  NOT NULL,\n" +
+                    "  state number(2,0) NOT NULL,\n" +
+                    "  l_unique varchar2(32) NOT NULL,\n" +
+                    "  group_id varchar2(10) NOT NULL,\n" +
+                    "  task_id varchar2(10) NOT NULL,\n" +
+                    "  invocation BLOB NOT NULL,\n" +
+                    "  PRIMARY KEY (id)\n" +
                     ")";
                 break;
             }
             case "sqlserver": {
-                sql = "CREATE TABLE `" + tableName + "` (\n" +
-                    "  `id` varchar(10) NOT NULL,\n" +
-                    "  `retried_count` int(3) NOT NULL,\n" +
-                    "  `create_time` datetime NOT NULL,\n" +
-                    "  `last_time` datetime NOT NULL,\n" +
-                    "  `state` int(2) NOT NULL,\n" +
-                    "  `l_unique` nchar(32) NOT NULL,\n" +
-                    "  `group_id` nchar(10) NOT NULL,\n" +
-                    "  `task_id` nchar(10) NOT NULL,\n" +
-                    "  `invocation` varbinary NOT NULL,\n" +
-                    "  PRIMARY KEY (`id`)\n" +
+                sql = "CREATE TABLE " + tableName + " (\n" +
+                    "  id varchar(10) NOT NULL,\n" +
+                    "  retried_count int NOT NULL,\n" +
+                    "  create_time datetime NOT NULL,\n" +
+                    "  last_time datetime NOT NULL,\n" +
+                    "  state int NOT NULL,\n" +
+                    "  l_unique nchar(32) NOT NULL,\n" +
+                    "  group_id nchar(10) NOT NULL,\n" +
+                    "  task_id nchar(10) NOT NULL,\n" +
+                    "  invocation varbinary NOT NULL,\n" +
+                    "  PRIMARY KEY (id)\n" +
                     ")";
                 break;
             }
@@ -60,6 +60,7 @@ public class SqlHelper {
         }
         return sql;
     }
+
 
     public static String getFindAllByUniqueSql(String dbType, String tableName) {
         return "select * from " + tableName + " where state = ? and l_unique = ? ";
