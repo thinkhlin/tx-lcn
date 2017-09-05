@@ -2,11 +2,12 @@ package com.lorne.tx.dubbo.service.impl;
 
 import com.alibaba.dubbo.config.ApplicationConfig;
 import com.alibaba.dubbo.config.ProviderConfig;
-import com.lorne.core.framework.utils.encode.MD5Util;
 import com.lorne.tx.service.ModelNameService;
+import org.apache.commons.codec.digest.Md5Crypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
@@ -42,7 +43,11 @@ public class ModelNameServiceImpl implements ModelNameService {
     @Override
     public String getUniqueKey() {
         String address = getIp()+providerConfig.getPort();
-        return  MD5Util.md5(address);
+        try {
+            return Md5Crypt.md5Crypt(address.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
     }
 
 
